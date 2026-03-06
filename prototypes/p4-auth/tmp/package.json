@@ -1,0 +1,20 @@
+{
+  "name": "@cliver/auth-prototype",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx --import ./register.js src/server.ts"
+  },
+  "dependencies": {
+    "@cliver/contracts": "link:../../p0-contracts",
+    "@cliver/auth": "link:../../p4-auth",
+    "@hono/node-server": "^1.14.0",
+    "hono": "^4.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.7.0"
+  }
+}
