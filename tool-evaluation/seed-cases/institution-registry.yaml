@@ -1,0 +1,248 @@
+group: institution-registry
+endpoints: [ror, gleif, companies-house]
+# OpenCorporates excluded — blocked (free tier no longer supports unauthenticated API access)
+kyc_steps: [a]
+
+seed_cases:
+  # --- Easy (2-3): well-known institutions, should be fully covered ---
+
+  - id: 1
+    name: "The Scripps Research Institute"
+    type: academic
+    country: US
+    source: customers_csv
+    difficulty: easy
+    query_params:
+      institution_name: "The Scripps Research Institute"
+      address: "10550 North Torrey Pines Rd, La Jolla, CA 92037, USA"
+      email_domain: "scripps.edu"
+    hypothesis: >
+      Should be fully covered — large US research institute, certainly in ROR with correct city
+      (La Jolla/San Diego). Unlikely to have an LEI (non-commercial). Not a UK entity so
+      Companies House is irrelevant. Good baseline for "what does a clean ROR match look like."
+
+  - id: 2
+    name: "University of Oxford"
+    type: academic
+    country: GB
+    source: general_knowledge
+    difficulty: easy
+    query_params:
+      institution_name: "University of Oxford"
+      address: "University Offices, Wellington Square, Oxford OX1 2JD, UK"
+      email_domain: "ox.ac.uk"
+    hypothesis: >
+      Should be in ROR (major UK university) and may appear in Companies House as a chartered
+      corporation or via subsidiary entities. GLEIF unlikely for the university itself but possible
+      for Oxford University Press or investment vehicles. Tests the UK-specific Companies House path.
+
+  - id: 3
+    name: "Pfizer Inc"
+    type: pharma
+    country: US
+    source: general_knowledge
+    difficulty: easy
+    query_params:
+      institution_name: "Pfizer Inc"
+      address: "66 Hudson Boulevard East, New York, NY 10001, USA"
+      email_domain: "pfizer.com"
+    hypothesis: >
+      Should be in ROR (major pharma, classified as "company") and definitely in GLEIF (publicly
+      traded, will have an LEI with registered address). Good test of the GLEIF path for commercial
+      entities. Not UK-headquartered, so Companies House would only show a UK subsidiary if any.
+
+  # --- Medium (3): international institutions, mid-size companies, government labs ---
+
+  - id: 4
+    name: "Indian Institute of Technology Kanpur"
+    type: academic
+    country: IN
+    source: customers_csv
+    difficulty: medium
+    query_params:
+      institution_name: "Indian Institute of Technology Kanpur"
+      address: "Kalyanpur, Kanpur, Uttar Pradesh 208016, India"
+      email_domain: "iitk.ac.in"
+    hypothesis: >
+      Should be in ROR (well-known Indian research university, part of IIT system). GLEIF and
+      Companies House will miss it (non-commercial, non-UK). Tests whether ROR returns
+      city-level match for a non-Western institution. The IIT system has many branches — check if
+      query returns the correct campus vs. other IITs.
+
+  - id: 5
+    name: "National Microbiology Laboratory, Public Health Agency of Canada"
+    type: government_lab
+    country: CA
+    source: customers_csv
+    difficulty: medium
+    query_params:
+      institution_name: "National Microbiology Laboratory"
+      address: "1015 Arlington St, Winnipeg, Manitoba R3E 3R2, Canada"
+      email_domain: "phac-aspc.gc.ca"
+    hypothesis: >
+      Government lab — may be in ROR under Public Health Agency of Canada or as a sub-unit, but
+      querying "National Microbiology Laboratory" alone might not resolve. Definitely not in GLEIF
+      or Companies House. Tests hierarchical institution lookup: does ROR surface the parent org
+      when querying by the lab name? Also tests government email domain matching.
+
+  - id: 6
+    name: "Griffith University"
+    type: academic
+    country: AU
+    source: customers_csv
+    difficulty: medium
+    query_params:
+      institution_name: "Griffith University"
+      address: "Gold Coast Campus, Parklands Dr, Southport QLD 4222, Australia"
+      email_domain: "griffith.edu.au"
+    hypothesis: >
+      Should be in ROR (established Australian university). Tests whether ROR's city field
+      matches Gold Coast campus vs. the main Brisbane campus — multi-campus institutions are a
+      known ambiguity. GLEIF and Companies House will miss it. Useful for testing city-level
+      match failures when the customer is at a satellite campus.
+
+  # --- Hard/adversarial (4): community labs, new startups, non-OECD, name changes ---
+
+  - id: 7
+    name: "Lay Sciences Inc"
+    type: biotech_startup
+    country: US
+    source: customers_csv
+    difficulty: hard
+    query_params:
+      institution_name: "Lay Sciences Inc"
+      address: "Unknown — not provided in customer data"
+      email_domain: "laysciences.com"
+    hypothesis: >
+      Very small biotech startup — almost certainly NOT in ROR (only ~110K orgs, mostly academic
+      and major research orgs). Might be in GLEIF if incorporated and registered an LEI, but
+      unlikely for a tiny startup. Not UK, so Companies House is irrelevant. This is the
+      prototypical gap case: legitimate small company that falls through all registry lookups.
+
+  - id: 8
+    name: "Baqiyatallah University of Medical Sciences"
+    type: academic
+    country: IR
+    source: customers_csv
+    difficulty: hard
+    query_params:
+      institution_name: "Baqiyatallah University of Medical Sciences"
+      address: "Mollasadra St, Vanak Sq, Tehran, Iran"
+      email_domain: "bmsu.ac.ir"
+    hypothesis: >
+      Iranian university affiliated with the IRGC — likely in ROR (it's a real university with
+      publications) but the transliteration of "Baqiyatallah" may vary across records. GLEIF and
+      Companies House will miss it. Key adversarial dimension: this is a sanctioned institution,
+      so it tests whether registry presence says anything about sanctions status (it shouldn't —
+      that's a separate check). Also tests non-Latin script name matching.
+
+  - id: 9
+    name: "Tierärztliche Hochschule Hannover"
+    type: academic
+    country: DE
+    source: customers_csv
+    difficulty: hard
+    query_params:
+      institution_name: "Tierärztliche Hochschule Hannover"
+      address: "Bünteweg 2, 30559 Hannover, Germany"
+      email_domain: "tiho-hannover.de"
+      alternate_names:
+        - "University of Veterinary Medicine Hannover"
+        - "Stiftung Tierärztliche Hochschule Hannover"
+        - "TiHo Hannover"
+    hypothesis: >
+      This institution changed its official name — formerly "Tierärztliche Hochschule Hannover,"
+      now officially "Stiftung Tierärztliche Hochschule Hannover" and known in English as
+      "University of Veterinary Medicine Hannover, Foundation." Tests whether ROR handles
+      alias/alternate name matching and non-ASCII characters (ä). The customer data uses the
+      older German name — will a query find the current ROR record?
+
+  - id: 10
+    name: "Genspace"
+    type: community_lab
+    country: US
+    source: general_knowledge
+    difficulty: hard
+    query_params:
+      institution_name: "Genspace"
+      address: "142 W 36th St, 7th Floor, New York, NY 10018, USA"
+      email_domain: "genspace.org"
+    hypothesis: >
+      Community biology lab — the canonical hard case. Probably NOT in ROR (community labs are
+      not traditional research orgs). Definitely not in GLEIF or Companies House. The address is
+      a shared commercial building in Manhattan. This tests the fundamental coverage gap: a
+      legitimate biosafety-level-1 lab that exists in no institutional registry. The stage 3
+      agent should verify whether any community labs appear in ROR at all.
+
+information_sources:
+  - source: "customers.csv — Controlled Agent Industry"
+    what_to_look_for: >
+      Filter for Type='Controlled Agent Industry' to find small biotech companies (Fusix Biotech,
+      Uvax Bio, Signablok Inc, Virometix AG, AdaptVac, etc.). These are the most likely to fall
+      through registry lookups. Test each against ROR and GLEIF.
+  - source: "customers.csv — Sanctioned Institution Customers"
+    what_to_look_for: >
+      Filter for Type='Sanctioned Institution Customers' to find institutions in Iran, China
+      (PLA-affiliated), and Russia (RAS branches). Test transliteration variants and check
+      whether ROR coverage exists for sanctioned-country institutions.
+  - source: "ROR data dump"
+    url: "https://ror.readme.io/docs/data-dump"
+    what_to_look_for: >
+      Download and filter by country to assess coverage density. Key countries to probe:
+      Iran (IR), Russia (RU), China (CN), India (IN), Brazil (BR), Nigeria (NG), Kenya (KE).
+      Also filter by type='Company' to see how many commercial entities ROR includes.
+  - source: "iGEM team list"
+    url: "https://igem.org/teams"
+    what_to_look_for: >
+      Student teams at universities in Africa, Southeast Asia, and Latin America. These
+      institutions may be legitimate but small enough to be absent from ROR or have
+      inconsistent metadata (wrong city, missing domain).
+  - source: "BioCurious / community bio lab directories"
+    url: "https://sphere.diybio.org/"
+    what_to_look_for: >
+      Full directory of community bio labs worldwide. Almost certainly none are in ROR or GLEIF.
+      Use to build a set of "guaranteed miss" cases and quantify the gap.
+  - source: "GLEIF LEI search"
+    url: "https://search.gleif.org/"
+    what_to_look_for: >
+      Search for biotech/pharma companies from the customer list to determine which types of
+      life-sciences companies actually have LEIs. Hypothesis: large pharma yes, mid-size biotech
+      sometimes, small startups never.
+  - source: "Companies House advanced search"
+    url: "https://find-and-update.company-information.service.gov.uk/advanced-search"
+    what_to_look_for: >
+      Search for UK-incorporated biotech companies with SIC codes 72110 (R&D natural sciences)
+      or 72190 (other R&D). Check whether recently incorporated companies (last 12 months)
+      appear in API results, and whether dissolved companies are returned with status flags.
+
+pre_committed_reasoning: |
+  ROR should cover most major universities worldwide — its ~110K records span 200+ countries and
+  include government labs, research institutes, and some companies. The coverage hypothesis breaks
+  down along three axes:
+
+  1. **Entity type:** Academic institutions are ROR's core strength. Government labs are usually
+     present but sometimes only under a parent agency name (e.g., "National Microbiology Laboratory"
+     might only appear as "Public Health Agency of Canada"). Companies are sparsely covered — ROR
+     includes ~6K companies but these are mostly large firms with significant research output.
+     Community bio labs are almost certainly absent. GLEIF fills the commercial gap (~2.9M entities)
+     but is biased toward financial services and large corporates; small biotech startups rarely
+     register LEIs.
+
+  2. **Geography:** ROR coverage is strong in the US, EU, UK, Australia, Japan, and established
+     research nations. Coverage gets thinner in Sub-Saharan Africa, Central Asia, and some Middle
+     Eastern countries — though sanctioned-country institutions (Iran, Russia, China) may actually
+     be well-represented because they have publication output. The real gap is likely non-OECD
+     countries with limited research infrastructure. Companies House is UK-only, which is a hard
+     boundary.
+
+  3. **Name matching:** Non-ASCII names (German umlauts, Chinese characters, Arabic transliterations)
+     are the most likely failure mode for query matching. ROR stores alternate names and aliases, but
+     a query for "Tierärztliche Hochschule Hannover" may not match if the record uses "University of
+     Veterinary Medicine Hannover." Institutions that changed names recently may also have stale
+     records. The stage 3 agent should test both the original name and known variants.
+
+  The biggest expected gap is the intersection of "non-academic" + "small" + "recently founded" —
+  a new biotech startup in a non-OECD country will appear in none of these registries. For the
+  address-to-institution KYC step specifically, this means registry lookups alone cannot confirm
+  institutional presence for a significant fraction of legitimate small-company customers, and the
+  pipeline must rely on fallback signals (funding databases, publication affiliations, web search).
