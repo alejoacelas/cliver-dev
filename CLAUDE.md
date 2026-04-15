@@ -8,10 +8,16 @@ Cliver aims to be a user-facing website demonstrating automated KYC verification
 
 ## Live directories
 
+- **`data/`** — Datasets for tool evaluation.
+  - `frontiers-profiles.csv` — 134 real life science researcher profiles from the Frontiers paper evaluation (`cliver/frontiers-evals`). Columns: `work_url`, `Type`, `Name`, `Institution`, `Email`, `Order`, `customer_info`. Multiline CSV (customer_info spans multiple lines). Four customer types: Controlled Agent Academia (56), General Life Science (29), Sanctioned Institution (25), Controlled Agent Industry (24). Covers 18+ countries. Non-anonymized — contains real names, emails, and institutions.
+- **`tool-evaluation/`** — KYC tool evaluation pipeline. Empirical testing of API endpoints against adversarial cases for 5 priority KYC steps (M02, M03, M04, M05, M12 + adjacent M06, M07, M10).
+  - `run.md` — Pipeline execution spec. 8 stages: credential check → relevance classification → adversarial test set → endpoint testing → field assessment → adversarial review → BOTEC cost synthesis → final synthesis.
+  - `customers.csv` — 535 deanonymized researcher profiles (name, institution, email, order) for test case sourcing.
 - **`notes/`** — Meeting notes, planning docs, and investigation summaries.
   - `2026-04-07-minimal-standard-meeting2-agenda.md` — CSSWG Meeting #2 agenda and discussion notes. Contains the draft minimal standard structure, stakeholder alignment criteria, discussion of attacker stories, and the full measure-by-measure table with screening processes, requirements, and open questions. Key reference for ongoing work.
   - `measure-A-deep-dive-planning.md` — Planning doc for the Measure A (address-to-institution) deep dive.
   - `reference-wg-and-phishing.md` — Pointers and excerpts from `cliver/wg` (bypass research, measures-in-practice, false-negative rates) and `tries/phishing` (provider email security, attack chain costs). Maps our 5 KYC steps to the wg measure numbers.
+  - `tool-evaluation-plan.md` — Plan for the KYC tool evaluation pipeline. 8 stages (0–7): credential check, endpoint relevance classification, adversarial test set construction, endpoint testing, field-level assessment, adversarial review, BOTEC cost synthesis, and final synthesis. Covers 5 priority KYC steps across ~21 endpoints. Working plan — subject to refinement during execution.
 
 ## Archive
 
