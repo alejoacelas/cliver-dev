@@ -132,7 +132,7 @@ The stage 4 assessments classify each profile group into one of five tiers: `aut
 
 **Cost per case by tier:**
 - `auto`: $0 incremental (API cost only, already in Layer 1)
-- `llm_review`: ~$0.01-0.03/case (LLM inference + any Exa/web search calls). Wall-clock time ~0.5-2 min but no human cost.
+- `llm_review`: ~$0.02-0.05/case (LLM inference + Exa web search calls). Exa cost alone averages ~$0.020/call blended ($0.007 for easy cases, $0.035-0.042 for hard cases with 4-5 searches); add OpenRouter/Gemini token costs on top (~$0.01-0.02/call, not tracked by the script — see `llm-exa-prompts/test-results.md` for empirical data). Wall-clock time ~5-30s but no human cost.
 - `llm_review_human_audit`: ~$0.02-0.03 LLM cost + human audits a fraction of cases. Use the `escalation_rate` from the profile group to estimate the human portion.
 - `human_review` (`quick_review`): $40/hr × estimated_time (1-3 min). Human glances at flag + context.
 - `human_review` (`investigation`): $40/hr × estimated_time (5-15 min). Human digs — cross-references, web searches.

@@ -99,23 +99,35 @@ Each prompt defines:
 2. A **template** with placeholders for the case-specific fields (institution name, address, email domain, etc.).
 3. A **structured output schema** the LLM must follow (verdict, confidence, evidence, sources).
 
-Use the `llm-exa-search.py` script to run each case:
+Use the `llm-exa-search.py` script to run each case. The prompt file is the **system instruction** (the template); the case-specific input fields go in a separate file passed as the user prompt:
 
 ```bash
 # Pipeline integration (structured JSON with tool call details and Exa cost)
-uv run tool-evaluation/llm-exa-search.py --prompt-file query.txt --json
+uv run tool-evaluation/llm-exa-search.py \
+  --system-prompt-file llm-exa-prompts/a-address-institution.txt \
+  --prompt-file case-input.txt --json
 
 # Verbose mode (shows each iteration and search query on stderr)
-uv run tool-evaluation/llm-exa-search.py -v --json --prompt-file query.txt
+uv run tool-evaluation/llm-exa-search.py -v --json \
+  --system-prompt-file llm-exa-prompts/a-address-institution.txt \
+  --prompt-file case-input.txt
 ```
 
-The script runs Gemini 3.1 Pro via OpenRouter with Exa neural search as a tool. The model decides when and what to search. It loops until it has enough information to answer, then returns its verdict.
+The case input file contains just the structured fields for one case (e.g., `institution_name: MIT\nshipping_address: 77 Massachusetts Ave...`). See `llm-exa-prompts/test-inputs/` for examples.
+
+The script runs Gemini 3.1 Pro via OpenRouter with Exa neural search as a tool. The prompts include a **search budget of 4 web searches** — the model should stop searching and synthesize after 4 searches. The script enforces a hard cap of 6 iterations; if the model returns an empty answer after exhausting searches, the script forces a final synthesis by re-prompting with `tools=[]`.
+
+**Interpreting results with `null` fields:** When the model exhausts its search budget without finding evidence, it correctly sets fields to `null` rather than guessing. This is expected behavior, not a test failure. In particular, step (e) will return `forwarding_service_detected: null` for freight forwarders that have no web presence at their warehouse address — this is a known limitation, not a bug.
+
+**Cost expectations:** Easy cases (well-known institutions, clear domains) cost ~$0.007 (1 search). Hard cases (fictional entities, addresses with no web presence) cost $0.035–$0.042 (4-5 searches). Blended average is ~$0.020/call. These are Exa costs only — OpenRouter/Gemini token costs are not tracked by the script.
 
 For each LLM+Exa endpoint, run 20-30 test cases. Record the JSON output from `--json` mode (includes the answer, Exa search queries, number of results per search, per-call duration, and total Exa cost). Write results to `03-results/llm-exa-{step}.yaml` (e.g., `03-results/llm-exa-a.yaml`).
 
 ## Output
 
 **One result file per endpoint** (not per group). The stage 3 agent runs per group (sharing cases across endpoints and comparing their responses), but writes a separate result file for each endpoint. This makes each endpoint independently assessable in later stages.
+
+For the LLM+Exa endpoints, also reference `llm-exa-prompts/test-results.md` — it contains prompt-level analysis (guardrail assessment, cost model, known per-step limitations) from pre-pipeline testing that downstream stages should use alongside the raw test outputs.
 
 ### Structured results: `tool-evaluation/03-results/{endpoint-slug}.yaml`
 

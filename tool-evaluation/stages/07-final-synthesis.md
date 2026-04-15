@@ -10,6 +10,7 @@
 - Adversarial review finals: `tool-evaluation/05-adversarial-reviews/{group-name}-final.md` (one per endpoint group). Contains unresolved findings.
 - BOTEC synthesis: `tool-evaluation/06-cost-coverage-synthesis.md`. Contains profile group inventory, fraction estimates (with source tags), cost tables, cost drivers, tail risk analysis, and provider archetype scenarios.
 - Per-endpoint results: `tool-evaluation/03-results/{endpoint-slug}.yaml` + `.md`. Individual endpoint test results.
+- LLM+Exa prompt test analysis: `tool-evaluation/llm-exa-prompts/test-results.md`. Contains prompt-level findings from pre-pipeline testing — guardrail assessment, per-step pass rates, cost model, and known limitations (e.g., step (e) cannot detect freight forwarders by address). Use this alongside the stage 3 raw results for section 4a.
 - Cross-endpoint comparisons: `tool-evaluation/03-results/{group-name}-comparison.md`.
 - Endpoint manifest: `tool-evaluation/00-endpoint-manifest.yaml`.
 - Endpoint map: `tool-evaluation/stages/01-endpoint-map.md` (static endpoint-to-KYC-step mapping).
