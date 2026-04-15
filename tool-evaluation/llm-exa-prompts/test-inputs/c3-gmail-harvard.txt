@@ -1,0 +1,4 @@
+email_domain: gmail.com
+claimed_institution: Harvard University
+person_name: John Smith
+institution_country: US

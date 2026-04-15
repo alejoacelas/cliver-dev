@@ -103,7 +103,7 @@ The distinction matters: if you know Companies House is UK-only, don't spend tes
 
 ## Output
 
-One file per endpoint group: `tool-evaluation/seed-cases/{group-name}.yaml`
+One file per endpoint group: `tool-evaluation/02-seed-cases/{group-name}.yaml`
 
 ```yaml
 group: institution-registry

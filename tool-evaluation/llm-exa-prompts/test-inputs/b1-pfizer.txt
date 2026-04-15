@@ -1,0 +1,7 @@
+billing_entity_name: Pfizer Inc.
+billing_address: 66 Hudson Blvd East, New York, NY 10001
+claimed_institution: Pfizer Inc.
+institution_address: 66 Hudson Blvd East, New York, NY 10001
+payment_method: card
+wire_originating_bank: null
+wire_originating_country: null

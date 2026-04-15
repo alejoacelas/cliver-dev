@@ -1,0 +1,683 @@
+{
+  "answer": "",
+  "model": "google/gemini-3.1-pro-preview",
+  "iterations": 15,
+  "total_exa_cost_usd": 0.09800000000000003,
+  "tool_calls": [
+    {
+      "tool": "search_web",
+      "query": "\"4512 Oak Lane\" \"Bethesda\" \"MD\" \"20817\"",
+      "num_results": 10,
+      "duration_s": 1.17,
+      "results": [
+        {
+          "title": "5612 Oak Pl, Bethesda, MD 20817 - MLS MDMC2208498 - Coldwell Banker",
+          "url": "https://www.coldwellbankerhomes.com/md/bethesda/5612-oak-pl/pid_69261857/"
+        },
+        {
+          "title": "5612 Oak Place, Bethesda, MD 20817 | MLS# MDMC2208498 | RLAH @properties",
+          "url": "https://www.atproperties.com/MDMC2208498/5612-oak-place-bethesda-maryland-20817-brightmls"
+        },
+        {
+          "title": "Oak Forest Lane in Bethesda, MD Public Real Estate Info | BlockShopper",
+          "url": "https://blockshopper.com/md/montgomery-county/cities/bethesda/streets/oak-forest-ln"
+        },
+        {
+          "title": "7021 Oak Forest   Lane, Bethesda, 20817",
+          "url": "https://www.northernvirginiahomepro.com/property/MDMC2105458/"
+        },
+        {
+          "title": "7021 Oak Forest Lane,  Bethesda, MD.| MLS# MDMC2105458",
+          "url": "https://www.montgomeryhomesexpert.com/idx/listing/VA-MRIS/MDMC2105458/7021-Oak-Forest-Lane-Bethesda-MD-20817"
+        },
+        {
+          "title": "Oakmont Avenue, Bethesda, MD 20817 - House Value & Property Details",
+          "url": "https://www.ownerly.com/md/bethesda/oakmont-ave-home-details"
+        },
+        {
+          "title": "5616 Oak Pl  Bethesda, MD 20817",
+          "url": "https://www.coldwellbankerhomes.com/md/bethesda/5616-oak-pl/pid_55261062/"
+        },
+        {
+          "title": "Oak Forest Lane, 20817, MD | BlockShopper.com",
+          "url": "https://blockshopper.com/md/montgomery-county/zips/20817/streets/oak-forest-ln"
+        },
+        {
+          "title": "5522 Oakmont Ave ,  Bethesda, MD 20817",
+          "url": "https://www.redfin.com/MD/Bethesda/5522-Oakmont-Ave-20817/home/10651847"
+        },
+        {
+          "title": "Oak Lane in Chevy Chase, MD Public Real Estate Info | BlockShopper",
+          "url": "https://blockshopper.com/md/montgomery-county/cities/chevy-chase/streets/oak-ln"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"4512 Oak Lane\" Bethesda MD",
+      "num_results": 10,
+      "duration_s": 1.05,
+      "results": [
+        {
+          "title": "5612 Oak Pl, Bethesda, MD 20817 - MLS MDMC2208498 - Coldwell Banker",
+          "url": "https://www.coldwellbankerhomes.com/md/bethesda/5612-oak-pl/pid_69261857/"
+        },
+        {
+          "title": "5612 Oak Place, Bethesda, MD 20817 | MLS# MDMC2208498 | RLAH @properties",
+          "url": "https://www.atproperties.com/MDMC2208498/5612-oak-place-bethesda-maryland-20817-brightmls"
+        },
+        {
+          "title": "4515 Great Oak Rd, Rockville, MD 20853 Property Records",
+          "url": "https://www.countyoffice.org/property-record-4515-great-oak-rd-rockville-md-20853-15a/"
+        },
+        {
+          "title": "Oak Lane in Chevy Chase, MD Public Real Estate Info | BlockShopper",
+          "url": "https://blockshopper.com/md/montgomery-county/cities/chevy-chase/streets/oak-ln"
+        },
+        {
+          "title": "Oakridge Ln, Chevy Chase, Maryland, 20815",
+          "url": "https://www.ownerly.com/md/chevy-chase/oakridge-ln-home-details"
+        },
+        {
+          "title": "Oak Forest Lane in Bethesda, MD Public Real Estate Info | BlockShopper",
+          "url": "https://blockshopper.com/md/montgomery-county/cities/bethesda/streets/oak-forest-ln"
+        },
+        {
+          "title": "4218 Oakridge Ln ,  Chevy Chase, MD 20815",
+          "url": "https://www.redfin.com/MD/Chevy-Chase/4218-Oakridge-Ln-20815/home/10675559"
+        },
+        {
+          "title": "4515 Great Oak Rd ,  Rockville, MD 20853",
+          "url": "https://www.redfin.com/MD/Rockville/4515-Great-Oak-Rd-20853/home/11135684"
+        },
+        {
+          "title": "7021 Oak Forest   Lane, Bethesda, 20817",
+          "url": "https://www.northernvirginiahomepro.com/property/MDMC2105458/"
+        },
+        {
+          "title": "5715 Lone Oak Dr , Bethesda ,  MD   20814",
+          "url": "https://www.redfin.com/MD/Bethesda/5715-Lone-Oak-Dr-20814/home/10676563"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"4512 Oak Lane\" Bethesda",
+      "num_results": 10,
+      "duration_s": 0.97,
+      "results": [
+        {
+          "title": "5612 Oak Pl, Bethesda, MD 20817 - MLS MDMC2208498 - Coldwell Banker",
+          "url": "https://www.coldwellbankerhomes.com/md/bethesda/5612-oak-pl/pid_69261857/"
+        },
+        {
+          "title": "4515 Great Oak Rd, Rockville, MD 20853 Property Records",
+          "url": "https://www.countyoffice.org/property-record-4515-great-oak-rd-rockville-md-20853-15a/"
+        },
+        {
+          "title": "5612 Oak Place, Bethesda, MD 20817 | MLS# MDMC2208498 | RLAH @properties",
+          "url": "https://www.atproperties.com/MDMC2208498/5612-oak-place-bethesda-maryland-20817-brightmls"
+        },
+        {
+          "title": "4515 Great Oak Rd ,  Rockville, MD 20853",
+          "url": "https://www.redfin.com/MD/Rockville/4515-Great-Oak-Rd-20853/home/11135684"
+        },
+        {
+          "title": "Oak Lane in Chevy Chase, MD Public Real Estate Info | BlockShopper",
+          "url": "https://blockshopper.com/md/montgomery-county/cities/chevy-chase/streets/oak-ln"
+        },
+        {
+          "title": "5522 Oakmont Ave ,  Bethesda, MD 20817",
+          "url": "https://www.redfin.com/MD/Bethesda/5522-Oakmont-Ave-20817/home/10651847"
+        },
+        {
+          "title": "4218 Oakridge Ln ,  Chevy Chase, MD 20815",
+          "url": "https://www.redfin.com/MD/Chevy-Chase/4218-Oakridge-Ln-20815/home/10675559"
+        },
+        {
+          "title": "4501 GREAT OAK RD   Rockville, MD 20853",
+          "url": "https://www.patrickrealestateteam.com/sold-listing/detail/50912171/4501_GREAT_OAK_RD-Rockville-MD"
+        },
+        {
+          "title": "Oak Place in Bethesda, MD",
+          "url": "https://blockshopper.com/md/montgomery-county/cities/bethesda/streets/oak-pl"
+        },
+        {
+          "title": "4501 Oak Hill Rd, Rockville, MD 20853 - Movoto",
+          "url": "https://www.movoto.com/rockville-md/4501-oak-hill-rd-rockville-md-20853-310_mdmc756924/"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"4512 Oak Ln\" Bethesda",
+      "num_results": 10,
+      "duration_s": 2.37,
+      "results": [
+        {
+          "title": "5612 Oak Pl, Bethesda, MD 20817 - MLS MDMC2208498 - Coldwell Banker",
+          "url": "https://www.coldwellbankerhomes.com/md/bethesda/5612-oak-pl/pid_69261857/"
+        },
+        {
+          "title": "4515 Great Oak Rd, Rockville, MD 20853 Property Records",
+          "url": "https://www.countyoffice.org/property-record-4515-great-oak-rd-rockville-md-20853-15a/"
+        },
+        {
+          "title": "5612 Oak Place, Bethesda, MD 20817 | MLS# MDMC2208498 | RLAH @properties",
+          "url": "https://www.atproperties.com/MDMC2208498/5612-oak-place-bethesda-maryland-20817-brightmls"
+        },
+        {
+          "title": "4515 Great Oak Rd ,  Rockville, MD 20853",
+          "url": "https://www.redfin.com/MD/Rockville/4515-Great-Oak-Rd-20853/home/11135684"
+        },
+        {
+          "title": "5522 Oakmont Ave ,  Bethesda, MD 20817",
+          "url": "https://www.redfin.com/MD/Bethesda/5522-Oakmont-Ave-20817/home/10651847"
+        },
+        {
+          "title": "\u2013  -  -",
+          "url": "https://www.springerrealtygroup.com/sold-listing/detail/52626003/5515_OAKMONT_AVE-Bethesda-MD"
+        },
+        {
+          "title": "4513 Maple Ave ,  Bethesda, MD 20814",
+          "url": "https://www.redfin.com/MD/Bethesda/4513-Maple-Ave-20814/home/10652047"
+        },
+        {
+          "title": "4501 Oak Hill Rd, Rockville, MD 20853 - Movoto",
+          "url": "https://www.movoto.com/rockville-md/4501-oak-hill-rd-rockville-md-20853-310_mdmc756924/"
+        },
+        {
+          "title": "4510 Chestnut St, Bethesda, MD 20814 | Compass",
+          "url": "https://compass.com/listing/da2fd2eeac5c378cfd401e034db6b4b3525b13e7/view"
+        },
+        {
+          "title": "5715 Lone Oak Dr , Bethesda ,  MD   20814",
+          "url": "https://www.redfin.com/MD/Bethesda/5715-Lone-Oak-Dr-20814/home/10676563"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"4512 Oak Lane\" \"20817\"",
+      "num_results": 10,
+      "duration_s": 0.91,
+      "results": [
+        {
+          "title": "4515 Great Oak Rd, Rockville, MD 20853 Property Records",
+          "url": "https://www.countyoffice.org/property-record-4515-great-oak-rd-rockville-md-20853-15a/"
+        },
+        {
+          "title": "Oak Lane in Chevy Chase, MD Public Real Estate Info | BlockShopper",
+          "url": "https://blockshopper.com/md/montgomery-county/cities/chevy-chase/streets/oak-ln"
+        },
+        {
+          "title": "Oakridge Ln, Chevy Chase, Maryland, 20815",
+          "url": "https://www.ownerly.com/md/chevy-chase/oakridge-ln-home-details"
+        },
+        {
+          "title": "4501 GREAT OAK RD   Rockville, MD 20853",
+          "url": "https://www.patrickrealestateteam.com/sold-listing/detail/50912171/4501_GREAT_OAK_RD-Rockville-MD"
+        },
+        {
+          "title": "4508 Oak Hill Rd, Rockville, MD 20853 Property Records",
+          "url": "https://www.countyoffice.org/property-record-4508-oak-hill-rd-rockville-md-20853-c7a/"
+        },
+        {
+          "title": "8412 Oak Dr, Brandywine, MD 20613 Property Records",
+          "url": "https://www.countyoffice.org/property-record-8412-oak-dr-brandywine-md-20613-79d/"
+        },
+        {
+          "title": "5612 Oak Pl, Bethesda, MD 20817 - MLS MDMC2208498 - Coldwell Banker",
+          "url": "https://www.coldwellbankerhomes.com/md/bethesda/5612-oak-pl/pid_69261857/"
+        },
+        {
+          "title": "7516 Oak Lane Rd, Elkins Park, PA 19027 | RealtyTrac",
+          "url": "http://www.realtytrac.com/p/oak-lane-rd-elkins-park-pa-19027-46948311/"
+        },
+        {
+          "title": "Oak Lane, Mount Rainier, MD 20712 - House Value & Property Details",
+          "url": "https://www.ownerly.com/md/mount-rainier/oak-ln-home-details"
+        },
+        {
+          "title": "Oak Forest Lane, 20817, MD | BlockShopper.com",
+          "url": "https://blockshopper.com/md/montgomery-county/zips/20817/streets/oak-forest-ln"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"4512 Oak\" Bethesda OR 20817",
+      "num_results": 10,
+      "duration_s": 1.25,
+      "results": [
+        {
+          "title": "5612 Oak Pl, Bethesda, MD 20817 - MLS MDMC2208498 - Coldwell Banker",
+          "url": "https://www.coldwellbankerhomes.com/md/bethesda/5612-oak-pl/pid_69261857/"
+        },
+        {
+          "title": "4515 Great Oak Rd, Rockville, MD 20853 Property Records",
+          "url": "https://www.countyoffice.org/property-record-4515-great-oak-rd-rockville-md-20853-15a/"
+        },
+        {
+          "title": "5612 Oak Place, Bethesda, MD 20817 | MLS# MDMC2208498 | RLAH @properties",
+          "url": "https://www.atproperties.com/MDMC2208498/5612-oak-place-bethesda-maryland-20817-brightmls"
+        },
+        {
+          "title": "4510 Chestnut St, Bethesda, MD 20814 | Compass",
+          "url": "https://compass.com/listing/da2fd2eeac5c378cfd401e034db6b4b3525b13e7/view"
+        },
+        {
+          "title": "4515 Great Oak Rd ,  Rockville, MD 20853",
+          "url": "https://www.redfin.com/MD/Rockville/4515-Great-Oak-Rd-20853/home/11135684"
+        },
+        {
+          "title": "4502 Maple   Avenue, Bethesda, 20814",
+          "url": "https://www.mocorealestate.com/property/MDMC2174654/"
+        },
+        {
+          "title": "4505 Boxwood Rd, Bethesda, MD 20816 Property Record",
+          "url": "https://www.countyoffice.org/property-record-4505-boxwood-rd-bethesda-md-20816/"
+        },
+        {
+          "title": "9112 Charred Oak Dr \n               Bethesda,  MD 20817",
+          "url": "https://www.washingtondcrealestate.com/idx/9112-charred-oak-dr-bethesda-md-20817/13062288_spid/"
+        },
+        {
+          "title": "4512 Maple Ave, Bethesda, MD 20814 | Compass",
+          "url": "http://www.compass.com/homedetails/4512-Maple-Ave-Bethesda-MD-20814/1UXEQ6_pid/"
+        },
+        {
+          "title": "8121 River Rd, Unit 451 Bethesda, MD 20817",
+          "url": "https://www.compass.com/listing/8121-river-road-unit-451-bethesda-md-20817/1811851173943312969/"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"4512 Oak Lane\" \"Bethesda\" Maryland",
+      "num_results": 10,
+      "duration_s": 1.18,
+      "results": [
+        {
+          "title": "5612 Oak Pl, Bethesda, MD 20817 - MLS MDMC2208498 - Coldwell Banker",
+          "url": "https://www.coldwellbankerhomes.com/md/bethesda/5612-oak-pl/pid_69261857/"
+        },
+        {
+          "title": "5612 Oak Place, Bethesda, MD 20817 | MLS# MDMC2208498 | RLAH @properties",
+          "url": "https://www.atproperties.com/MDMC2208498/5612-oak-place-bethesda-maryland-20817-brightmls"
+        },
+        {
+          "title": "4515 Great Oak Rd, Rockville, MD 20853 Property Records",
+          "url": "https://www.countyoffice.org/property-record-4515-great-oak-rd-rockville-md-20853-15a/"
+        },
+        {
+          "title": "Oak Forest Lane in Bethesda, MD Public Real Estate Info | BlockShopper",
+          "url": "https://blockshopper.com/md/montgomery-county/cities/bethesda/streets/oak-forest-ln"
+        },
+        {
+          "title": "\u2013  -  -",
+          "url": "https://www.springerrealtygroup.com/sold-listing/detail/52626003/5515_OAKMONT_AVE-Bethesda-MD"
+        },
+        {
+          "title": "7021 Oak Forest   Lane, Bethesda, 20817",
+          "url": "https://www.northernvirginiahomepro.com/property/MDMC2105458/"
+        },
+        {
+          "title": "Oak Lane in Chevy Chase, MD Public Real Estate Info | BlockShopper",
+          "url": "https://blockshopper.com/md/montgomery-county/cities/chevy-chase/streets/oak-ln"
+        },
+        {
+          "title": "5522 Oakmont Ave ,  Bethesda, MD 20817",
+          "url": "https://www.redfin.com/MD/Bethesda/5522-Oakmont-Ave-20817/home/10651847"
+        },
+        {
+          "title": "Oak Place in Bethesda, MD",
+          "url": "https://blockshopper.com/md/montgomery-county/cities/bethesda/streets/oak-pl"
+        },
+        {
+          "title": "7021 Oak Forest Lane,  Bethesda, MD.| MLS# MDMC2105458",
+          "url": "https://www.montgomeryhomesexpert.com/idx/listing/VA-MRIS/MDMC2105458/7021-Oak-Forest-Lane-Bethesda-MD-20817"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"4512 Oak Lane\"",
+      "num_results": 9,
+      "duration_s": 1.31,
+      "results": [
+        {
+          "title": "4512  Everwood Oak Lane , Knoxville, TN 37918 - #1314767 | Realty Executives",
+          "url": "https://www.realtyexecutives.com/office/associates/propertydetails/4512-everwood-oak-lane-knoxville-tn-37918-1314767-lid277151203"
+        },
+        {
+          "title": "7516 Oak Lane Rd, Elkins Park, PA 19027 | RealtyTrac",
+          "url": "http://www.realtytrac.com/p/oak-lane-rd-elkins-park-pa-19027-46948311/"
+        },
+        {
+          "title": "Who Lives on Orchard Oaks Ct, Oakley, CA 94561 | Spokeo",
+          "url": "https://www.spokeo.com/Orchard+Oaks+Ct+Oakley+CA+addresses"
+        },
+        {
+          "title": "4519 Lanier Blvd, Oakwood, GA 30566 | RealtyTrac",
+          "url": "http://www.realtytrac.com/p/lanier-blvd-oakwood-ga-30566-31828090/"
+        },
+        {
+          "title": "451 Oakdale Rd NE ,  Atlanta, GA 30307",
+          "url": "https://www.redfin.com/GA/Atlanta/451-Oakdale-Rd-NE-30307/home/23836576"
+        },
+        {
+          "title": "4502 W Oak Ridge Road,  Orlando, FL 32809",
+          "url": "https://www.nystatemls.com/property/4502-w-oak-ridge-road-orlando-fl-32809/11319908/"
+        },
+        {
+          "title": "431 Oakland Rd, Lawrenceville, GA 30044 Property Record",
+          "url": "https://www.countyoffice.org/property-record-431-oakland-rd-lawrenceville-ga-30044-4ad/"
+        },
+        {
+          "title": "451 42nd Street, Oakland, CA 94609",
+          "url": "https://blockshopper.com/ca/alameda-county/oakland/property/12-1010-64/451-42nd-street"
+        },
+        {
+          "title": "4515 Great Oak Rd, Rockville, MD 20853 Property Records",
+          "url": "https://www.countyoffice.org/property-record-4515-great-oak-rd-rockville-md-20853-15a/"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "site:montgomerycountymd.gov \"4512 Oak Lane\" OR \"4512 Oak Ln\"",
+      "num_results": 10,
+      "duration_s": 0.78,
+      "results": [
+        {
+          "title": "Oaks Landfill, DEP, Montgomery County Government, MD",
+          "url": "https://www.montgomerycountymd.gov/DEP/trash-recycling/facilities/oaks-landfill/index.html"
+        },
+        {
+          "title": "Website Redirects",
+          "url": "https://montgomerycountymd.gov/rrm/facilities/oaks/index.html"
+        },
+        {
+          "title": "Montgomery County MD - Estimated Real Property Tax System",
+          "url": "https://www2.montgomerycountymd.gov/estimatedtax/ViewDetail.aspx?ParcelCode=03171615"
+        },
+        {
+          "title": "Montgomery County MD - Estimated Real Property Tax System",
+          "url": "https://www2.montgomerycountymd.gov/estimatedtax/ViewDetail.aspx?ParcelCode=01227421"
+        },
+        {
+          "title": "Montgomery\u00a0County,\u00a0MD",
+          "url": "https://montgomerycountymd.gov/exec/register/orders/2012/Oct12ExecOrders.html"
+        },
+        {
+          "title": "Montgomery\u00a0County,\u00a0MD",
+          "url": "https://montgomerycountymd.gov/exec/register/orders/2012/May12ExecOrders.html"
+        },
+        {
+          "title": "2012 Opinions",
+          "url": "https://montgomerycountymd.gov/BOA/opinions/2012.html"
+        },
+        {
+          "title": "41-12",
+          "url": "https://www.montgomerycountymd.gov/COUNCIL/Resources/Files/bill/2012/41-12.htm"
+        },
+        {
+          "title": "Montgomery County MD - Estimated Real Property Tax System",
+          "url": "https://www2.montgomerycountymd.gov/estimatedtax/ViewDetail.aspx?ParcelCode=03404051"
+        },
+        {
+          "title": "Montgomery\u00a0County,\u00a0MD",
+          "url": "https://montgomerycountymd.gov/exec/register/orders/2011/June11ExecOrders.html"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"Oak Lane\" Bethesda MD",
+      "num_results": 10,
+      "duration_s": 0.68,
+      "results": [
+        {
+          "title": "Oak Lane in Chevy Chase, MD Public Real Estate Info | BlockShopper",
+          "url": "https://blockshopper.com/md/montgomery-county/cities/chevy-chase/streets/oak-ln"
+        },
+        {
+          "title": "Oak Forest Lane in Bethesda, MD Public Real Estate Info | BlockShopper",
+          "url": "https://blockshopper.com/md/montgomery-county/cities/bethesda/streets/oak-forest-ln"
+        },
+        {
+          "title": "Oak Place in Bethesda, MD",
+          "url": "https://blockshopper.com/md/montgomery-county/cities/bethesda/streets/oak-pl"
+        },
+        {
+          "title": "Shady Oak Lane in Bethesda, MD",
+          "url": "https://blockshopper.com/md/montgomery-county/cities/bethesda/streets/shady-oak-ln"
+        },
+        {
+          "title": "7409 Oak Lane, Chevy Chase, MD 20815 |  Public Property Record | BlockShopper",
+          "url": "https://blockshopper.com/md/montgomery-county/chevy-chase/property/7-018-00475095/7409-oak-lane"
+        },
+        {
+          "title": "5710 Lone Oak Drive\n     \n         \n             \n                             \n             \n                Bethesda, Maryland 20814",
+          "url": "https://www.atproperties.com/MDMC2198080/5710-lone-oak-drive-bethesda-maryland-20814-brightmls"
+        },
+        {
+          "title": "5715 Lone Oak Dr , Bethesda ,  MD   20814",
+          "url": "https://www.redfin.com/MD/Bethesda/5715-Lone-Oak-Dr-20814/home/10676563"
+        },
+        {
+          "title": "5905 Lone Oak Dr Bethesda,MD",
+          "url": "https://batchleads.io/properties/property-5905_Lone_Oak_Dr-e0f70e50a14188d1da6ae268b0715ccc-all"
+        },
+        {
+          "title": "Oakridge Ln, Chevy Chase, Maryland, 20815",
+          "url": "https://www.ownerly.com/md/chevy-chase/oakridge-ln-home-details"
+        },
+        {
+          "title": "5710 Lone Oak Drive",
+          "url": "https://www.weichert.com/130176622/"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"4512 Oak Ln\" \"Bethesda\"",
+      "num_results": 10,
+      "duration_s": 0.62,
+      "results": [
+        {
+          "title": "5612 Oak Pl, Bethesda, MD 20817 - MLS MDMC2208498 - Coldwell Banker",
+          "url": "https://www.coldwellbankerhomes.com/md/bethesda/5612-oak-pl/pid_69261857/"
+        },
+        {
+          "title": "5612 Oak Place, Bethesda, MD 20817 | MLS# MDMC2208498 | RLAH @properties",
+          "url": "https://www.atproperties.com/MDMC2208498/5612-oak-place-bethesda-maryland-20817-brightmls"
+        },
+        {
+          "title": "4515 Great Oak Rd, Rockville, MD 20853 Property Records",
+          "url": "https://www.countyoffice.org/property-record-4515-great-oak-rd-rockville-md-20853-15a/"
+        },
+        {
+          "title": "\u2013  -  -",
+          "url": "https://www.springerrealtygroup.com/sold-listing/detail/52626003/5515_OAKMONT_AVE-Bethesda-MD"
+        },
+        {
+          "title": "5522 Oakmont Ave ,  Bethesda, MD 20817",
+          "url": "https://www.redfin.com/MD/Bethesda/5522-Oakmont-Ave-20817/home/10651847"
+        },
+        {
+          "title": "4515 Great Oak Rd ,  Rockville, MD 20853",
+          "url": "https://www.redfin.com/MD/Rockville/4515-Great-Oak-Rd-20853/home/11135684"
+        },
+        {
+          "title": "5612 Oak Place, Bethesda, MD 20817",
+          "url": "https://homevisionsmedia.hd.pics/5612-Oak-Place"
+        },
+        {
+          "title": "5616 Oak Pl  Bethesda, MD 20817",
+          "url": "https://www.coldwellbankerhomes.com/md/bethesda/5616-oak-pl/pid_55261062/"
+        },
+        {
+          "title": "4502 Maple   Avenue, Bethesda, 20814",
+          "url": "https://www.mocorealestate.com/property/MDMC2174654/"
+        },
+        {
+          "title": "5511 Oakmont Ave",
+          "url": "https://www.apartments.com/5511-oakmont-ave-bethesda-md/lckvjeg/"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"4512 Oak Lane\" site:mdproperty.net",
+      "num_results": 0,
+      "duration_s": 1.38,
+      "results": []
+    },
+    {
+      "tool": "search_web",
+      "query": "\"4512 Oak Lane\" maryland",
+      "num_results": 10,
+      "duration_s": 1.67,
+      "results": [
+        {
+          "title": "4515 Great Oak Rd, Rockville, MD 20853 Property Records",
+          "url": "https://www.countyoffice.org/property-record-4515-great-oak-rd-rockville-md-20853-15a/"
+        },
+        {
+          "title": "4501 Scarlet Oak Lane,  Baltimore, MD.| MLS# MDBA2086398",
+          "url": "https://www.russ-realtor.com/idx/listing/MD-BRIGHT/MDBA2086398/4501-Scarlet-Oak-Lane-Baltimore-MD-21229"
+        },
+        {
+          "title": "Property valuation of Powder Mill Road, Beltsville, MD: 4517, 4519, 4520, 4521, 4522, 4526, 4600, 4601, 4603, 4605 (tax assessments)",
+          "url": "https://www.city-data.com/prince-georges-county/P/Powder-Mill-Road-14.html"
+        },
+        {
+          "title": "4501 GREAT OAK RD   Rockville, MD 20853",
+          "url": "https://www.patrickrealestateteam.com/sold-listing/detail/50912171/4501_GREAT_OAK_RD-Rockville-MD"
+        },
+        {
+          "title": "Oakridge Ln, Chevy Chase, Maryland, 20815",
+          "url": "https://www.ownerly.com/md/chevy-chase/oakridge-ln-home-details"
+        },
+        {
+          "title": "8121 RIDGELY OAK RD, PARKVILLE, MD - SFR Analytics",
+          "url": "https://app.sfranalytics.com/properties/62543789"
+        },
+        {
+          "title": "Oak Lane in Chevy Chase, MD Public Real Estate Info | BlockShopper",
+          "url": "https://blockshopper.com/md/montgomery-county/cities/chevy-chase/streets/oak-ln"
+        },
+        {
+          "title": "4515 Great Oak Rd ,  Rockville, MD 20853",
+          "url": "https://www.redfin.com/MD/Rockville/4515-Great-Oak-Rd-20853/home/11135684"
+        },
+        {
+          "title": "4508 Oak Hill Rd, Rockville, MD 20853 Property Records",
+          "url": "https://www.countyoffice.org/property-record-4508-oak-hill-rd-rockville-md-20853-c7a/"
+        },
+        {
+          "title": "Oak Ridge Drive, Street, MD 21154 - House Value & Property Details",
+          "url": "https://www.ownerly.com/md/street/oak-ridge-dr-home-details"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"4512 Oak Lane\" 20817 site:maryland.gov",
+      "num_results": 10,
+      "duration_s": 0.73,
+      "results": [
+        {
+          "title": "Maryland   Department of Assessments and\n                                    Taxation",
+          "url": "https://sdat.dat.maryland.gov/RealProperty/Pages/viewdetails.aspx?AccountNumber=01142838&County=16&District=13&SearchType=ACCT"
+        },
+        {
+          "title": "SDAT: Real Property Data Search",
+          "url": "https://sdat.dat.maryland.gov/RealProperty/Pages/viewdetails.aspx?AccountNumber=362474&County=14&District=05&SearchType=ACCT"
+        },
+        {
+          "title": "SDAT: Real Property Data Search",
+          "url": "https://sdat.dat.maryland.gov/RealProperty/Pages/viewdetails.aspx?AccountNumber=03366272&County=16&District=04&SearchType=ACCT"
+        },
+        {
+          "title": "SDAT: Real Property Data Search",
+          "url": "https://sdat.dat.maryland.gov/RealProperty/Pages/viewdetails.aspx?AccountNumber=00830841&County=16&District=09&SearchType=ACCT"
+        },
+        {
+          "title": "Maryland   Department of Assessments and\n                                    Taxation",
+          "url": "https://sdat.dat.maryland.gov/RealProperty/Pages/viewdetails.aspx?County=13&SearchType=ACCT&District=03&AccountNumber=228282"
+        },
+        {
+          "title": "Maryland   Department of Assessments and\n                                    Taxation",
+          "url": "https://sdat.dat.maryland.gov/RealProperty/Pages/viewdetails.aspx?County=17&SearchType=ACCT&District=02&AccountNumber=0129452"
+        },
+        {
+          "title": "SDAT: Real Property Data Search",
+          "url": "https://sdat.dat.maryland.gov/RealProperty/Pages/viewdetails.aspx?AccountNumber=03202056&County=16&District=08&SearchType=ACCT"
+        },
+        {
+          "title": "Maryland   Department of Assessments and\n                                    Taxation",
+          "url": "https://sdat.dat.maryland.gov/RealProperty/Pages/viewdetails.aspx?County=17&SearchType=ACCT&District=02&AccountNumber=0129445"
+        },
+        {
+          "title": "SDAT: Real Property Data Search",
+          "url": "https://sdat.dat.maryland.gov/RealProperty/Pages/viewdetails.aspx?AccountNumber=2500009012&County=04&District=03&SearchType=ACCT"
+        },
+        {
+          "title": "Maryland   Department of Assessments and\n                                    Taxation",
+          "url": "https://sdat.dat.maryland.gov/RealProperty/Pages/viewdetails.aspx?AccountNumber=0101350241&County=04&District=01&SearchType=ACCT"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"4512 Oak Ln\" 20817",
+      "num_results": 10,
+      "duration_s": 1.21,
+      "results": [
+        {
+          "title": "4515 Great Oak Rd, Rockville, MD 20853 Property Records",
+          "url": "https://www.countyoffice.org/property-record-4515-great-oak-rd-rockville-md-20853-15a/"
+        },
+        {
+          "title": "4501 GREAT OAK RD   Rockville, MD 20853",
+          "url": "https://www.patrickrealestateteam.com/sold-listing/detail/50912171/4501_GREAT_OAK_RD-Rockville-MD"
+        },
+        {
+          "title": "4515 Great Oak Rd ,  Rockville, MD 20853",
+          "url": "https://www.redfin.com/MD/Rockville/4515-Great-Oak-Rd-20853/home/11135684"
+        },
+        {
+          "title": "4508 Oak Hill Rd, Rockville, MD 20853 Property Records",
+          "url": "https://www.countyoffice.org/property-record-4508-oak-hill-rd-rockville-md-20853-c7a/"
+        },
+        {
+          "title": "Oak Lane in Chevy Chase, MD Public Real Estate Info | BlockShopper",
+          "url": "https://blockshopper.com/md/montgomery-county/cities/chevy-chase/streets/oak-ln"
+        },
+        {
+          "title": "4501 Oak Hill Rd, Rockville, MD 20853 - Movoto",
+          "url": "https://www.movoto.com/rockville-md/4501-oak-hill-rd-rockville-md-20853-310_mdmc756924/"
+        },
+        {
+          "title": "Property valuation of Powder Mill Road, Beltsville, MD: 4517, 4519, 4520, 4521, 4522, 4526, 4600, 4601, 4603, 4605 (tax assessments)",
+          "url": "https://www.city-data.com/prince-georges-county/P/Powder-Mill-Road-14.html"
+        },
+        {
+          "title": "5612 Oak Pl, Bethesda, MD 20817 - MLS MDMC2208498 - Coldwell Banker",
+          "url": "https://www.coldwellbankerhomes.com/md/bethesda/5612-oak-pl/pid_69261857/"
+        },
+        {
+          "title": "4505 Great Oak Rd Rockville, MD 20853",
+          "url": "https://www.trulia.com/home/4505-great-oak-rd-rockville-md-20853-37289708"
+        },
+        {
+          "title": "Oakridge Ln, Chevy Chase, Maryland, 20815",
+          "url": "https://www.ownerly.com/md/chevy-chase/oakridge-ln-home-details"
+        }
+      ]
+    }
+  ]
+}

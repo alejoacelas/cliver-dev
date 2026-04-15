@@ -14,7 +14,7 @@ A bad result looks like: "I tested 30 well-known institutions and they all worke
 
 ## Per-agent inputs
 
-- Seed cases and info sources: `tool-evaluation/seed-cases/{group-name}.yaml`
+- Seed cases and info sources: `tool-evaluation/02-seed-cases/{group-name}.yaml`
 - Endpoint manifest: `tool-evaluation/00-endpoint-manifest.yaml` — **read the `rate_limit` and `max_test_budget` fields** for each endpoint in your group. These are your hard constraints.
 - Pre-committed reasoning from stage 2 — treat this as a starting hypothesis, not a conclusion.
 - Idea syntheses from the archive: `archive-2026-04-kyc-research/pipeline/outputs/ideas/{idea-slug}/07-synthesis.md` (known coverage gaps from desk research).
@@ -111,13 +111,13 @@ uv run tool-evaluation/llm-exa-search.py -v --json --prompt-file query.txt
 
 The script runs Gemini 3.1 Pro via OpenRouter with Exa neural search as a tool. The model decides when and what to search. It loops until it has enough information to answer, then returns its verdict.
 
-For each LLM+Exa endpoint, run 20-30 test cases. Record the JSON output from `--json` mode (includes the answer, Exa search queries, number of results per search, per-call duration, and total Exa cost). Write results to `results/llm-exa-{step}.yaml` (e.g., `results/llm-exa-a.yaml`).
+For each LLM+Exa endpoint, run 20-30 test cases. Record the JSON output from `--json` mode (includes the answer, Exa search queries, number of results per search, per-call duration, and total Exa cost). Write results to `03-results/llm-exa-{step}.yaml` (e.g., `03-results/llm-exa-a.yaml`).
 
 ## Output
 
 **One result file per endpoint** (not per group). The stage 3 agent runs per group (sharing cases across endpoints and comparing their responses), but writes a separate result file for each endpoint. This makes each endpoint independently assessable in later stages.
 
-### Structured results: `tool-evaluation/results/{endpoint-slug}.yaml`
+### Structured results: `tool-evaluation/03-results/{endpoint-slug}.yaml`
 
 ```yaml
 endpoint: ror
@@ -183,7 +183,9 @@ results:
 
 Note: cases are shared across endpoints in the same group (the same MIT case appears in `ror.yaml`, `gleif.yaml`, etc.), but each file records only the query and response for that specific endpoint.
 
-### Human-readable summary: `tool-evaluation/results/{endpoint-slug}.md`
+**Important:** The cross-comparison file is the primary source of comparative evidence for later stages. When endpoints in a group show complementary coverage (e.g., ROR covers academic, OpenCorporates covers commercial), document this in the comparison — not just in the individual endpoint files. Stage 4 and 5 agents will rely on the comparison file to understand how endpoints work together.
+
+### Human-readable summary: `tool-evaluation/03-results/{endpoint-slug}.md`
 
 ```markdown
 # ROR API v2 — Test Results
@@ -212,7 +214,7 @@ Evidence: [case 8, 9, 14, 19, 27, 31]
 - [Cases I ran out of budget to test]
 ```
 
-### Per-group cross-comparison: `tool-evaluation/results/{group-name}-comparison.md`
+### Per-group cross-comparison: `tool-evaluation/03-results/{group-name}-comparison.md`
 
 In addition to the per-endpoint files, write one short comparison file per group summarizing how the endpoints performed relative to each other on the shared cases. This is the cross-referencing value of running endpoints together.
 

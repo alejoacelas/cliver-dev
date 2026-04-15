@@ -1,0 +1,56 @@
+{
+  "answer": "I have searched the web for information regarding Genspace and the shipping address in Brooklyn, NY. Here is a summary of the findings:\n\n```yaml\n# Address-institution fields\ninstitution_found_online: true\ninstitution_website: \"https://www.genspace.org\"\ninstitution_address_on_record: \"132 32nd Street, Suite 108, Brooklyn, NY 11232\"\naddress_matches_claimed: true\naddress_match_level: \"street\"\nother_entity_at_address: \"BRIQ Building\"\ncoworking_or_incubator: true\ncoworking_operator: null\ninstitution_has_multiple_campuses: false\ninstitution_moved_recently: true\nmoved_from: \"33 Flatbush Avenue, Brooklyn, NY 11217\"\nmoved_to: \"132 32nd Street, Suite 108, Brooklyn, NY 11232\"\n\n# Confidence and evidence\nconfidence: high\nfree_text_summary: |\n  Genspace is a nonprofit community biology lab located in Brooklyn, NY. Their official website confirms their current address is 132 32nd Street, Suite 108, Brooklyn, NY 11232, which matches the shipping address provided. The lab is located in the BRIQ Building and functions as a shared biolab/incubator space for citizen scientists and entrepreneurs. Genspace officially moved to this location in Sunset Park, Brooklyn, in 2017, having previously been located at 33 Flatbush Avenue in downtown Brooklyn. \n\nsources:\n  - url: \"https://www.genspace.org/contact-us\"\n    domain: \"genspace.org\"\n    source_type: official_institution_page\n    snippet: \"We are located in the BRIQ Building. 132 32nd Street, Suite 108, Brooklyn, NY 11232\"\n  - url: \"https://www.genspace.org/the-lab\"\n    domain: \"genspace.org\"\n    source_type: official_institution_page\n    snippet: \"In 2017, Genspace moved to our new home in Sunset Park, Brooklyn. Genspace continues to be a platform for curious people to follow their imaginations\"\n  - url: \"https://www.mapquest.com/us/new-york/genspace-420001226\"\n    domain: \"mapquest.com\"\n    source_type: business_directory\n    snippet: \"132 32nd St, Brooklyn, NY, 11232. Genspace is the world's first community biology lab located in Brooklyn, NY... Offering membership opportunities, Genspace allows individuals to work on personal projects in a shared biolab setting\"\n  - url: \"https://brooklynbrainery.com/locations/Genspace\"\n    domain: \"brooklynbrainery.com\"\n    source_type: business_directory\n    snippet: \"Genspace is located at 33 Flatbush Avenue in Downtown Brooklyn.\"\n  - url: \"https://www.guidestar.org/profile/27-0947943\"\n    domain: \"guidestar.org\"\n    source_type: business_directory\n    snippet: \"GENSPACE NYC... Main address: 140 32nd St Ste 108, Brooklyn, NY 11232 USA\"\n\nsearches_performed:\n  - query: \"\\\"Genspace\\\" Brooklyn NY address\"\n    num_results: 10\n```",
+  "model": "google/gemini-3.1-pro-preview",
+  "iterations": 2,
+  "total_exa_cost_usd": 0.007,
+  "tool_calls": [
+    {
+      "tool": "search_web",
+      "query": "\"Genspace\" Brooklyn NY address",
+      "num_results": 10,
+      "duration_s": 1.04,
+      "results": [
+        {
+          "title": "Genspace",
+          "url": "https://brooklynbrainery.com/locations/Genspace"
+        },
+        {
+          "title": "Contact \u2014 Genspace",
+          "url": "https://www.genspace.org/contact-us"
+        },
+        {
+          "title": "Genspace, 132 32nd St, Brooklyn, NY 11232, US - MapQuest",
+          "url": "https://www.mapquest.com/us/new-york/genspace-420001226"
+        },
+        {
+          "title": "Genspace - Brooklyn",
+          "url": "https://a-better-place.com/US/genspace-i904080.html"
+        },
+        {
+          "title": "GenspaceNYC",
+          "url": "https://www.mapquest.com/us/new-york/genspacenyc-441747277"
+        },
+        {
+          "title": "About the Lab \u2014 Genspace",
+          "url": "https://www.genspace.org/the-lab"
+        },
+        {
+          "title": "Genspace",
+          "url": "https://genspace.org/"
+        },
+        {
+          "title": "Mission \u2014 Genspace",
+          "url": "https://www.genspace.org/about"
+        },
+        {
+          "title": "Genspace",
+          "url": "https://en.wikipedia.org/wiki/Genspace"
+        },
+        {
+          "title": "GENSPACE NYC - GuideStar Profile",
+          "url": "https://www.guidestar.org/profile/27-0947943"
+        }
+      ]
+    }
+  ]
+}

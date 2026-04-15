@@ -1,0 +1,7 @@
+billing_entity_name: University of Oxford
+billing_address: Wellington Square, Oxford OX1 2JD, United Kingdom
+claimed_institution: University of Oxford
+institution_address: Wellington Square, Oxford OX1 2JD, United Kingdom
+payment_method: wire_transfer
+wire_originating_bank: Barclays Bank
+wire_originating_country: GB

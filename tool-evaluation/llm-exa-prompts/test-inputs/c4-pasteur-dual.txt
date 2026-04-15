@@ -1,0 +1,4 @@
+email_domain: pasteur.fr
+claimed_institution: TheraVectys
+person_name: Pierre Dupont
+institution_country: FR

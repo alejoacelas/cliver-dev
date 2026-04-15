@@ -1,0 +1,816 @@
+{
+  "answer": "",
+  "model": "google/gemini-3.1-pro-preview",
+  "iterations": 15,
+  "total_exa_cost_usd": 0.11900000000000005,
+  "tool_calls": [
+    {
+      "tool": "search_web",
+      "query": "\"700 Main St\" Cambridge MA 02139",
+      "num_results": 10,
+      "duration_s": 1.36,
+      "results": [
+        {
+          "title": "700 Main St,  \n\t\t\t\t\t Cambridge, MA 02139",
+          "url": "https://www.loopnet.com/property/700-main-st-cambridge-ma-02139/25017-004943697/"
+        },
+        {
+          "title": "100-700 Main Street Cambridge, MA commercial lease comps and tenants.",
+          "url": "https://property.compstak.com/100-700-Main-Street-Cambridge/p/476505"
+        },
+        {
+          "title": "700 Main Street",
+          "url": "https://www.commercialcafe.com/coworking-property/us/ma/cambridge/700-main-street-1/"
+        },
+        {
+          "title": "700 Main Street Cambridge, MA",
+          "url": "https://www.flowrealty.com/property/700-main-street-cambridge-ma/52240778/"
+        },
+        {
+          "title": "700 Main Street",
+          "url": "https://www.coworkingcafe.com/coworking-property/us/ma/cambridge/700-main-street-1/"
+        },
+        {
+          "title": "700 Main Street Cambridge, MA commercial lease comps and tenants.",
+          "url": "https://property.compstak.com/700-Main-Street-Cambridge/p/78493"
+        },
+        {
+          "title": "700 Main St \n             \n\n         \n3,661 - 31,454 SF of 4-Star Office Space Available in Cambridge, MA 02139",
+          "url": "https://www.loopnet.com/Listing/700-Main-St-Cambridge-MA/33232261/"
+        },
+        {
+          "title": "700 Main Street",
+          "url": "https://capitalprojects.mit.edu/projects/700-main-street"
+        },
+        {
+          "title": "700 Main Street, Cambridge, MA 02139 | Campion and Company",
+          "url": "https://www.campionre.com/property/700-main-street-cambridge-ma/52240778/"
+        },
+        {
+          "title": "Cambridge, MA Coworking Space  at 700 Main Street | CoworkingMag",
+          "url": "https://coworkingmag.com/listings/coworking-property/us/ma/cambridge/labcentral-700/"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"Helix Therapeutics Inc.\"",
+      "num_results": 10,
+      "duration_s": 0.6,
+      "results": [
+        {
+          "title": "Helix Therapeutics - Products, Competitors, Financials, Employees, Headquarters Locations",
+          "url": "https://www.cbinsights.com/company/helix-therapeutics"
+        },
+        {
+          "title": "About Us - Helix Biopharma",
+          "url": "https://www.helixbiopharma.com/about-us/"
+        },
+        {
+          "title": "Helix Biomedix, Inc. - Helix BioMedix Inc",
+          "url": "http://www.helixbiomedix.com/"
+        },
+        {
+          "title": "Helix Biopharma: Transforming Cancer Treatment With Innovation",
+          "url": "https://www.helixbiopharma.com/home2/"
+        },
+        {
+          "title": "Helix Biopharma: Transforming Cancer Treatment With Innovation",
+          "url": "https://www.helixbiopharma.com/"
+        },
+        {
+          "title": "Helix BioPharma - 2026 Company Profile, Team, Funding & Competitors - Tracxn",
+          "url": "https://tracxn.com/d/companies/helixbiopharma/__f64IKWbCaHeYIgAedv4TYxHfQRO0JQO7vmG97MlUfHE"
+        },
+        {
+          "title": "Helix BioMedix - 2025 Company Profile, Team, Funding, Competitors & Financials - Tracxn",
+          "url": "https://tracxn.com/d/companies/helix-biomedix/___VyIlNS8TdA0rDkgjeVxWVg8ZpYUz6jCHSOSTHvPU_o"
+        },
+        {
+          "title": "Helix Therapeutics Stock Price, Funding, Valuation, Revenue & Financial Statements",
+          "url": "https://www.cbinsights.com/company/helix-therapeutics/financials"
+        },
+        {
+          "title": "Helix BioMedix - 2026 Company Profile, Funding, Competitors & Financials - Tracxn",
+          "url": "https://tracxn.com/d/companies/helixbiomedix/___VyIlNS8TdA0rDkgjeVxWVg8ZpYUz6jCHSOSTHvPU_o"
+        },
+        {
+          "title": "Helixis - 2026 Company Profile, Team, Funding & Competitors - Tracxn",
+          "url": "https://tracxn.com/d/companies/helixis/__2jhaTsPaxGoBzgy1fG8SzpHiWox38H998ZlzmdPnzbk"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"Helix Therapeutics\" Cambridge",
+      "num_results": 10,
+      "duration_s": 0.72,
+      "results": [
+        {
+          "title": "HelixNano",
+          "url": "https://ch.linkedin.com/company/helixnano"
+        },
+        {
+          "title": "Helix Therapeutics - Products, Competitors, Financials, Employees, Headquarters Locations",
+          "url": "https://www.cbinsights.com/company/helix-therapeutics"
+        },
+        {
+          "title": "Helix Carbon",
+          "url": "https://www.third-derivative.org/portfolio/helix-carbon"
+        },
+        {
+          "title": "About Us - Helix Biopharma",
+          "url": "https://www.helixbiopharma.com/about-us/"
+        },
+        {
+          "title": "HelixNano | MeHI",
+          "url": "https://mehi.masstech.org/node/4551"
+        },
+        {
+          "title": "Helix Therapeutics Stock Price, Funding, Valuation, Revenue & Financial Statements",
+          "url": "https://www.cbinsights.com/company/helix-therapeutics/financials"
+        },
+        {
+          "title": "Helix Biopharma: Transforming Cancer Treatment With Innovation",
+          "url": "https://www.helixbiopharma.com/"
+        },
+        {
+          "title": "Disrupting Bio Innovation | ON Helix",
+          "url": "https://on-helix.net/"
+        },
+        {
+          "title": "Helix Biopharma: Transforming Cancer Treatment With Innovation",
+          "url": "https://www.helixbiopharma.com/home2/"
+        },
+        {
+          "title": "Helix Biomedix, Inc. - Helix BioMedix Inc",
+          "url": "http://www.helixbiomedix.com/"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"Helix Therapeutics\" (\"700 Main\" OR LabCentral)",
+      "num_results": 10,
+      "duration_s": 0.66,
+      "results": [
+        {
+          "title": "Helix Therapeutics - Products, Competitors, Financials, Employees, Headquarters Locations",
+          "url": "https://www.cbinsights.com/company/helix-therapeutics"
+        },
+        {
+          "title": "Helix Center Biotech Incubator",
+          "url": "https://www.tradelineinc.com/reports/2013-3/helix-center-biotech-incubator"
+        },
+        {
+          "title": "Our Technology - Helix BioStructures",
+          "url": "https://www.helixbiostructures.com/technology"
+        },
+        {
+          "title": "Helix Center | St. Louis Economic Development Partnership",
+          "url": "https://stlpartnership.com/innovation-entrepreneurship/helix-center/"
+        },
+        {
+          "title": "Helixis - 2026 Company Profile, Team, Funding & Competitors - Tracxn",
+          "url": "https://tracxn.com/d/companies/helixis/__2jhaTsPaxGoBzgy1fG8SzpHiWox38H998ZlzmdPnzbk"
+        },
+        {
+          "title": "<img decoding=\"async\" class=\"wp-image-40 aligncenter\" src=\"https://www.portalinnovations.com/wp-content/uploads/portal-innovations-logo-640x190.png\" alt=\"Portal Innovations\" width=\"266\" height=\"79\" srcset=\"https://www.portalinnovations.com/wp-content/uploads/portal-innovations-logo-640x190.png 640w, https://www.portalinnovations.com/wp-content/uploads/portal-innovations-logo-960x285.png 960w, https://www.portalinnovations.com/wp-content/uploads/portal-innovations-logo-1536x456.png 1536w, https://www.portalinnovations.com/wp-content/uploads/portal-innovations-logo-768x228.png 768w, https://www.portalinnovations.com/wp-content/uploads/portal-innovations-logo.png 1600w\" sizes=\"(max-width: 266px) 100vw, 266px\" data-eio=\"l\" />",
+          "url": "https://www.portalinnovations.com/houston/"
+        },
+        {
+          "title": "Laboratory build out | Helix",
+          "url": "https://www.helixlabpartners.com/laboratory-build-out"
+        },
+        {
+          "title": "Connecticut Innovations Makes Investment in Helix Therapeutics LLC",
+          "url": "https://www.biospace.com/connecticut-innovations-makes-investment-in-helix-therapeutics-llc"
+        },
+        {
+          "title": "Helix Center Biotech Incubator",
+          "url": "https://www.coworkingcafe.com/coworking-property/us/mo/st-louis/helix-center-biotech-incubator/"
+        },
+        {
+          "title": "Helix CoWork Lab - 2025 Company Profile, Team & Competitors - Tracxn",
+          "url": "https://tracxn.com/d/companies/helix-cowork-lab/__0lbQAQSjTOKItgXM8_6vzhGQPAWpt_2sbPjR4-Q9ezs"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"Helix Therapeutics\" OR \"Helix Therapeutics Inc.\" \"Cambridge\"",
+      "num_results": 10,
+      "duration_s": 0.71,
+      "results": [
+        {
+          "title": "Helix Therapeutics - Products, Competitors, Financials, Employees, Headquarters Locations",
+          "url": "https://www.cbinsights.com/company/helix-therapeutics"
+        },
+        {
+          "title": "HelixNano",
+          "url": "https://ch.linkedin.com/company/helixnano"
+        },
+        {
+          "title": "About Us - Helix Biopharma",
+          "url": "https://www.helixbiopharma.com/about-us/"
+        },
+        {
+          "title": "Helix Therapeutics Stock Price, Funding, Valuation, Revenue & Financial Statements",
+          "url": "https://www.cbinsights.com/company/helix-therapeutics/financials"
+        },
+        {
+          "title": "HelixNano | MeHI",
+          "url": "https://mehi.masstech.org/node/4551"
+        },
+        {
+          "title": "Helixis - 2026 Company Profile, Team, Funding & Competitors - Tracxn",
+          "url": "https://tracxn.com/d/companies/helixis/__2jhaTsPaxGoBzgy1fG8SzpHiWox38H998ZlzmdPnzbk"
+        },
+        {
+          "title": "Helix Therapeutics",
+          "url": "https://www.crunchbase.com/organization/helix-therapeutics"
+        },
+        {
+          "title": "Helix Biopharma: Transforming Cancer Treatment With Innovation",
+          "url": "https://www.helixbiopharma.com/home2/"
+        },
+        {
+          "title": "Helix Biomedix, Inc. - Helix BioMedix Inc",
+          "url": "http://www.helixbiomedix.com/"
+        },
+        {
+          "title": "Helix Biopharma: Transforming Cancer Treatment With Innovation",
+          "url": "https://www.helixbiopharma.com/"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"Helix Therapeutics\" \"700 Main\"",
+      "num_results": 10,
+      "duration_s": 0.94,
+      "results": [
+        {
+          "title": "Helix Therapeutics - Products, Competitors, Financials, Employees, Headquarters Locations",
+          "url": "https://www.cbinsights.com/company/helix-therapeutics"
+        },
+        {
+          "title": "Connecticut Innovations Makes Investment in Helix Therapeutics LLC",
+          "url": "https://www.biospace.com/connecticut-innovations-makes-investment-in-helix-therapeutics-llc"
+        },
+        {
+          "title": "Helix Therapeutics Inc Secures Additional Funding to Advance Cutting-Edge Stem Cell Gene Correction Therapy for Genetic Diseases",
+          "url": "https://www.prnewswire.com/news-releases/helix-therapeutics-inc-secures-additional-funding-to-advance-cutting-edge-stem-cell-gene-correction-therapy-for-genetic-diseases-110112939.html"
+        },
+        {
+          "title": "Helix Therapeutics",
+          "url": "https://www.crunchbase.com/organization/helix-therapeutics"
+        },
+        {
+          "title": "Helix Therapeutics Stock Price, Funding, Valuation, Revenue & Financial Statements",
+          "url": "https://www.cbinsights.com/company/helix-therapeutics/financials"
+        },
+        {
+          "title": "Helix Therapeutics handed $2.5M in new funding \u2013 ABG Commercial Realty",
+          "url": "https://abgrealty.com/helix-therapeutics-handed-2-5m-funding/"
+        },
+        {
+          "title": "Helix Therapeutics Inc Secures Additional Funding to Advance Cutting-Edge Stem Cell Gene Correction Therapy for Genetic Diseases - BioSpace",
+          "url": "https://www.biospace.com/b-helix-therapeutics-inc-b-secures-additional-funding-to-advance-cutting-edge-stem-cell-gene-correction-therapy-for-genetic-diseases"
+        },
+        {
+          "title": "Helix BioMedix - 2026 Company Profile, Funding, Competitors & Financials - Tracxn",
+          "url": "https://tracxn.com/d/companies/helixbiomedix/___VyIlNS8TdA0rDkgjeVxWVg8ZpYUz6jCHSOSTHvPU_o"
+        },
+        {
+          "title": "Helixis - 2026 Company Profile, Team, Funding & Competitors - Tracxn",
+          "url": "https://tracxn.com/d/companies/helixis/__2jhaTsPaxGoBzgy1fG8SzpHiWox38H998ZlzmdPnzbk"
+        },
+        {
+          "title": "Helix BioMedix - 2025 Company Profile, Team, Funding, Competitors & Financials - Tracxn",
+          "url": "https://tracxn.com/d/companies/helix-biomedix/___VyIlNS8TdA0rDkgjeVxWVg8ZpYUz6jCHSOSTHvPU_o"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"LabCentral\" \"700 Main St\"",
+      "num_results": 10,
+      "duration_s": 0.55,
+      "results": [
+        {
+          "title": "LabCentral 700 | Shared Biotech Lab Space in Cambridge",
+          "url": "https://www.labcentral.org/our-labs/labcentral-700"
+        },
+        {
+          "title": "Locations - LabCentral | Cambridge, MA",
+          "url": "https://www.labcentral.org/contact/location"
+        },
+        {
+          "title": "LabCentral | Technology | Laboratory",
+          "url": "https://cambridgechamberma.chambermaster.com/list/member/labcentral-cambridge-48674.htm"
+        },
+        {
+          "title": "Lab Central",
+          "url": "https://thequincychamber.chambermaster.com/list/member/lab-central-2420.htm"
+        },
+        {
+          "title": "Lab Facilities | Shared Biotech Lab Space in Cambridge",
+          "url": "https://www.labcentral.org/our-labs"
+        },
+        {
+          "title": "LabCentral | Technology | Laboratory",
+          "url": "https://cambridgechamberma.chambermaster.com/list/member/labcentral-cambridge-48674"
+        },
+        {
+          "title": "Cambridge, MA Coworking Space  at 700 Main Street | CoworkingMag",
+          "url": "https://coworkingmag.com/listings/coworking-property/us/ma/cambridge/labcentral-700/"
+        },
+        {
+          "title": "Labcentral, 238 Main St, Cambridge, MA 02142, US - MapQuest",
+          "url": "https://www.mapquest.com/us/massachusetts/labcentral-788695864"
+        },
+        {
+          "title": "LabCentral | Technology | Laboratory",
+          "url": "https://business.cambridgechamber.org/list/member/labcentral-cambridge-48674.htm"
+        },
+        {
+          "title": "LabCentral 700 | Shared Biotech Lab Space in Cambridge",
+          "url": "https://www.labcentral.org/labs-and-facilities/labcentral-700"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"Helix Therapeutics\" \"LabCentral\"",
+      "num_results": 10,
+      "duration_s": 0.55,
+      "results": [
+        {
+          "title": "Laboratory build out | Helix",
+          "url": "https://www.helixlabpartners.com/laboratory-build-out"
+        },
+        {
+          "title": "Helix Therapeutics - Products, Competitors, Financials, Employees, Headquarters Locations",
+          "url": "https://www.cbinsights.com/company/helix-therapeutics"
+        },
+        {
+          "title": "Our Technology - Helix BioStructures",
+          "url": "https://www.helixbiostructures.com/technology"
+        },
+        {
+          "title": "SigmaticOS",
+          "url": "https://www.helixai.com/"
+        },
+        {
+          "title": "Helical - 2026 Company Profile, Team, Funding & Competitors - Tracxn",
+          "url": "https://tracxn.com/d/companies/helical/__jcGQv0pO1X01jRiLjt1TfEg3--gnLtTMJZHwLN3hhN0"
+        },
+        {
+          "title": "Helix Biological Laboratory LLC , Analytical Services Company-2021",
+          "url": "https://www.pharmatechoutlook.com/helix-biological-laboratory-llc-"
+        },
+        {
+          "title": "HelixAI - 2026 Company Profile, Team, Funding & Competitors - Tracxn",
+          "url": "https://tracxn.com/d/companies/helixai/__-UDh-RmXdsIN0vbpOuiJbaveo_sGVQwgeSHqCHI1hKE"
+        },
+        {
+          "title": "HELIX Design Lab | Explore Innovative Design Solutions",
+          "url": "https://www.helixdesignlab.com/"
+        },
+        {
+          "title": "HelixAI - Alexa, ask Helix to help me with a protocol",
+          "url": "http://www.askhelix.io/"
+        },
+        {
+          "title": "Helix3 Inc.",
+          "url": "https://lb.linkedin.com/company/helix3-inc-"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"Helix Therapeutics\" \"MA\" OR \"Massachusetts\"",
+      "num_results": 8,
+      "duration_s": 0.8,
+      "results": [
+        {
+          "title": "HelixBind, Inc",
+          "url": "https://nl.linkedin.com/company/helixbind-inc"
+        },
+        {
+          "title": "Helix Therapeutics - Products, Competitors, Financials, Employees, Headquarters Locations",
+          "url": "https://www.cbinsights.com/company/helix-therapeutics"
+        },
+        {
+          "title": "HELIXBIND | Identification of Bloodstream Infections | Boxborough, MA",
+          "url": "https://www.helixbind.com/"
+        },
+        {
+          "title": "HelixNano",
+          "url": "https://ch.linkedin.com/company/helixnano"
+        },
+        {
+          "title": "HelixNano | MeHI",
+          "url": "https://mehi.masstech.org/node/4551"
+        },
+        {
+          "title": "HelixBind - Products, Competitors, Financials, Employees, Headquarters Locations",
+          "url": "https://www.cbinsights.com/company/helixbind"
+        },
+        {
+          "title": "HelixNano - Products, Competitors, Financials, Employees, Headquarters Locations",
+          "url": "https://www.cbinsights.com/company/helix-nanotechnologies"
+        },
+        {
+          "title": "Helix Nanotechnologies - BioPharmGuy",
+          "url": "https://mail.biopharmguy.com/company.php/Helix%20Nanotechnologies"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"Helix\" 700 Main St Cambridge MA",
+      "num_results": 10,
+      "duration_s": 0.62,
+      "results": [
+        {
+          "title": "Helix Power | Energy Storage | Flywheel | Massachusetts",
+          "url": "https://www.helixpower.com/"
+        },
+        {
+          "title": "SigmaticOS",
+          "url": "https://www.helixai.com/"
+        },
+        {
+          "title": "Company overview | Helix",
+          "url": "https://www.globalgraphics.com/company"
+        },
+        {
+          "title": "HelixNano",
+          "url": "https://ch.linkedin.com/company/helixnano"
+        },
+        {
+          "title": "Helix | MITdesignX - MITdesignX",
+          "url": "https://designx.mit.edu/venture_team/helix/"
+        },
+        {
+          "title": "Replacing fossil fuels as a carbon feedstock",
+          "url": "https://helixcarbon.co/home-1"
+        },
+        {
+          "title": "Helix AI \u2014 intelligent systems, not isolated outputs.",
+          "url": "https://www.helix-ai.dev/"
+        },
+        {
+          "title": "HelixNano | MeHI",
+          "url": "https://mehi.masstech.org/node/4551"
+        },
+        {
+          "title": "Company overview | Helix",
+          "url": "http://www.globalgraphics.com/company/history"
+        },
+        {
+          "title": "Helix Studio - The Genome IDE for CRISPR & Prime Editing",
+          "url": "https://helix-studio.com/"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"Helix Therapeutics\" site:sec.gov",
+      "num_results": 10,
+      "duration_s": 0.57,
+      "results": [
+        {
+          "title": "Ea023255501ex99 2 helix2.htm",
+          "url": "https://www.sec.gov/Archives/edgar/data/1869105/000121390025018335/ea023255501ex99-2_helix2.htm"
+        },
+        {
+          "title": "Ea023255501ex99 2 helix2.htm",
+          "url": "https://www.sec.gov/Archives/edgar/data/1869105/000121390025018334/ea023255501ex99-2_helix2.htm"
+        },
+        {
+          "title": "",
+          "url": "https://www.sec.gov/Archives/edgar/data/1869105/000121390025056321/ea0237401-05.htm"
+        },
+        {
+          "title": "Fs12019a1 helixtcs.htm",
+          "url": "https://www.sec.gov/Archives/edgar/data/1611277/000121390019011422/fs12019a1_helixtcs.htm"
+        },
+        {
+          "title": "View Filing Data",
+          "url": "https://www.sec.gov/cgi-bin/viewer?accession_number=0001213900-25-056321&action=view&cik=1869105&xbrl_type=v"
+        },
+        {
+          "title": "Fs12024a2 helixacq2.htm",
+          "url": "https://www.sec.gov/Archives/edgar/data/1869105/000121390024010676/fs12024a2_helixacq2.htm"
+        },
+        {
+          "title": "Ea0273746 s1mef helix3.htm",
+          "url": "https://www.sec.gov/Archives/edgar/data/2099656/000121390026006859/ea0273746-s1mef_helix3.htm"
+        },
+        {
+          "title": "Fs12019 helixtcs.htm",
+          "url": "https://www.sec.gov/Archives/edgar/data/1611277/000121390019009835/fs12019_helixtcs.htm"
+        },
+        {
+          "title": "Ea156790 s1a2 helixacq.htm",
+          "url": "https://www.sec.gov/Archives/edgar/data/1821586/000121390022012161/ea156790-s1a2_helixacq.htm"
+        },
+        {
+          "title": "Ea027396001ex99 2 helix3.htm",
+          "url": "https://www.sec.gov/Archives/edgar/data/2099656/000121390026007972/ea027396001ex99-2_helix3.htm"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"Helix Therapeutics\" New Haven CT",
+      "num_results": 10,
+      "duration_s": 1.02,
+      "results": [
+        {
+          "title": "Helix Therapeutics - Products, Competitors, Financials, Employees, Headquarters Locations",
+          "url": "https://www.cbinsights.com/company/helix-therapeutics"
+        },
+        {
+          "title": "Connecticut Innovations Makes Investment in Helix Therapeutics LLC",
+          "url": "https://www.biospace.com/connecticut-innovations-makes-investment-in-helix-therapeutics-llc"
+        },
+        {
+          "title": "Helix Therapeutics Inc Secures Additional Funding to Advance Cutting-Edge Stem Cell Gene Correction Therapy for Genetic Diseases",
+          "url": "https://www.prnewswire.com/news-releases/helix-therapeutics-inc-secures-additional-funding-to-advance-cutting-edge-stem-cell-gene-correction-therapy-for-genetic-diseases-110112939.html"
+        },
+        {
+          "title": "Helix Therapeutics",
+          "url": "https://www.crunchbase.com/organization/helix-therapeutics"
+        },
+        {
+          "title": "Helix Therapeutics Inc Secures Additional Funding to Advance Cutting-Edge Stem Cell Gene Correction Therapy for Genetic Diseases - BioSpace",
+          "url": "https://www.biospace.com/b-helix-therapeutics-inc-b-secures-additional-funding-to-advance-cutting-edge-stem-cell-gene-correction-therapy-for-genetic-diseases"
+        },
+        {
+          "title": "Company Profile",
+          "url": "https://www.inknowvation.com/sbir/companies/helix-therapeutics-llc"
+        },
+        {
+          "title": "Helix Therapeutics handed $2.5M in new funding",
+          "url": "https://abgrealty.com/helix-therapeutics-handed-2-5m-funding"
+        },
+        {
+          "title": "Helix Therapeutics Stock Price, Funding, Valuation, Revenue & Financial Statements",
+          "url": "https://www.cbinsights.com/company/helix-therapeutics/financials"
+        },
+        {
+          "title": "Helix Therapeutics 3/5/2009 Capital Raise - Gaebler.com Venture Capital Database",
+          "url": "https://www.gaebler.com/VC-Funding-02D3D778-942E-42C8-9FC9-C7C4BB92B0DA-Helix-Therapeutics-03-05-2009"
+        },
+        {
+          "title": "Helix Therapeutics - Tech Company Profile - Gaebler.com Venture Capital Database",
+          "url": "https://www.gaebler.com/Funded-Company-0BDE8405-467A-493D-A7B1-C229A29BBEF8-Helix-Therapeutics"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"Helix Therapeutics\" OR \"Helix Therapeutics Inc.\" \"labcentral\" OR \"700 Main St\"",
+      "num_results": 10,
+      "duration_s": 0.61,
+      "results": [
+        {
+          "title": "Helix Therapeutics - Products, Competitors, Financials, Employees, Headquarters Locations",
+          "url": "https://www.cbinsights.com/company/helix-therapeutics"
+        },
+        {
+          "title": "Helix Therapeutics Stock Price, Funding, Valuation, Revenue & Financial Statements",
+          "url": "https://www.cbinsights.com/company/helix-therapeutics/financials"
+        },
+        {
+          "title": "Helix Therapeutics handed $2.5M in new funding \u2013 ABG Commercial Realty",
+          "url": "https://abgrealty.com/helix-therapeutics-handed-2-5m-funding/"
+        },
+        {
+          "title": "Helixis - 2026 Company Profile, Team, Funding & Competitors - Tracxn",
+          "url": "https://tracxn.com/d/companies/helixis/__2jhaTsPaxGoBzgy1fG8SzpHiWox38H998ZlzmdPnzbk"
+        },
+        {
+          "title": "Connecticut Innovations Makes Investment in Helix Therapeutics LLC",
+          "url": "https://www.biospace.com/connecticut-innovations-makes-investment-in-helix-therapeutics-llc"
+        },
+        {
+          "title": "Helix Therapeutics 3/5/2009 Capital Raise - Gaebler.com Venture Capital Database",
+          "url": "https://www.gaebler.com/VC-Funding-02D3D778-942E-42C8-9FC9-C7C4BB92B0DA-Helix-Therapeutics-03-05-2009"
+        },
+        {
+          "title": "Helix Nanotechnologies - BioPharmGuy",
+          "url": "https://mail.biopharmguy.com/company.php/Helix%20Nanotechnologies"
+        },
+        {
+          "title": "Helix Therapeutics",
+          "url": "https://www.crunchbase.com/organization/helix-therapeutics"
+        },
+        {
+          "title": "Helix Therapeutics - Tech Company Profile - Gaebler.com Venture Capital Database",
+          "url": "https://www.gaebler.com/Funded-Company-0BDE8405-467A-493D-A7B1-C229A29BBEF8-Helix-Therapeutics"
+        },
+        {
+          "title": "HelixNano - Products, Competitors, Financials, Employees, Headquarters Locations",
+          "url": "https://www.cbinsights.com/company/helix-nanotechnologies/"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"HelixNano\" OR \"Helix Nanotechnologies\" OR \"Helix Therapeutics Inc\" 700 Main St Cambridge MA",
+      "num_results": 10,
+      "duration_s": 0.88,
+      "results": [
+        {
+          "title": "HelixNano",
+          "url": "https://ch.linkedin.com/company/helixnano"
+        },
+        {
+          "title": "home (Dec '23 snapshot) \u2014 HelixNano",
+          "url": "https://www.helixnano.com/home-1"
+        },
+        {
+          "title": "HelixNano - Products, Competitors, Financials, Employees, Headquarters Locations",
+          "url": "https://www.cbinsights.com/company/helix-nanotechnologies"
+        },
+        {
+          "title": "HelixNano 2025 Company Profile: Valuation, Funding &amp; Investors | PitchBook",
+          "url": "https://pitchbook.com/profiles/company/118112-95"
+        },
+        {
+          "title": "HelixNano | MeHI",
+          "url": "https://mehi.masstech.org/node/4551"
+        },
+        {
+          "title": "Helix Nanotechnologies - Company Information | YCDB - The Y Combinator Database",
+          "url": "https://www.ycdb.co/company/helix-nanotechnologies"
+        },
+        {
+          "title": "Helix Nanotechnologies - BioPharmGuy",
+          "url": "https://mail.biopharmguy.com/company.php/Helix%20Nanotechnologies"
+        },
+        {
+          "title": "Helix Nanotechnologies - LifeScienceHistory.com",
+          "url": "https://lifesciencehistory.com/companies/helix-nanotechnologies-inc/"
+        },
+        {
+          "title": "Helix Nanotechnologies: Next-generation mRNA platform to solve cancer, COVID and climate. | Y Combinator",
+          "url": "https://www.ycombinator.com/companies/helix-nanotechnologies"
+        },
+        {
+          "title": "HelixNano | Golden",
+          "url": "https://golden.com/wiki/HelixNano-MNYNZWN"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"HelixNano\" 700 Main St",
+      "num_results": 10,
+      "duration_s": 0.69,
+      "results": [
+        {
+          "title": "home (Dec '23 snapshot) \u2014 HelixNano",
+          "url": "https://www.helixnano.com/home-1"
+        },
+        {
+          "title": "HelixNano",
+          "url": "https://ch.linkedin.com/company/helixnano"
+        },
+        {
+          "title": "Helix Nanotechnologies: Next-generation mRNA platform to solve cancer, COVID and climate. | Y Combinator",
+          "url": "https://www.ycombinator.com/companies/helix-nanotechnologies"
+        },
+        {
+          "title": "HelixNano 2025 Company Profile: Valuation, Funding &amp; Investors | PitchBook",
+          "url": "https://pitchbook.com/profiles/company/118112-95"
+        },
+        {
+          "title": "Helix Nanotechnologies: Next-generation mRNA platform to solve cancer, COVID and climate. | Y Combinator",
+          "url": "https://www.ycombinator.com/companies/1560"
+        },
+        {
+          "title": "HelixNano",
+          "url": "http://www.helixnano.com/"
+        },
+        {
+          "title": "Clinical Product Manufacturing Lead \u2014 HelixNano",
+          "url": "https://www.helixnano.com/careers/clinical-product-manufacturing-lead"
+        },
+        {
+          "title": "HelixNano | Devex",
+          "url": "https://www.devex.com/organizations/helixnano-180537"
+        },
+        {
+          "title": "HelixNano - Products, Competitors, Financials, Employees, Headquarters Locations",
+          "url": "https://www.cbinsights.com/company/helix-nanotechnologies/"
+        },
+        {
+          "title": "Helix Biotech - DNA/RNA/LNP Formulations CDMO Services",
+          "url": "http://www.helixbiotech.com/"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"Helix Therapeutics\" 700 Main St Cambridge MA",
+      "num_results": 10,
+      "duration_s": 0.6,
+      "results": [
+        {
+          "title": "HelixNano",
+          "url": "https://ch.linkedin.com/company/helixnano"
+        },
+        {
+          "title": "Helix Therapeutics - Products, Competitors, Financials, Employees, Headquarters Locations",
+          "url": "https://www.cbinsights.com/company/helix-therapeutics"
+        },
+        {
+          "title": "HelixNano | MeHI",
+          "url": "https://mehi.masstech.org/node/4551"
+        },
+        {
+          "title": "Helix Carbon",
+          "url": "https://www.third-derivative.org/portfolio/helix-carbon"
+        },
+        {
+          "title": "Helix Therapeutics Stock Price, Funding, Valuation, Revenue & Financial Statements",
+          "url": "https://www.cbinsights.com/company/helix-therapeutics/financials"
+        },
+        {
+          "title": "HelixNano - Products, Competitors, Financials, Employees, Headquarters Locations",
+          "url": "https://www.cbinsights.com/company/helix-nanotechnologies"
+        },
+        {
+          "title": "HelixNano 2025 Company Profile: Valuation, Funding &amp; Investors | PitchBook",
+          "url": "https://pitchbook.com/profiles/company/118112-95"
+        },
+        {
+          "title": "SigmaticOS",
+          "url": "https://www.helixai.com/"
+        },
+        {
+          "title": "HelixNano - Teeming.ai \u00b7 Teeming.ai",
+          "url": "https://teeming.ai/c/helixnano/1d262ec1-b6f8-4501-bfce-54f08a96d28a"
+        },
+        {
+          "title": "Helix Nanotechnologies - BioPharmGuy",
+          "url": "https://mail.biopharmguy.com/company.php/Helix%20Nanotechnologies"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "site:labcentral.org \"Helix\"",
+      "num_results": 10,
+      "duration_s": 0.59,
+      "results": [
+        {
+          "title": "About LabCentral | Nonprofit Biotech Hub in Cambridge MA",
+          "url": "https://www.labcentral.org/about"
+        },
+        {
+          "title": "Shared Biotech Lab Space for Startups | LabCentral MA",
+          "url": "https://labcentral.org/"
+        },
+        {
+          "title": "Home | LabCentral, Inc.",
+          "url": "https://boldlygo.labcentral.org/"
+        },
+        {
+          "title": "Shared Biotech Lab Space for Startups | LabCentral MA",
+          "url": "https://www.labcentral.org./"
+        },
+        {
+          "title": "Blavatnik Harvard Life Lab | Biotech Lab Space in Boston",
+          "url": "https://www.labcentral.org/labs-and-facilities/the-blavatnik-harvard-life-lab"
+        },
+        {
+          "title": "Lab Facilities | Shared Biotech Lab Space in Cambridge",
+          "url": "https://www.labcentral.org/our-labs"
+        },
+        {
+          "title": "AI BioHub - LabCentral | Cambridge, MA",
+          "url": "https://www.labcentral.org/startup-support/ai-biohub"
+        },
+        {
+          "title": "Biotech Entrepreneur Programs - LabCentral | Cambridge, MA",
+          "url": "https://www.labcentral.org/startup-support/startup-programs"
+        },
+        {
+          "title": "Golden Tickets - LabCentral | Cambridge, MA",
+          "url": "https://www.labcentral.org/startup-support/golden-tickets"
+        },
+        {
+          "title": "Apply Now - LabCentral | Cambridge, MA",
+          "url": "https://www.labcentral.org./resident-applications/"
+        }
+      ]
+    }
+  ]
+}

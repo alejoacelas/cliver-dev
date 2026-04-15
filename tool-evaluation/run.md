@@ -93,16 +93,17 @@ tool-evaluation/
     07-final-synthesis.md
   00-endpoint-manifest.yaml              # stage 0 output
   00-credential-check.md                 # stage 0 output
-  setup-guides/                          # stage 0 (blocked endpoints)
-  seed-cases/                            # stage 2 output
+  00-setup-guides/                       # stage 0 (blocked endpoints)
+  02-seed-cases/                         # stage 2 output
     {group-name}.yaml
-  results/                               # stage 3 output
-    {group-name}.yaml
-    {group-name}.md
-  assessments/                           # stage 4 output
+  03-results/                            # stage 3 output
+    {endpoint-slug}.yaml                 # one file per endpoint
+    {endpoint-slug}.md                   # human-readable per endpoint
+    {group-name}-comparison.md           # cross-endpoint comparison per group
+  04-assessments/                        # stage 4 output
     {kyc-step}.yaml
     {kyc-step}.md
-  adversarial-reviews/                   # stage 5 output (per endpoint group, versioned)
+  05-adversarial-reviews/                # stage 5 output (per endpoint group, versioned)
     {group-name}-v{N}.md                 # per-iteration findings
     {group-name}-final.md                # final state after loop
   06-cost-coverage-synthesis.md          # stage 6 output

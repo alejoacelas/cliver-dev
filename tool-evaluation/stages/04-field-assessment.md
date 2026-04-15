@@ -6,11 +6,12 @@
 
 ## Per-agent inputs
 
-- All `results/{endpoint-slug}.yaml` files for endpoints relevant to this KYC step (from `01-endpoint-map.md`), plus the `results/{group-name}-comparison.md` cross-comparison files.
+- All `03-results/{endpoint-slug}.yaml` files for endpoints relevant to this KYC step (from `01-endpoint-map.md`).
+- **Cross-endpoint comparisons:** `03-results/{group-name}-comparison.md` — read these alongside the per-endpoint files. They contain the comparative evidence showing how endpoints complement each other (e.g., which cases ROR misses that OpenCorporates catches). Essential for the flag verdict's "best endpoint combination" and for understanding integrated coverage.
 - The KYC step definition (flag triggers, follow-up actions from the CSSWG table in `run.md`).
 - Measure definitions from `archive-2026-04-kyc-research/pipeline/measures.md`.
 - The original `07-synthesis.md` files for relevant ideas (for context on intended use of each field).
-- Adversarial review finals: `tool-evaluation/adversarial-reviews/{group-name}-final.md` (one per endpoint group — contains any unresolved high- or medium-severity findings from the stage 3↔5 loop).
+- Adversarial review finals: `tool-evaluation/05-adversarial-reviews/{group-name}-final.md` (one per endpoint group — contains any unresolved high- or medium-severity findings from the stage 3↔5 loop).
 
 ## Agent assignments
 
@@ -62,7 +63,9 @@ The groups should emerge from the data — don't force them into predefined cate
 - **Auto (0 min):** Deterministic rule resolves it. No human or LLM sees it.
 - **LLM review (0.5-2 min):** An LLM agent with web search + API access runs a prescribed procedure and makes a pass/escalate decision. No human sees the case unless the LLM escalates. Use this tier when the resolution path is fully procedural — a sequence of API calls and web lookups with a binary pass/fail rule at the end. Cost: ~$0.01-0.03/case in inference.
 - **LLM review + human audit:** The LLM runs the structured portion, but a human reviews the LLM's output for a subset of cases (e.g., compliance-sensitive decisions, soft thresholds). Use this when the procedure is automatable but the final call has liability or judgment implications.
-- **Human review (1-15 min):** A human reviewer handles the case. No customer contact. Use this when the resolution path requires subjective judgment that can't be reduced to a procedure, or when the evidence is genuinely ambiguous.
+- **Human review (1-15 min):** A human reviewer handles the case. No customer contact. Use this when the resolution path requires subjective judgment that can't be reduced to a procedure, or when the evidence is genuinely ambiguous. Distinguish **sub-tiers** within human review using the `human_review_type` field:
+  - `quick_review` **(1-3 min):** Human glances at the flag + context and makes a call. The evidence is available but requires a judgment that can't be fully proceduralized. Example: "ROR returns the institution but the address is a known incubator — reviewer checks if the incubator is associated with the institution."
+  - `investigation` **(5-15 min):** Human needs to dig — cross-reference multiple sources, search the web, evaluate ambiguous evidence. Example: "Small non-OECD biotech with no registry matches — reviewer must web-search the company, assess credibility, check if the address makes sense."
 - **Customer follow-up (15-60 min):** Human must contact the customer and wait for a response.
 
 But within each tier, there will be sub-groups. For example, "LLM review" might include:
@@ -79,7 +82,9 @@ These sub-groups are the profile groups.
 
 ### What each profile group needs
 
-For each profile group, document:
+For each profile group, document the fields below. **The examples below are illustrative** — time estimates, escalation rates, and tier assignments should be derived from the stage 3 test results, not copied from these examples. If the test results suggest a different tier or time than the example shows, go with the data.
+
+
 
 ```yaml
 - group: "Established US/EU academic institution"
@@ -140,7 +145,7 @@ These distinctions feed directly into stage 6's cost estimation.
 
 Two files per KYC step:
 
-### Structured: `tool-evaluation/assessments/{kyc-step}.yaml`
+### Structured: `tool-evaluation/04-assessments/{kyc-step}.yaml`
 
 ```yaml
 kyc_step: a-address-to-institution
@@ -169,6 +174,7 @@ profile_groups:
   - group: "Established US/EU academic institution"
     description: "..."
     time_tier: auto          # auto | llm_review | llm_review_human_audit | human_review | customer_follow_up
+    human_review_type: null  # quick_review | investigation (only when time_tier = human_review)
     estimated_time: "0 min"
     resolution_path: "..."
     fraction_of_test_cases: "18/38 (47%)"
@@ -199,6 +205,6 @@ unresolved_issues:
   - "3 high-severity findings from adversarial review remain unresolved after 3 iterations: [list]"
 ```
 
-### Human-readable: `tool-evaluation/assessments/{kyc-step}.md`
+### Human-readable: `tool-evaluation/04-assessments/{kyc-step}.md`
 
 Narrative version with tables, examples, and the profile group descriptions. This is what a working group member would read.

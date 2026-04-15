@@ -6,11 +6,11 @@
 
 ## Inputs
 
-- Field assessments: `tool-evaluation/assessments/{kyc-step}.yaml` + `.md` (5 files each). Contains profile groups, time tiers, and flag verdicts.
-- Adversarial review finals: `tool-evaluation/adversarial-reviews/{group-name}-final.md` (one per endpoint group). Contains unresolved findings.
+- Field assessments: `tool-evaluation/04-assessments/{kyc-step}.yaml` + `.md` (5 files each). Contains profile groups, time tiers, and flag verdicts.
+- Adversarial review finals: `tool-evaluation/05-adversarial-reviews/{group-name}-final.md` (one per endpoint group). Contains unresolved findings.
 - BOTEC synthesis: `tool-evaluation/06-cost-coverage-synthesis.md`. Contains profile group inventory, fraction estimates (with source tags), cost tables, cost drivers, tail risk analysis, and provider archetype scenarios.
-- Per-endpoint results: `tool-evaluation/results/{endpoint-slug}.yaml` + `.md`. Individual endpoint test results.
-- Cross-endpoint comparisons: `tool-evaluation/results/{group-name}-comparison.md`.
+- Per-endpoint results: `tool-evaluation/03-results/{endpoint-slug}.yaml` + `.md`. Individual endpoint test results.
+- Cross-endpoint comparisons: `tool-evaluation/03-results/{group-name}-comparison.md`.
 - Endpoint manifest: `tool-evaluation/00-endpoint-manifest.yaml`.
 - Endpoint map: `tool-evaluation/stages/01-endpoint-map.md` (static endpoint-to-KYC-step mapping).
 - Credential check: `tool-evaluation/00-credential-check.md`.

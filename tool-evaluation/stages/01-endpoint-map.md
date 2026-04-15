@@ -26,7 +26,8 @@ This file is the hardcoded starting point for the pipeline. It defines which end
 | **OpenCorporates** | Corporate registry data across 140+ jurisdictions. Extends Companies House globally. | m09-corp-registry-stack |
 | **OSM Overpass** | Campus polygon containment. Can check if address falls within institution boundary. | m05-ror-gleif-canonical |
 | **GeoNames** | Reverse geocoding, nearby feature lookup. Campus-center coordinates via ROR's geonames_id. | m05-ror-gleif-canonical |
-| **Google Places (New API)** | Nearby Search: find institutions within radius of address. `primaryType` classification. | m04-google-places-business, m05-google-places-campus |
+| **Google Places Text Search** | Type classification when institution name is included in query (`university`, `manufacturer`, `research_institute`). | m04-google-places-business, m05-google-places-campus |
+| **Google Places Nearby Search** | Find institutions within radius of address coordinates. Detect freight forwarder clusters via `type=shipping_service`. | m05-google-places-campus, m06-freight-forwarder-denylist |
 | **Smarty US Street API** | Address normalization for comparison. Also feeds steps (d) and (e). | m05-ror-gleif-canonical |
 | **NIH RePORTER** | Institution has federal research funding — strong legitimacy signal. ~2,500 US biomedical institutions. | m18-nih-reporter |
 | **NSF Awards** | US NSF-funded research across all sciences. ~15K institutions. | m18-nsf-awards |
@@ -72,6 +73,7 @@ This file is the hardcoded starting point for the pipeline. It defines which end
 | Endpoint | What it tells us | Source idea |
 |---|---|---|
 | **Smarty US Street API** | RDI field: Residential vs. Commercial classification. US addresses only. | m04-usps-rdi |
+| **Melissa Global Address** | International address verification: RDI equivalent, PO Box detection, CMRA flag for 240+ countries. Closes the non-US residential classification gap. | m03-smarty-melissa |
 | **Google Places (New API)** | `primaryType` classification: `university`, `apartment_building`, `coworking_space`, etc. International. | m04-google-places-business |
 | **LLM+Exa web search** | Standalone: "Is address X a residential or business/institutional address?" | llm-exa-search-standalone |
 
@@ -81,9 +83,10 @@ This file is the hardcoded starting point for the pipeline. It defines which end
 |---|---|---|
 | **PO Box regex** | Local pattern matching: PO Box, APO/FPO, PMB. Zero-cost, zero false negatives on standard formats. | m03-pobox-regex-sop |
 | **Smarty US Street API** | CMRA flag (Commercial Mail Receiving Agency = mail forwarding). DPV vacancy flag. US only. | m03-smarty-melissa |
+| **Melissa Global Address** | International PO Box detection and CMRA flag for 240+ countries. Extends Smarty coverage globally. | m03-smarty-melissa |
+| **Google Places Nearby Search** (type=shipping_service) | Detect freight forwarder clusters at an address by searching for shipping businesses at the coordinates. The data exists in Google but is unreachable via text search. | m06-freight-forwarder-denylist |
 | **BIS Country Group D/E + EAR matrix** | Local logic: map destination country to BIS licensing requirements. Export control compliance. | m06-bis-country-groups |
 | **ISO 3166 country normalization** | Local logic: normalize country names/codes, check against sanctioned territory list. | m06-iso-country-normalize |
-| **Consolidated Screening List** | OFAC SDN, BIS Entity List, DPL, UVL, MEU. Catches denied parties/entities at the address. | m06-bis-entity-list |
 | **LLM+Exa web search** | Standalone: "Is address X a PO box, mail forwarding service, or freight forwarder?" | llm-exa-search-standalone |
 
 ---
@@ -97,19 +100,19 @@ Each API is tested once. Results are cross-referenced to all relevant KYC steps 
 | 1 | ROR API v2 | a, c | none | live |
 | 2 | GLEIF API | a | none | live |
 | 3 | RDAP/WHOIS | c | none | live |
-| 4 | Consolidated Screening List | e | API key | live |
-| 5 | OSM Overpass | a | none | live |
-| 6 | binlist.net | b | none | live |
-| 7 | InCommon/eduGAIN | c | none | live |
-| 8 | Smarty US Street API | a, d, e | auth-id + token | live |
-| 9 | Stripe test mode | b | secret key | live |
-| 10 | Stripe AVS (production) | b | — | docs-only |
-| 11 | Plaid sandbox | b | client_id + secret | live |
-| 12 | Plaid prod | b | — | docs-only |
-| 13 | Companies House | a | API key | live |
-| 14 | Exa neural search | a, b, c, d, e | API key | live |
-| 15 | GeoNames | a | username | live |
-| 16 | Google Places (New API) | a, d | API key | live |
+| 4 | OSM Overpass | a | none | live |
+| 5 | binlist.net | b | none | live |
+| 6 | InCommon/eduGAIN | c | none | live |
+| 7 | Smarty US Street API | a, d, e | auth-id + token | live |
+| 8 | Stripe test mode | b | secret key | live |
+| 9 | Stripe AVS (production) | b | — | docs-only |
+| 10 | Plaid sandbox | b | client_id + secret | live |
+| 11 | Plaid prod | b | — | docs-only |
+| 12 | Companies House | a | API key | live |
+| 13 | Exa neural search | a, b, c, d, e | API key | live |
+| 14 | GeoNames | a | username | live |
+| 15 | Google Places Text Search | a, d | API key | live |
+| 16 | Google Places Nearby Search | a, e | API key | live |
 | 17 | Disposable/free-mail blocklist | c | none | live (local) |
 | 18 | MX/SPF/DMARC tenant check | c | none | live (DNS) |
 | 19 | BIS Country Group D/E + EAR | e | none | live (local) |
@@ -124,28 +127,34 @@ Each API is tested once. Results are cross-referenced to all relevant KYC steps 
 | 28 | ORCID public API | c | none | live |
 | 29 | OpenAlex API | c | none | live |
 | 30 | PubMed (NCBI E-utilities) | a | none | live |
-| 31 | OpenCorporates | a | none (free tier) | live |
+| 31 | OpenCorporates | a | none (free tier) | blocked |
+| 32 | EU CORDIS | a | none | live |
+| 33 | SEC EDGAR | a, b | none (User-Agent required) | live |
+| 34 | Melissa Global Address | d, e | auth-id + auth-token | live (free trial) |
+| 35 | Google Scholar Profiles | c | SerpApi key or scraping | live |
+| 36 | MaxMind minFraud / Binbase | b | — | docs-only |
+| 37 | ORCID OAuth | c | — | docs-only |
 
-**Total: 31 endpoints** (20 requiring network calls, 8 local logic, 2 docs-only, 1 standalone LLM+search)
+**Total: 37 endpoints** (23 requiring network calls, 8 local logic, 4 docs-only, 2 blocked)
 
 ### Grouping for stage 2/3/5 agents
 
-Endpoints are grouped for testing. Each group gets one agent in stages 2, 3, and 5. The **slug** is the canonical identifier used in filenames (`seed-cases/{slug}.yaml`, `results/{slug}.yaml`, `adversarial-reviews/{slug}-final.md`).
+Endpoints are grouped for testing. Each group gets one agent in stages 2, 3, and 5. The **slug** is the canonical identifier used in filenames (`02-seed-cases/{slug}.yaml`, `03-results/{slug}.yaml`, `05-adversarial-reviews/{slug}-final.md`).
 
 | Slug | Group name | Endpoints | KYC steps |
 |---|---|---|---|
-| `institution-registry` | Institution registry | ROR, GLEIF, Companies House, OpenCorporates | a |
-| `address-classification` | Address classification | Smarty, Google Places (New), GeoNames, OSM Overpass | a, d, e |
+| `institution-registry` | Institution registry | ROR, GLEIF, Companies House, OpenCorporates, SEC EDGAR | a |
+| `address-classification` | Address classification | Smarty, Melissa, Google Places Text Search, Google Places Nearby Search, GeoNames, OSM Overpass | a, d, e |
 | `email-domain` | Email / domain verification | RDAP, disposable blocklist, MX/SPF/DMARC, lookalike detector, InCommon | c |
 | `payment-bin` | Payment / BIN | Stripe test, binlist, fintech BIN denylist, billing-shipping consistency | b |
-| `funding-legitimacy` | Funding / legitimacy | NIH RePORTER, NSF, UKRI, PubMed | a |
-| `individual-affiliation` | Individual affiliation | ORCID, OpenAlex | c |
-| `export-control` | Export control | Screening List, BIS country groups, ISO normalization, PO Box regex | e |
+| `funding-legitimacy` | Funding / legitimacy | NIH RePORTER, NSF, UKRI, EU CORDIS, PubMed | a |
+| `individual-affiliation` | Individual affiliation | ORCID, OpenAlex, Google Scholar Profiles | c |
+| `export-control` | Export control | BIS country groups, ISO normalization, PO Box regex | e |
 | `llm-exa-a` | LLM+Exa: address→institution | Exa (pre-designed prompt targeting structured API gaps for step a) | a |
 | `llm-exa-b` | LLM+Exa: payment→institution | Exa (pre-designed prompt targeting structured API gaps for step b) | b |
 | `llm-exa-c` | LLM+Exa: email→affiliation | Exa (pre-designed prompt targeting structured API gaps for step c) | c |
 | `llm-exa-d` | LLM+Exa: residential address | Exa (pre-designed prompt targeting structured API gaps for step d) | d |
 | `llm-exa-e` | LLM+Exa: PO box/freight | Exa (pre-designed prompt targeting structured API gaps for step e) | e |
-| `docs-only` | Documentation review | Stripe AVS prod, Plaid prod | b |
+| `docs-only` | Documentation review | Stripe AVS prod, Plaid prod, MaxMind/Binbase, ORCID OAuth | b, c |
 
 LLM+Exa prompts are designed before the pipeline runs and stored in `tool-evaluation/llm-exa-prompts/`. Each prompt targets the specific coverage gaps identified in prior pipeline iterations. See `03-adversarial-testing.md` for the prompt format and testing protocol.

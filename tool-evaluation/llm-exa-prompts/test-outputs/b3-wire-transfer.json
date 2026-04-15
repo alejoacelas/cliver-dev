@@ -1,0 +1,52 @@
+{
+  "answer": "```yaml\n# Billing entity fields\nbilling_entity_found_online: true\nbilling_entity_website: \"https://www.ox.ac.uk\"\nbilling_entity_type: \"nonprofit\"\nbilling_entity_incorporation_state: null\nbilling_entity_incorporation_date: null\nbilling_entity_address_on_record: \"University Offices, Wellington Square, Oxford, OX1 2JD, United Kingdom\"\nbilling_address_matches_entity: true\nbilling_entity_is_fintech_issuer: false\nfintech_issuer_name: null\n\n# Institution association fields\nentity_institution_association: true\nassociation_type: \"same_entity\"\nassociation_evidence: \"The billing entity is exactly the claimed institution. The provided address points directly to the main administrative buildings ('University Offices') of the University of Oxford.\"\n\n# Wire transfer fields \nbank_verified: true\nbank_country_consistent: true\nbank_type: \"major_national\"\n\n# Confidence and evidence\nconfidence: high\nfree_text_summary: |\n  The billing entity is the University of Oxford itself. The provided billing address, Wellington Square, Oxford OX1 2JD, perfectly aligns with the official University Offices which house the administrative headquarters for the institution. The wire transfer originates from Barclays Bank in Great Britain (GB), which is a major national British bank, fully consistent with a major UK university's banking practices. \n\nsources:\n  - url: \"https://estates.admin.ox.ac.uk/university-offices-wellington-square\"\n    domain: \"ox.ac.uk\"\n    source_type: company_website\n    snippet: \"University Offices, Wellington Square, Oxford, OX1 2JD. The FM services available within the University Offices building are shown below.\"\n  - url: \"https://en.wikipedia.org/wiki/Wellington_Square,_Oxford\"\n    domain: \"en.wikipedia.org\"\n    source_type: user_submitted\n    snippet: \"Wellington Square is a garden square in central Oxford, England... In the centre of the square is a small park, Wellington Square Gardens, owned by the University of Oxford.\"\n\nsearches_performed:\n  - query: \"\\\"University of Oxford\\\" \\\"Wellington Square\\\" \\\"OX1 2JD\\\"\"\n    num_results: 9\n```",
+  "model": "google/gemini-3.1-pro-preview",
+  "iterations": 2,
+  "total_exa_cost_usd": 0.007,
+  "tool_calls": [
+    {
+      "tool": "search_web",
+      "query": "\"University of Oxford\" \"Wellington Square\" \"OX1 2JD\"",
+      "num_results": 9,
+      "duration_s": 0.65,
+      "results": [
+        {
+          "title": "Wellington Square, Oxford",
+          "url": "https://en.wikipedia.org/wiki/Wellington_Square,_Oxford"
+        },
+        {
+          "title": "University Of Oxford, Oxford (Wellington Square)",
+          "url": "https://www.oxfordonline.co.uk/info/1278/"
+        },
+        {
+          "title": "University Offices, Wellington Square | Estates Services",
+          "url": "https://estates.admin.ox.ac.uk/university-offices-wellington-square"
+        },
+        {
+          "title": "Wellington Square, 16 | Estates Services",
+          "url": "https://estates.admin.ox.ac.uk/16-wellington-square"
+        },
+        {
+          "title": "15 Wellington Square",
+          "url": "https://gradaccommodation.admin.ox.ac.uk/15-wellington-square"
+        },
+        {
+          "title": "Wellington Square Watch",
+          "url": "https://wellingtonsquarewatch.org/"
+        },
+        {
+          "title": "Wellington Square, Oxford",
+          "url": "https://www.wikiwand.com/en/articles/Wellington_Square,_Oxford"
+        },
+        {
+          "title": "14 Wellington Square",
+          "url": "https://gradaccommodation.admin.ox.ac.uk/14-wellington-square"
+        },
+        {
+          "title": "Wellington Square, Oxford \u2014 Grokipedia",
+          "url": "https://grokipedia.com/page/wellington_square_oxford"
+        }
+      ]
+    }
+  ]
+}

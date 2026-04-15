@@ -1,0 +1,296 @@
+{
+  "answer": "```yaml\n# Domain ownership fields\ndomain_belongs_to: \"NetEase\"\ndomain_is_free_email: true\nfree_email_provider_name: \"163.com (NetEase)\"\ndomain_is_institutional: false\ndomain_institution_matches_claimed: null\ndomain_website_url: \"https://mail.163.com\"\ndomain_appears_impersonation: false\nimpersonation_target: null\n\n# Institution email fields\nclaimed_institution_known_domains: \n  - \"whu.edu.cn\"\nclaimed_institution_email_format: \"username@whu.edu.cn\"\n\n# Individual affiliation fields\nperson_institution_link_found: null\nperson_found_on_faculty_page: null\nperson_found_in_publications: null\nperson_link_evidence: null\ncommon_name_risk: true\n\n# Dual affiliation fields\ndual_affiliation_detected: false\ndomain_institution: null\nclaimed_institution_link: null\n\n# Confidence and evidence\nconfidence: high\nfree_text_summary: |\n  The active email domain 163.com is a well-known free email provider operated by the Chinese company NetEase, and does not belong to Wuhan University. Wuhan University's official institutional email domain is whu.edu.cn. Furthermore, because \"Wei Zhang\" is an extremely common name and the customer is using a free email provider, accurate disambiguation cannot be reliably performed. Therefore, the specific affiliation of this individual cannot be securely verified using this email address.\n\nsources:\n  - url: \"https://baike.baidu.com/item/163%E9%82%AE%E7%AE%B1/2250159\"\n    domain: \"baike.baidu.com\"\n    source_type: \"business_directory\"\n    snippet: \"163\u90ae\u7bb1\u662f\u7f51\u6613\u516c\u53f8\u65d7\u4e0b\u7684\u4e00\u6b3e\u7535\u5b50\u90ae\u4ef6\u4ea7\u54c1\u3002\u5b83\u6e90\u4e8e\u4e01\u78ca\u4e0e\u9648\u78ca\u534e\u4e8e1998\u5e743\u6708\u63a8\u51fa\u7684163\uff08net\uff09\u514d\u8d39\u90ae\u7bb1\u670d\u52a1 (163 Mail is an email product under NetEase... offering free email services since 1998).\"\n  - url: \"https://en.wikiredia.com/wiki/163.com\"\n    domain: \"en.wikiredia.com\"\n    source_type: \"business_directory\"\n    snippet: \"NetEase, Inc. (redirected from 163.com)... is a Chinese developer and publisher of online PC and mobile games, advertising services, email services, and e-commerce platforms.\"\n  - url: \"http://jszy.whu.edu.cn/weiwei3/en/lwcg/503147/content/68264.htm\"\n    domain: \"whu.edu.cn\"\n    source_type: \"official_institution_page\"\n    snippet: \"Wuhan University WEIWEI... E-Mail: weiwei@whu.edu.cn\"\n\nsearches_performed:\n  - query: \"\\\"Wuhan University\\\" official email domain student faculty\"\n    num_results: 10\n  - query: \"\\\"Wuhan University\\\" email domain \\\"@whu.edu.cn\\\"\"\n    num_results: 10\n  - query: \"\\\"Wei Zhang\\\" \\\"Wuhan University\\\" site:whu.edu.cn\"\n    num_results: 10\n  - query: \"\\\"Wei Zhang\\\" \\\"Wuhan University\\\" publication email \\\"163.com\\\"\"\n    num_results: 10\n  - query: \"\\\"163.com\\\" email provider type company\"\n    num_results: 10\n  - query: \"\\\"Wei Zhang\\\" \\\"Wuhan University\\\" site:pubpeer.com\"\n    num_results: 10\n```",
+  "model": "google/gemini-3.1-pro-preview",
+  "iterations": 7,
+  "total_exa_cost_usd": 0.042,
+  "tool_calls": [
+    {
+      "tool": "search_web",
+      "query": "\"Wuhan University\" official email domain student faculty",
+      "num_results": 10,
+      "duration_s": 0.82,
+      "results": [
+        {
+          "title": "Wuhan University Contact Information | Email, Telephone, Address | CUCAS",
+          "url": "https://www.cucas.cn/studyinchina/admission/Wuhan_University_70_22.html"
+        },
+        {
+          "title": "Contact Us-Wuhan University",
+          "url": "https://en.whu.edu.cn/About_WHU1/contactus.htm"
+        },
+        {
+          "title": "Contact Us-Wuhan University",
+          "url": "https://en.whu.edu.cn/Contact_Us.htm"
+        },
+        {
+          "title": "Wuhan University of Technology Email Formats",
+          "url": "https://prospeo.io/c/wuhan-university-of-technology-email-format"
+        },
+        {
+          "title": "Wuhan University (WU) Professors Email || China Scholarship 2021 || CSC Guide official \u2013 CSC Guide Official",
+          "url": "https://cscguideofficials.com/wuhan-university-wu-professors-email-china-scholarship-2021-csc-guide-official/"
+        },
+        {
+          "title": "Contact Information-Wuhan University",
+          "url": "https://en.whu.edu.cn/2023/About/Administration/Contact_Information.htm"
+        },
+        {
+          "title": "Contact Information-Wuhan University",
+          "url": "https://en.whu.edu.cn/n2023/About/Administration/Contact_Information.htm"
+        },
+        {
+          "title": "Contact Us-Wuhan University",
+          "url": "https://en.whu.edu.cn/undergraduate/Contact_Us.htm"
+        },
+        {
+          "title": "Contact Us-Wuhan University",
+          "url": "https://en.whu.edu.cn/2023/undergraduate/Contact_Us.htm"
+        },
+        {
+          "title": "Contact Us-Wuhan University",
+          "url": "https://en.whu.edu.cn/info/1245/1865.htm"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"Wuhan University\" email domain \"@whu.edu.cn\"",
+      "num_results": 10,
+      "duration_s": 1.33,
+      "results": [
+        {
+          "title": "Contact Us-Wuhan University",
+          "url": "https://en.whu.edu.cn/Contact_Us.htm"
+        },
+        {
+          "title": "Contact Us-Wuhan University",
+          "url": "https://en.whu.edu.cn/About_WHU1/contactus.htm"
+        },
+        {
+          "title": "Wuhan University  Email Addresses",
+          "url": "https://anymailfinder.com/directory/whu.edu.cn"
+        },
+        {
+          "title": "Wuhan University of Technology Email Formats",
+          "url": "https://prospeo.io/c/wuhan-university-of-technology-email-format"
+        },
+        {
+          "title": "Wuhan University Contact Information | Email, Telephone, Address | CUCAS",
+          "url": "https://www.cucas.cn/studyinchina/admission/Wuhan_University_70_22.html"
+        },
+        {
+          "title": "Contact Us-Wuhan University",
+          "url": "http://en.whu.edu.cn/jzbf/About_WHU1/contactus.htm"
+        },
+        {
+          "title": "Contact Information-Wuhan University",
+          "url": "https://en.whu.edu.cn/2023/About/Administration/Contact_Information.htm"
+        },
+        {
+          "title": "Contact Information-Wuhan University",
+          "url": "https://en.whu.edu.cn/n2023/About/Administration/Contact_Information.htm"
+        },
+        {
+          "title": "Wuhan University",
+          "url": "https://en.whu.edu.cn/"
+        },
+        {
+          "title": "About-Wuhan University",
+          "url": "https://en.whu.edu.cn/2023/About.htm"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"Wei Zhang\" \"Wuhan University\" site:whu.edu.cn",
+      "num_results": 10,
+      "duration_s": 1.28,
+      "results": [
+        {
+          "title": "Wuhan University Wei He--Home",
+          "url": "http://jszy.whu.edu.cn/hewei5/en/tdcy/1425103/content/2566.htm"
+        },
+        {
+          "title": "Wuhan University Wei Zhenwei--Home--Home",
+          "url": "http://jszy.whu.edu.cn/weizhenwei/en/index.htm"
+        },
+        {
+          "title": "Wuhan University Wang Wei--Home--Home",
+          "url": "http://jszy.whu.edu.cn/wangwei3/en/index.htm"
+        },
+        {
+          "title": "Wuhan University Xinwei Zhang--Home--Home",
+          "url": "https://jszy.whu.edu.cn/zhangxinwei/en/index.htm"
+        },
+        {
+          "title": "People-\u6b66\u6c49\u5927\u5b66\u9ec4\u536b\u534e\u8bfe\u9898\u7ec4",
+          "url": "https://huanglab.whu.edu.cn/People.htm"
+        },
+        {
+          "title": "Wuhan University Zhang Wanwei--Home--Home",
+          "url": "http://jszy.whu.edu.cn/zhangwanwei/en/index.htm"
+        },
+        {
+          "title": "Wuhan University WEIWEI--Home",
+          "url": "http://jszy.whu.edu.cn/weiwei3/en/lwcg/503147/content/68264.htm"
+        },
+        {
+          "title": "Wuhan University Xianwei Zheng--Home--Home",
+          "url": "https://jszy.whu.edu.cn/zhengxianwei/en/index.htm"
+        },
+        {
+          "title": "Wuhan University Zhao Wei--Home",
+          "url": "http://jszy.whu.edu.cn/zhaowei/en/kyxm/193556/content/6397.htm"
+        },
+        {
+          "title": "Faculty & Staff",
+          "url": "https://maths.whu.edu.cn/info/1411/13032.htm"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"Wei Zhang\" \"Wuhan University\" publication email \"163.com\"",
+      "num_results": 10,
+      "duration_s": 0.75,
+      "results": [
+        {
+          "title": "Wei Zhang",
+          "url": "https://www.csauthors.net/wei-zhang-079/"
+        },
+        {
+          "title": "Wei Zhang",
+          "url": "https://www.csauthors.net/wei-zhang-193/"
+        },
+        {
+          "title": "Wei Zhang from Zhongnan Hospital of Wuhan University | Scilit",
+          "url": "https://www.scilit.com/scholars/20575229"
+        },
+        {
+          "title": "Wei Zhang",
+          "url": "https://www.csauthors.net/wei-zhang-176/"
+        },
+        {
+          "title": "\u202aZhang Wei\u202c - \u202aGoogle Scholar\u202c",
+          "url": "https://scholar.google.com/citations?user=RLJ2vZ4AAAAJ&hl=en"
+        },
+        {
+          "title": "Wei Zhang",
+          "url": "https://www.csauthors.net/wei-zhang-102/"
+        },
+        {
+          "title": "Wei Zhang",
+          "url": "http://www.myhuiban.com/researcher/13952"
+        },
+        {
+          "title": "Wei Zhang",
+          "url": "https://www.csauthors.net/wei-zhang-156/"
+        },
+        {
+          "title": "Wei Zhang",
+          "url": "http://myhuiban.com/researcher/19205"
+        },
+        {
+          "title": "Wei Zhang",
+          "url": "https://www.csauthors.net/wei-zhang-256/"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"163.com\" email provider type company",
+      "num_results": 10,
+      "duration_s": 1.08,
+      "results": [
+        {
+          "title": "NetEase - Wikipedia",
+          "url": "https://en.wikiredia.com/wiki/163.com"
+        },
+        {
+          "title": "NETEASE MAIL\uff08A web-based email service launched by Guangzhou NetEase Computer System Co., Ltd.\uff09_Baiduwiki",
+          "url": "https://baike.baidu.com/en/item/NETEASE%20MAIL/946152"
+        },
+        {
+          "title": "163postbox_Baiduwiki",
+          "url": "https://baike.baidu.com/en/item/163postbox/986209"
+        },
+        {
+          "title": "NetEase - Wikipedia",
+          "url": "https://www.alphapedia.ru/w/163.com"
+        },
+        {
+          "title": "163\u90ae\u7bb1_\u767e\u5ea6\u767e\u79d1",
+          "url": "https://baike.baidu.com/item/163%E9%82%AE%E7%AE%B1/2250159"
+        },
+        {
+          "title": "163\u7535\u5b50\u90ae\u7bb1-\u57df\u540d\u9891\u9053IDC\u77e5\u8bc6\u5e93",
+          "url": "https://www.dns110.com/docs/27488.html"
+        },
+        {
+          "title": "TOM 163\u90ae\u7bb1",
+          "url": "https://www.163.net/"
+        },
+        {
+          "title": "What is the email address of @163.com?",
+          "url": "https://m.php.cn/faq/496562.html"
+        },
+        {
+          "title": "What Is 163 Com Email, And Why Is It So Popular Worldwide?",
+          "url": "https://www.emailsettingspot.com/what-is-163-com-email/"
+        },
+        {
+          "title": "What is the email address of @163.com?",
+          "url": "https://www.php.cn/faq/496562.html"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"Wei Zhang\" \"Wuhan University\" site:pubpeer.com",
+      "num_results": 10,
+      "duration_s": 0.6,
+      "results": [
+        {
+          "title": "PubPeer - RACK1 recruits STAT3 specifically to insulin and insulin-lik...",
+          "url": "https://pubpeer.com/publications/02D758CBC482F797628822233B8FD1"
+        },
+        {
+          "title": "PubPeer - On the production of hidden-flavored hadronic states at high...",
+          "url": "https://pubpeer.com/publications/49BA118F1CD131729B3D04440BB7BC"
+        },
+        {
+          "title": "PubPeer - Current Situation and Countermeasures of County School Predi...",
+          "url": "https://pubpeer.com/publications/F150B7C009F36B606C5F63D36084C0"
+        },
+        {
+          "title": "PubPeer - NKILA represses nasopharyngeal carcinoma carcinogenesis and...",
+          "url": "https://pubpeer.com/publications/D031001FC36D98DC545F386BC0945E"
+        },
+        {
+          "title": "PubPeer - Zinc finger protein 64 promotes Toll-like receptor-triggered...",
+          "url": "https://pubpeer.com/publications/144A879EE063349F7218585CE1473F"
+        },
+        {
+          "title": "PubPeer - Plant biology. Suppression of endogenous gene silencing by b...",
+          "url": "https://pubpeer.com/publications/972B739EE560A983CC211CAF578A50"
+        },
+        {
+          "title": "PubPeer - Construction of an Intelligent Evaluation Model of Mental He...",
+          "url": "https://pubpeer.com/publications/98E3E38AB0FAD67AFF80713ADC83FE"
+        },
+        {
+          "title": "PubPeer - Upregulation of long noncoding RNA ZEB1-AS1 promotes tumor m...",
+          "url": "https://pubpeer.com/publications/8B217127A2DFDC3B1762D13272A10F"
+        },
+        {
+          "title": "PubPeer - A transcriptional regulator that boosts grain yields and sho...",
+          "url": "https://pubpeer.com/publications/BD2EC156ECF112FF07C061140CE848"
+        },
+        {
+          "title": "PubPeer - Effects of the Long Non-Coding RNA HOST2 On the Proliferatio...",
+          "url": "https://pubpeer.com/publications/9967F45BC315DBB0225DA3EF8211DE"
+        }
+      ]
+    }
+  ]
+}

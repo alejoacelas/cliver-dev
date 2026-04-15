@@ -16,8 +16,8 @@ The goal is to produce an estimate granular enough that a provider can look at t
 
 ## Inputs
 
-- All stage 3 results: `tool-evaluation/results/{endpoint-slug}.yaml` — the individual test cases and their outcomes, per endpoint.
-- All stage 4 assessments: `tool-evaluation/assessments/{kyc-step}.yaml` — the profile groups with time tiers and resolution paths.
+- All stage 3 results: `tool-evaluation/03-results/{endpoint-slug}.yaml` — the individual test cases and their outcomes, per endpoint.
+- All stage 4 assessments: `tool-evaluation/04-assessments/{kyc-step}.yaml` — the profile groups with time tiers and resolution paths.
 - The endpoint manifest: `tool-evaluation/00-endpoint-manifest.yaml` — cost per call.
 - Published market data on DNA synthesis customer segments (see step 2 below).
 
@@ -42,7 +42,8 @@ profile_groups:
         time_tier: auto
         estimated_time: "0 min"
       d-residential-address:
-        time_tier: quick_review
+        time_tier: human_review
+        human_review_type: quick_review
         estimated_time: "1 min (shipping to campus → auto; shipping to residential → quick check)"
     distinguishing_factors:
       country: [US, EU, UK, AU, JP, KR, SG, IL]
@@ -55,13 +56,16 @@ profile_groups:
     description: "Recently founded biotech company in a non-OECD country. Not in ROR or GLEIF. May be in OpenCorporates."
     kyc_steps:
       a-address-to-institution:
-        time_tier: investigation
+        time_tier: human_review
+        human_review_type: investigation
         estimated_time: "10-15 min"
       b-payment-to-institution:
-        time_tier: investigation
+        time_tier: human_review
+        human_review_type: investigation
         estimated_time: "5-10 min"
       c-email-to-affiliation:
-        time_tier: investigation
+        time_tier: human_review
+        human_review_type: investigation
         estimated_time: "5-10 min"
     distinguishing_factors:
       country: non-OECD
@@ -130,14 +134,16 @@ The stage 4 assessments classify each profile group into one of five tiers: `aut
 - `auto`: $0 incremental (API cost only, already in Layer 1)
 - `llm_review`: ~$0.01-0.03/case (LLM inference + any Exa/web search calls). Wall-clock time ~0.5-2 min but no human cost.
 - `llm_review_human_audit`: ~$0.02-0.03 LLM cost + human audits a fraction of cases. Use the `escalation_rate` from the profile group to estimate the human portion.
-- `human_review`: $40/hr × estimated_time. The human does the full review.
+- `human_review` (`quick_review`): $40/hr × estimated_time (1-3 min). Human glances at flag + context.
+- `human_review` (`investigation`): $40/hr × estimated_time (5-15 min). Human digs — cross-references, web searches.
 - `customer_follow_up`: $40/hr × estimated_time. Human contacts the customer.
 
 **Time and cost by tier (weighted):**
 ```
 auto_fraction = Σ fractions of profile groups with time_tier=auto
 llm_review_fraction = Σ fractions with time_tier=llm_review or llm_review_human_audit
-human_review_fraction = Σ fractions with time_tier=human_review
+human_quick_review_fraction = Σ fractions with time_tier=human_review, human_review_type=quick_review
+human_investigation_fraction = Σ fractions with time_tier=human_review, human_review_type=investigation
 follow_up_fraction = Σ fractions with time_tier=customer_follow_up
 ```
 
@@ -146,10 +152,11 @@ For `llm_review_human_audit` groups, split the fraction: `(1 - escalation_rate)`
 **Monthly totals at 1,000 orders/month:**
 - API cost = 1,000 × API cost per order
 - LLM review cost = 1,000 × llm_review_fraction × avg_llm_cost_per_case
-- Human review hours = 1,000 × human_review_fraction × avg_human_review_time / 60
+- Human quick review hours = 1,000 × human_quick_review_fraction × avg_quick_review_time / 60
+- Human investigation hours = 1,000 × human_investigation_fraction × avg_investigation_time / 60
 - Human audit hours (from LLM escalations) = 1,000 × Σ(llm_audit_fraction × escalation_rate × audit_time) / 60
 - Follow-up hours = 1,000 × follow_up_fraction × avg_follow_up_time / 60
-- Total human hours = human review + human audit + follow-up
+- Total human hours = quick review + investigation + human audit + follow-up
 - Blended cost per order = API cost + LLM cost + (human hours × $40/hr) / 1,000
 
 ### Step 4: Cross-step rollup

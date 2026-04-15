@@ -1,0 +1,104 @@
+{
+  "answer": "```yaml\n# Billing entity fields\nbilling_entity_found_online: true\nbilling_entity_website: \"https://www.pfizer.com\"\nbilling_entity_type: \"corporation\"\nbilling_entity_incorporation_state: \"Delaware\"\nbilling_entity_incorporation_date: \"1942-06-02\"\nbilling_entity_address_on_record: \"66 Hudson Boulevard East, New York, NY 10001-2192\"\nbilling_address_matches_entity: true\nbilling_entity_is_fintech_issuer: false\nfintech_issuer_name: null\n\n# Institution association fields\nentity_institution_association: true\nassociation_type: \"same_entity\"\nassociation_evidence: \"The billing entity and the claimed institution share the exact same corporate name and headquarters address, which is confirmed by official SEC filings to be the headquarters of Pfizer Inc.\"\n\n# Wire transfer fields\nbank_verified: null\nbank_country_consistent: null\nbank_type: null\n\n# Confidence and evidence\nconfidence: high\nfree_text_summary: |\n  Pfizer Inc. is a highly prominent, publicly traded pharmaceutical corporation. Official SEC Form 10-K filings confirm that Pfizer Inc. is incorporated in Delaware and maintains its principal executive offices at 66 Hudson Boulevard East, New York, NY 10001. The billing entity precisely matches the claimed institution in both name and registered headquarters address.\n\nsources:\n  - url: \"https://www.sec.gov/Archives/edgar/data/78003/000007800325000066/pfe-ars2025.pdf\"\n    domain: \"sec.gov\"\n    source_type: \"government_registry\"\n    snippet: \"PFIZER INC. (Exact name of registrant as specified in its charter) Delaware... 66 Hudson Boulevard East, New York, New York 10001-2192 (Address of principal executive offices)\"\n  - url: \"https://www.sec.gov/Archives/edgar/data/78003/000119312520317074/d36307dex32.htm\"\n    domain: \"sec.gov\"\n    source_type: \"corporate_filing\"\n    snippet: \"The name of the corporation is Pfizer Inc. The name under which it was originally incorporated was Chas. Pfizer & Co., Inc. The date of filing its original Certificate of Incorporation with the Secretary of State was June 2, 1942.\"\n  - url: \"https://www.drugs.com/manufacturer/pfizer-inc-113.html\"\n    domain: \"drugs.com\"\n    source_type: \"business_directory\"\n    snippet: \"Pfizer Inc. 66 Hudson Boulevard East New York, NY 10001 Phone: 1-800-879-3477 Website: https://www.pfizer.com/\"\n\nsearches_performed:\n  - query: \"\\\"Pfizer Inc.\\\" \\\"66 Hudson Blvd East\\\" \\\"New York\\\"\"\n    num_results: 10\n  - query: \"Pfizer Inc. corporate registry NY OR SEC filings\"\n    num_results: 10\n```",
+  "model": "google/gemini-3.1-pro-preview",
+  "iterations": 2,
+  "total_exa_cost_usd": 0.014,
+  "tool_calls": [
+    {
+      "tool": "search_web",
+      "query": "\"Pfizer Inc.\" \"66 Hudson Blvd East\" \"New York\"",
+      "num_results": 10,
+      "duration_s": 0.84,
+      "results": [
+        {
+          "title": "Pfizer Inc, 66 Hudson Blvd E, New York, NY 10001, US - MapQuest",
+          "url": "https://www.mapquest.com/us/new-york/pfizer-inc-1157969"
+        },
+        {
+          "title": "Address for Pfizer Inc",
+          "url": "https://www.immihelp.com/employer/employer-address/Pfizer_Inc/66_Hudson_Blvd_E/New_York/NY/10001/"
+        },
+        {
+          "title": "Pfizer - 66 Hudson Blvd. - Tower Enterprises",
+          "url": "https://towerenterprises.net/portfolio/pfizer-66-hudson-blvd/"
+        },
+        {
+          "title": "Where is Pfizer's Headquarters? Main Office Location and Global Offices",
+          "url": "https://clay.com/dossier/pfizer-headquarters-office-locations"
+        },
+        {
+          "title": "pfe-20230221",
+          "url": "https://www.sec.gov/Archives/edgar/data/78003/000007800323000019/pfe-20230221.htm"
+        },
+        {
+          "title": "Pfizer Inc. - Midtown Manhattan | Manhattan NYC",
+          "url": "https://www.manhattan-nyc.com/businesses/pfizer-inc--g-11t_kyytz1/"
+        },
+        {
+          "title": "Pfizer Inc. Company Information - Drugs.com",
+          "url": "http://failover.drugs.com/manufacturer/pfizer-inc-113.html"
+        },
+        {
+          "title": "Pfizer Inc. Company Information - Drugs.com",
+          "url": "https://www.drugs.com/manufacturer/pfizer-inc-113.html"
+        },
+        {
+          "title": "Pfizer Inc Headquarters | SalesTools AI",
+          "url": "https://salestools.io/report/pfizer-inc-headquarters"
+        },
+        {
+          "title": "FAQ | Pfizer",
+          "url": "http://www.pfizer.com/contact/faqs"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "Pfizer Inc. corporate registry NY OR SEC filings",
+      "num_results": 10,
+      "duration_s": 1.02,
+      "results": [
+        {
+          "title": "",
+          "url": "https://www.sec.gov/Archives/edgar/data/78003/000007800325000066/pfe-ars2025.pdf"
+        },
+        {
+          "title": "EX-3.2",
+          "url": "https://www.sec.gov/Archives/edgar/data/78003/000119312520317074/d36307dex32.htm"
+        },
+        {
+          "title": "View Filing Data",
+          "url": "https://www.sec.gov/cgi-bin/viewer?accession_number=0000078003-23-000024&action=view&cik=78003&xbrl_type=v"
+        },
+        {
+          "title": "EDGAR Search Results",
+          "url": "https://www.sec.gov/cgi-bin/browse-edgar?CIK=0000078003&amp%3Btype=10-K"
+        },
+        {
+          "title": "Restated Certificate of Incorporation of Pfizer Inc.",
+          "url": "https://www.sec.gov/Archives/edgar/data/78003/000007800304000132/ex-3_1.htm"
+        },
+        {
+          "title": "EDGAR Search Results",
+          "url": "https://www.sec.gov/cgi-bin/browse-edgar?CIK=0000078003&type=10-K"
+        },
+        {
+          "title": "EDGAR Search Results",
+          "url": "https://www.sec.gov/cgi-bin/browse-edgar?CIK=0000078003&action=getcompany&type=10-k"
+        },
+        {
+          "title": "EDGAR Search Results",
+          "url": "https://www.sec.gov/cgi-bin/browse-edgar?CIK=0000078003"
+        },
+        {
+          "title": "0000078003-24-000039",
+          "url": "https://s28.q4cdn.com/781576035/files/doc_financials/2023/ar/2023-10k.pdf"
+        },
+        {
+          "title": "",
+          "url": "https://investors.pfizer.com/files/doc_financials/2024/ar/10K_Final.pdf"
+        }
+      ]
+    }
+  ]
+}

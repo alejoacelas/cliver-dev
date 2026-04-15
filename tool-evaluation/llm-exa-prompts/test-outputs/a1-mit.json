@@ -1,0 +1,56 @@
+{
+  "answer": "```yaml\ninstitution_found_online: true\ninstitution_website: \"https://www.mit.edu\"\ninstitution_address_on_record: \"77 Massachusetts Avenue, Cambridge, MA 02139, USA\"\naddress_matches_claimed: true\naddress_match_level: \"street\"\nother_entity_at_address: null\ncoworking_or_incubator: false\ncoworking_operator: null\ninstitution_has_multiple_campuses: true\ninstitution_moved_recently: false\nmoved_from: null\nmoved_to: null\n\nconfidence: high\nfree_text_summary: |\n  The Massachusetts Institute of Technology (MIT) is a well-known institution, and 77 Massachusetts Avenue, Cambridge, MA 02139 is its primary official address and main entrance. The institution maintains a sprawling campus with various physical building addresses, but 77 Massachusetts Ave is the recognized main contact and mailing address for the university.\n\nsources:\n  - url: \"https://www.mit.edu/contact\"\n    domain: \"mit.edu\"\n    source_type: official_institution_page\n    snippet: \"Massachusetts Institute of Technology 77 Massachusetts Avenue Cambridge, MA 02139, USA\"\n  - url: \"https://web.mit.edu/visit/popup-77mass.html\"\n    domain: \"mit.edu\"\n    source_type: official_institution_page\n    snippet: \"This is 77 Massachusetts Avenue, MIT's main entrance. Enter here for Lobby 7, the MIT Information Center, and Admissions Office.\"\n\nsearches_performed:\n  - query: \"\\\"Massachusetts Institute of Technology\\\" address OR \\\"77 Massachusetts Ave\\\"\"\n    num_results: 10\n```",
+  "model": "google/gemini-3.1-pro-preview",
+  "iterations": 2,
+  "total_exa_cost_usd": 0.007,
+  "tool_calls": [
+    {
+      "tool": "search_web",
+      "query": "\"Massachusetts Institute of Technology\" address OR \"77 Massachusetts Ave\"",
+      "num_results": 10,
+      "duration_s": 0.92,
+      "results": [
+        {
+          "title": "77 Massachusetts Avenue",
+          "url": "https://web.mit.edu/visit/popup-77mass.html"
+        },
+        {
+          "title": "Contact | MIT - Massachusetts Institute of Technology",
+          "url": "https://www.mit.edu/contact"
+        },
+        {
+          "title": "Contact | MIT - Massachusetts Institute of Technology",
+          "url": "https://web.mit.edu/contact"
+        },
+        {
+          "title": "MIT Facilities - Request Services",
+          "url": "https://web.mit.edu/facilities/services/mail/addresses.html"
+        },
+        {
+          "title": "Contact | MIT - Massachusetts Institute of Technology",
+          "url": "http://counter.mit.edu/contact"
+        },
+        {
+          "title": "visiting MIT: getting here and getting around",
+          "url": "https://mit.edu/visit/get-around.html"
+        },
+        {
+          "title": "visiting MIT: getting here and getting around",
+          "url": "http://web.mit.edu/visit/get-around.html"
+        },
+        {
+          "title": "A Roadmap to Address Relief",
+          "url": "https://web.mit.edu/facilities/services/mail/_baks/addresses_new.html.0031.8759.bak"
+        },
+        {
+          "title": "What is the mail address/fax number? | MIT Admissions",
+          "url": "https://mitadmissions.org/help/faq/mail-address-fax"
+        },
+        {
+          "title": "Visit | MIT - Massachusetts Institute of Technology",
+          "url": "https://www.mit.edu/visit/"
+        }
+      ]
+    }
+  ]
+}

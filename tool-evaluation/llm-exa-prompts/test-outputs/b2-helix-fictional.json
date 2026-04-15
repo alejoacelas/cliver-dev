@@ -1,0 +1,716 @@
+{
+  "answer": "",
+  "model": "google/gemini-3.1-pro-preview",
+  "iterations": 15,
+  "total_exa_cost_usd": 0.11200000000000004,
+  "tool_calls": [
+    {
+      "tool": "search_web",
+      "query": "\"Helix Therapeutics\" \"700 Main St\" Cambridge MA",
+      "num_results": 10,
+      "duration_s": 0.89,
+      "results": [
+        {
+          "title": "HelixNano",
+          "url": "https://ch.linkedin.com/company/helixnano"
+        },
+        {
+          "title": "Helix Therapeutics - Products, Competitors, Financials, Employees, Headquarters Locations",
+          "url": "https://www.cbinsights.com/company/helix-therapeutics"
+        },
+        {
+          "title": "HelixNano | MeHI",
+          "url": "https://mehi.masstech.org/node/4551"
+        },
+        {
+          "title": "Helix Therapeutics Stock Price, Funding, Valuation, Revenue & Financial Statements",
+          "url": "https://www.cbinsights.com/company/helix-therapeutics/financials"
+        },
+        {
+          "title": "HelixNano - Products, Competitors, Financials, Employees, Headquarters Locations",
+          "url": "https://www.cbinsights.com/company/helix-nanotechnologies"
+        },
+        {
+          "title": "Helix Carbon",
+          "url": "https://www.third-derivative.org/portfolio/helix-carbon"
+        },
+        {
+          "title": "HelixNano Company Overview, Contact Details & Competitors | LeadIQ",
+          "url": "https://leadiq.com/c/helixnano/5a1dacac2300005a00a209ec"
+        },
+        {
+          "title": "Helix Nanotechnologies - BioPharmGuy",
+          "url": "https://mail.biopharmguy.com/company.php/Helix%20Nanotechnologies"
+        },
+        {
+          "title": "HelixNano 2025 Company Profile: Valuation, Funding &amp; Investors | PitchBook",
+          "url": "https://pitchbook.com/profiles/company/118112-95"
+        },
+        {
+          "title": "HelixNano - Teeming.ai \u00b7 Teeming.ai",
+          "url": "https://teeming.ai/c/helixnano/1d262ec1-b6f8-4501-bfce-54f08a96d28a"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"Helix Therapeutics Inc\" Massachusetts OR \"700 Main St\" Cambridge",
+      "num_results": 9,
+      "duration_s": 0.72,
+      "results": [
+        {
+          "title": "HelixNano",
+          "url": "https://ch.linkedin.com/company/helixnano"
+        },
+        {
+          "title": "Helix Therapeutics - Products, Competitors, Financials, Employees, Headquarters Locations",
+          "url": "https://www.cbinsights.com/company/helix-therapeutics"
+        },
+        {
+          "title": "HelixNano | MeHI",
+          "url": "https://mehi.masstech.org/node/4551"
+        },
+        {
+          "title": "Helix Carbon",
+          "url": "https://www.third-derivative.org/portfolio/helix-carbon"
+        },
+        {
+          "title": "HelixNano - Products, Competitors, Financials, Employees, Headquarters Locations",
+          "url": "https://www.cbinsights.com/company/helix-nanotechnologies"
+        },
+        {
+          "title": "Helix Therapeutics Stock Price, Funding, Valuation, Revenue & Financial Statements",
+          "url": "https://www.cbinsights.com/company/helix-therapeutics/financials"
+        },
+        {
+          "title": "HelixNano 2025 Company Profile: Valuation, Funding &amp; Investors | PitchBook",
+          "url": "https://pitchbook.com/profiles/company/118112-95"
+        },
+        {
+          "title": "Helix Nanotechnologies - BioPharmGuy",
+          "url": "https://mail.biopharmguy.com/company.php/Helix%20Nanotechnologies"
+        },
+        {
+          "title": "Helix Therapeutics",
+          "url": "https://www.crunchbase.com/organization/helix-therapeutics"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"Helix Therapeutics\" site:opencorporates.com",
+      "num_results": 1,
+      "duration_s": 0.6,
+      "results": [
+        {
+          "title": "HI-SPIRITS LTD",
+          "url": "https://assets.opencorporates.com/companies/gb/04509791"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"HelixNano\" \"700 Main St\" Cambridge",
+      "num_results": 10,
+      "duration_s": 0.65,
+      "results": [
+        {
+          "title": "home (Dec '23 snapshot) \u2014 HelixNano",
+          "url": "https://www.helixnano.com/home-1"
+        },
+        {
+          "title": "HelixNano",
+          "url": "https://ch.linkedin.com/company/helixnano"
+        },
+        {
+          "title": "Helix Nanotechnologies: Next-generation mRNA platform to solve cancer, COVID and climate. | Y Combinator",
+          "url": "https://www.ycombinator.com/companies/helix-nanotechnologies"
+        },
+        {
+          "title": "HelixNano 2025 Company Profile: Valuation, Funding &amp; Investors | PitchBook",
+          "url": "https://pitchbook.com/profiles/company/118112-95"
+        },
+        {
+          "title": "HelixNano - Company Profile",
+          "url": "https://www.boringbusinessnerd.com/startups/helixnano"
+        },
+        {
+          "title": "HelixNano Information | SignalHire Company Profile",
+          "url": "https://www.signalhire.com/overview/helixnano"
+        },
+        {
+          "title": "HelixNano - Products, Competitors, Financials, Employees, Headquarters Locations",
+          "url": "https://www.cbinsights.com/company/helix-nanotechnologies"
+        },
+        {
+          "title": "HelixNano | MeHI",
+          "url": "https://mehi.masstech.org/node/4551"
+        },
+        {
+          "title": "HelixNano Boston Office: Careers, Perks + Culture | Built In Boston",
+          "url": "https://www.builtinboston.com/company/helixnano"
+        },
+        {
+          "title": "Helix Nanotechnologies: Next-generation mRNA platform to solve cancer, COVID and climate. | Y Combinator",
+          "url": "https://www.ycombinator.com/companies/1560"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"Helix Therapeutics\" OR \"Helix Therapeutics Inc\" SEC EDGAR",
+      "num_results": 10,
+      "duration_s": 0.92,
+      "results": [
+        {
+          "title": "",
+          "url": "https://www.sec.gov/Archives/edgar/data/1869105/000121390025056321/ea0237401-05.htm"
+        },
+        {
+          "title": "View Filing Data",
+          "url": "https://www.sec.gov/cgi-bin/viewer?accession_number=0001213900-25-056321&action=view&cik=1869105&xbrl_type=v"
+        },
+        {
+          "title": "Ea023255501ex99 2 helix2.htm",
+          "url": "https://www.sec.gov/Archives/edgar/data/1869105/000121390025018335/ea023255501ex99-2_helix2.htm"
+        },
+        {
+          "title": "EDGAR Search Results",
+          "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&filenum=005-94447"
+        },
+        {
+          "title": "Ea0273746 s1mef helix3.htm",
+          "url": "https://www.sec.gov/Archives/edgar/data/2099656/000121390026006859/ea0273746-s1mef_helix3.htm"
+        },
+        {
+          "title": "EDGAR Search Results",
+          "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&filenum=333-289940"
+        },
+        {
+          "title": "Fs12024a2 helixacq2.htm",
+          "url": "https://www.sec.gov/Archives/edgar/data/1869105/000121390024010676/fs12024a2_helixacq2.htm"
+        },
+        {
+          "title": "Ea156790 s1a2 helixacq.htm",
+          "url": "https://www.sec.gov/Archives/edgar/data/1821586/000121390022012161/ea156790-s1a2_helixacq.htm"
+        },
+        {
+          "title": "EDGAR Search Results",
+          "url": "https://www.sec.gov/cgi-bin/browse-edgar?CIK=0001869105"
+        },
+        {
+          "title": "EDGAR Search Results",
+          "url": "https://www.sec.gov/cgi-bin/browse-edgar?CIK=0001869105&action=getcompany&count=40&owner=include"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"Helix Therapeutics\" \"Cambridge\" OR \"700 Main\"",
+      "num_results": 9,
+      "duration_s": 0.65,
+      "results": [
+        {
+          "title": "Helix Therapeutics - Products, Competitors, Financials, Employees, Headquarters Locations",
+          "url": "https://www.cbinsights.com/company/helix-therapeutics"
+        },
+        {
+          "title": "HelixNano",
+          "url": "https://ch.linkedin.com/company/helixnano"
+        },
+        {
+          "title": "HelixNano | MeHI",
+          "url": "https://mehi.masstech.org/node/4551"
+        },
+        {
+          "title": "Helix Therapeutics Stock Price, Funding, Valuation, Revenue & Financial Statements",
+          "url": "https://www.cbinsights.com/company/helix-therapeutics/financials"
+        },
+        {
+          "title": "Helix Therapeutics",
+          "url": "https://www.crunchbase.com/organization/helix-therapeutics"
+        },
+        {
+          "title": "Helix Therapeutics handed $2.5M in new funding \u2013 ABG Commercial Realty",
+          "url": "https://abgrealty.com/helix-therapeutics-handed-2-5m-funding/"
+        },
+        {
+          "title": "About Us - Helix Biopharma",
+          "url": "https://www.helixbiopharma.com/about-us/"
+        },
+        {
+          "title": "HelixNano - Teeming.ai \u00b7 Teeming.ai",
+          "url": "https://teeming.ai/c/helixnano/1d262ec1-b6f8-4501-bfce-54f08a96d28a"
+        },
+        {
+          "title": "Helix Nanotechnologies - BioPharmGuy",
+          "url": "https://mail.biopharmguy.com/company.php/Helix%20Nanotechnologies"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"Helix Therapeutics Inc\" Delaware registry",
+      "num_results": 10,
+      "duration_s": 0.78,
+      "results": [
+        {
+          "title": "Helix Innovations LLC",
+          "url": "https://www.sosnc.gov/online_services/search/profile_filings/15269570"
+        },
+        {
+          "title": "Helix Therapeutics - Products, Competitors, Financials, Employees, Headquarters Locations",
+          "url": "https://www.cbinsights.com/company/helix-therapeutics"
+        },
+        {
+          "title": "Ea136731ex3 1 helixtech.htm",
+          "url": "https://www.sec.gov/Archives/edgar/data/1611277/000121390021012852/ea136731ex3-1_helixtech.htm"
+        },
+        {
+          "title": "Ea023740105ex3 4 helix2.htm",
+          "url": "https://www.sec.gov/Archives/edgar/data/1869105/000121390025056321/ea023740105ex3-4_helix2.htm"
+        },
+        {
+          "title": "",
+          "url": "https://www.sec.gov/Archives/edgar/data/1869105/000121390025056321/ea0237401-05.htm"
+        },
+        {
+          "title": "Search for Corporations, Limited Liability Companies, Limited Partnerships, and Trademarks by Name",
+          "url": "https://search.sunbiz.org/Inquiry/corporationsearch/SearchResults?inquiryType=EntityName&searchTerm=HELIX+TECHNOLOGY+GROUP+INC"
+        },
+        {
+          "title": "Helix BioMedix - 2025 Company Profile, Team, Funding, Competitors & Financials - Tracxn",
+          "url": "https://tracxn.com/d/companies/helix-biomedix/___VyIlNS8TdA0rDkgjeVxWVg8ZpYUz6jCHSOSTHvPU_o"
+        },
+        {
+          "title": "Search for Corporations, Limited Liability Companies, Limited Partnerships, and Trademarks by Name",
+          "url": "https://search.sunbiz.org/Inquiry/corporationsearch/SearchResults?InquiryType=EntityName&SearchTerm=HELIX+BETTERMENT+GROUP+LLC&entityId=S43248&inquiryDirectionType=PreviousList&listNameOrder=HELIXRESEARCHDEVELOPMENT+S432480&searchNameOrder=HELIXRESEARCHDEVELOPMENT+S432480"
+        },
+        {
+          "title": "Helix Acquisition Holdings, Inc. - LEI: 549300CPM0Q4FQM7PL18",
+          "url": "https://lei.bloomberg.com/leis/view/549300CPM0Q4FQM7PL18"
+        },
+        {
+          "title": "Helix Therapeutics, Inc. - Drug pipelines, Patents, Clinical trials - Synapse",
+          "url": "https://synapse.patsnap.com/organization/31d09ab40832b17046bc0429f1fe19e1"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"Helix Therapeutics\" OR \"Helix Therapeutics Inc\" address",
+      "num_results": 10,
+      "duration_s": 0.97,
+      "results": [
+        {
+          "title": "Helix Therapeutics - Products, Competitors, Financials, Employees, Headquarters Locations",
+          "url": "https://www.cbinsights.com/company/helix-therapeutics"
+        },
+        {
+          "title": "Helix BioPharma - 2026 Company Profile, Team, Funding & Competitors - Tracxn",
+          "url": "https://tracxn.com/d/companies/helixbiopharma/__f64IKWbCaHeYIgAedv4TYxHfQRO0JQO7vmG97MlUfHE"
+        },
+        {
+          "title": "Helix BioMedix - 2025 Company Profile, Team, Funding, Competitors & Financials - Tracxn",
+          "url": "https://tracxn.com/d/companies/helix-biomedix/___VyIlNS8TdA0rDkgjeVxWVg8ZpYUz6jCHSOSTHvPU_o"
+        },
+        {
+          "title": "Helix BioMedix - 2026 Company Profile, Funding, Competitors & Financials - Tracxn",
+          "url": "https://tracxn.com/d/companies/helixbiomedix/___VyIlNS8TdA0rDkgjeVxWVg8ZpYUz6jCHSOSTHvPU_o"
+        },
+        {
+          "title": "Contact Page - Helix BioMedix Inc",
+          "url": "https://helixbiomedix.com/contact/"
+        },
+        {
+          "title": "Helix Biomedix, Inc. - Helix BioMedix Inc",
+          "url": "http://www.helixbiomedix.com/"
+        },
+        {
+          "title": "About Us - Helix Biopharma",
+          "url": "https://www.helixbiopharma.com/about-us/"
+        },
+        {
+          "title": "Contact Us | Helix Biopharma Corp.",
+          "url": "https://www.helixbiopharma.com/contact-us/"
+        },
+        {
+          "title": "Old Contact Us - Helix Biopharma",
+          "url": "https://www.helixbiopharma.com/old-contact-us/"
+        },
+        {
+          "title": "Helixis - 2026 Company Profile, Team, Funding & Competitors - Tracxn",
+          "url": "https://tracxn.com/d/companies/helixis/__2jhaTsPaxGoBzgy1fG8SzpHiWox38H998ZlzmdPnzbk"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"Helix Therapeutics\" \"700 Main St\" OR \"700 Main Street\" Cambridge",
+      "num_results": 9,
+      "duration_s": 0.81,
+      "results": [
+        {
+          "title": "Helix Therapeutics - Products, Competitors, Financials, Employees, Headquarters Locations",
+          "url": "https://www.cbinsights.com/company/helix-therapeutics"
+        },
+        {
+          "title": "HelixNano",
+          "url": "https://ch.linkedin.com/company/helixnano"
+        },
+        {
+          "title": "HelixNano | MeHI",
+          "url": "https://mehi.masstech.org/node/4551"
+        },
+        {
+          "title": "Helix Carbon",
+          "url": "https://www.third-derivative.org/portfolio/helix-carbon"
+        },
+        {
+          "title": "Helix Therapeutics Stock Price, Funding, Valuation, Revenue & Financial Statements",
+          "url": "https://www.cbinsights.com/company/helix-therapeutics/financials"
+        },
+        {
+          "title": "Helix Therapeutics handed $2.5M in new funding \u2013 ABG Commercial Realty",
+          "url": "https://abgrealty.com/helix-therapeutics-handed-2-5m-funding/"
+        },
+        {
+          "title": "HelixNano - Products, Competitors, Financials, Employees, Headquarters Locations",
+          "url": "https://www.cbinsights.com/company/helix-nanotechnologies"
+        },
+        {
+          "title": "HelixNano Company Overview, Contact Details & Competitors | LeadIQ",
+          "url": "https://leadiq.com/c/helixnano/5a1dacac2300005a00a209ec"
+        },
+        {
+          "title": "Helix Therapeutics",
+          "url": "https://www.crunchbase.com/organization/helix-therapeutics"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"Helix Therapeutics Inc\" Massachusetts business registry",
+      "num_results": 10,
+      "duration_s": 1.03,
+      "results": [
+        {
+          "title": "Robert Jerry LEPOFSKY",
+          "url": "https://find-and-update.company-information.service.gov.uk/officers/oLmjx6zPc9WudJSzm0PIFMzsVsE/appointments"
+        },
+        {
+          "title": "Helix Innovations LLC",
+          "url": "https://www.sosnc.gov/online_services/search/profile_filings/15269570"
+        },
+        {
+          "title": "EDGAR Search Results",
+          "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&filenum=021-297313"
+        },
+        {
+          "title": "",
+          "url": "https://www.sec.gov/Archives/edgar/data/1869105/000121390025056321/ea0237401-05.htm"
+        },
+        {
+          "title": "EDGAR Search Results",
+          "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&filenum=333-83162"
+        },
+        {
+          "title": "Helix Therapeutics - Products, Competitors, Financials, Employees, Headquarters Locations",
+          "url": "https://www.cbinsights.com/company/helix-therapeutics"
+        },
+        {
+          "title": "EDGAR Search Results",
+          "url": "https://www.sec.gov/cgi-bin/browse-edgar?CIK=0001863978&Find=Search&action=getcompany&owner=exclude"
+        },
+        {
+          "title": "EDGAR Search Results",
+          "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&filenum=000-06866"
+        },
+        {
+          "title": "EDGAR Search Results",
+          "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&filenum=021-212388"
+        },
+        {
+          "title": "EDGAR Search Results",
+          "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&filenum=333-56047"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"HelixNano\" site:bizapedia.com OR site:mass.gov OR site:opencorporates.com",
+      "num_results": 9,
+      "duration_s": 0.65,
+      "results": [
+        {
+          "title": "Company Search Subscription Service",
+          "url": "https://www.bizapedia.com/ma/qls-alpha-helix-fund-lp.html"
+        },
+        {
+          "title": "Company Search Subscription Service",
+          "url": "https://www.bizapedia.com/ma/elixir-pharmaceuticals-inc.html"
+        },
+        {
+          "title": "BIZAPEDIA PRO SEARCH SUBSCRIPTION",
+          "url": "https://www.bizapedia.com/mo/helixroad-biotech-llc.html"
+        },
+        {
+          "title": "BIZAPEDIA PRO SEARCH SUBSCRIPTION",
+          "url": "https://www.bizapedia.com/nh/helix-retail-llc.html"
+        },
+        {
+          "title": "Company Search Subscription Service",
+          "url": "https://www.bizapedia.com/id/helix-biomedical-llc.html"
+        },
+        {
+          "title": "BIZAPEDIA PRO SEARCH SUBSCRIPTION",
+          "url": "https://www.bizapedia.com/ma/healis-therapeutics-inc.html"
+        },
+        {
+          "title": "Company Search Subscription Service",
+          "url": "https://www.bizapedia.com/ma/bioxel-inc.html"
+        },
+        {
+          "title": "Company Search Subscription Service",
+          "url": "https://www.bizapedia.com/ma/korsana-biosciences-inc.html"
+        },
+        {
+          "title": "BIZAPEDIA PRO SEARCH SUBSCRIPTION",
+          "url": "https://www.bizapedia.com/ma/holonix-llc.html"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"Helix Therapeutics\" OR \"Helix Therapeutics Inc\" site:mass.gov OR site:opencorporates.com",
+      "num_results": 9,
+      "duration_s": 0.9,
+      "results": [
+        {
+          "title": "",
+          "url": "https://www.mass.gov/files/documents/2016/08/re/2006-corp-book.pdf"
+        },
+        {
+          "title": "",
+          "url": "https://www.mass.gov/files/documents/2016/08/no/2005-corp-book.pdf"
+        },
+        {
+          "title": "corporations - Copy.txt - Notepad",
+          "url": "https://www.mass.gov/files/documents/2017/09/30/corporations.pdf"
+        },
+        {
+          "title": "The Corporations Book | Mass.gov",
+          "url": "https://www.mass.gov/info-details/the-corporations-book"
+        },
+        {
+          "title": "Researching Massachusetts Corporations | Mass.gov",
+          "url": "https://www.mass.gov/info-details/researching-massachusetts-corporations"
+        },
+        {
+          "title": "File Room - Office of Consumer Affairs & Business Regulation - Mass.Gov",
+          "url": "https://services.oca.mass.gov/dtc/frmTelecomList.aspx"
+        },
+        {
+          "title": "Updated ChemGenes Corporation Case Study | Mass.gov",
+          "url": "https://www.mass.gov/news/updated-chemgenes-corporation-case-study"
+        },
+        {
+          "title": "",
+          "url": "https://www.mass.gov/files/documents/2016/10/nz/appendix-support-exxon-leave-motion.pdf"
+        },
+        {
+          "title": "In Major Antitrust Lawsuit, AG Healey Sues Generic Drug Makers for Conspiring to Raise Prices | Mass.gov",
+          "url": "https://www.mass.gov/news/in-major-antitrust-lawsuit-ag-healey-sues-generic-drug-makers-for-conspiring-to-raise-prices"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"Helix Therapeutics\" OR \"Helix Therapeutics Inc\" site:sec.gov",
+      "num_results": 10,
+      "duration_s": 0.83,
+      "results": [
+        {
+          "title": "Ea023255501ex99 2 helix2.htm",
+          "url": "https://www.sec.gov/Archives/edgar/data/1869105/000121390025018335/ea023255501ex99-2_helix2.htm"
+        },
+        {
+          "title": "Ea023255501ex99 2 helix2.htm",
+          "url": "https://www.sec.gov/Archives/edgar/data/1869105/000121390025018334/ea023255501ex99-2_helix2.htm"
+        },
+        {
+          "title": "",
+          "url": "https://www.sec.gov/Archives/edgar/data/1869105/000121390025056321/ea0237401-05.htm"
+        },
+        {
+          "title": "Fs12019a1 helixtcs.htm",
+          "url": "https://www.sec.gov/Archives/edgar/data/1611277/000121390019011422/fs12019a1_helixtcs.htm"
+        },
+        {
+          "title": "Fs12019 helixtcs.htm",
+          "url": "https://www.sec.gov/Archives/edgar/data/1611277/000121390019009835/fs12019_helixtcs.htm"
+        },
+        {
+          "title": "helix_10k-123111.htm",
+          "url": "https://www.sec.gov/Archives/edgar/data/831749/000143774912002826/helix_10k-123111.htm"
+        },
+        {
+          "title": "Fs12024a2 helixacq2.htm",
+          "url": "https://www.sec.gov/Archives/edgar/data/1869105/000121390024010676/fs12024a2_helixacq2.htm"
+        },
+        {
+          "title": "Filed by e3 Filing, Computershare 1-800-973-3274 - Helix BioPharma Corp. - Form 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1305591/000117625611000810/helixbiopharma20f110731.htm"
+        },
+        {
+          "title": "Ea156790 s1a2 helixacq.htm",
+          "url": "https://www.sec.gov/Archives/edgar/data/1821586/000121390022012161/ea156790-s1a2_helixacq.htm"
+        },
+        {
+          "title": "View Filing Data",
+          "url": "https://www.sec.gov/cgi-bin/viewer?accession_number=0001213900-25-056321&action=view&cik=1869105&xbrl_type=v"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"Helix Therapeutics Inc\" Cambridge MA",
+      "num_results": 9,
+      "duration_s": 1.75,
+      "results": [
+        {
+          "title": "Helix Therapeutics - Products, Competitors, Financials, Employees, Headquarters Locations",
+          "url": "https://www.cbinsights.com/company/helix-therapeutics"
+        },
+        {
+          "title": "HelixNano",
+          "url": "https://ch.linkedin.com/company/helixnano"
+        },
+        {
+          "title": "Helix Therapeutics Stock Price, Funding, Valuation, Revenue & Financial Statements",
+          "url": "https://www.cbinsights.com/company/helix-therapeutics/financials"
+        },
+        {
+          "title": "HelixBind, Inc",
+          "url": "https://nl.linkedin.com/company/helixbind-inc"
+        },
+        {
+          "title": "About Us - Helix Biopharma",
+          "url": "https://www.helixbiopharma.com/about-us/"
+        },
+        {
+          "title": "HELIXBIND | Identification of Bloodstream Infections | Boxborough, MA",
+          "url": "https://www.helixbind.com/"
+        },
+        {
+          "title": "HelixNano | MeHI",
+          "url": "https://mehi.masstech.org/node/4551"
+        },
+        {
+          "title": "Helix Biomedix, Inc. - Helix BioMedix Inc",
+          "url": "http://www.helixbiomedix.com/"
+        },
+        {
+          "title": "Helix Therapeutics",
+          "url": "https://www.crunchbase.com/organization/helix-therapeutics"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"HelixNano\" \"incorporation\" OR \"registered\" OR \"incorporated\"",
+      "num_results": 10,
+      "duration_s": 0.79,
+      "results": [
+        {
+          "title": "HelixNano - Company Profile",
+          "url": "https://www.boringbusinessnerd.com/startups/helixnano"
+        },
+        {
+          "title": "HelixNano",
+          "url": "https://ch.linkedin.com/company/helixnano"
+        },
+        {
+          "title": "HelixNano 2025 Company Profile: Valuation, Funding &amp; Investors | PitchBook",
+          "url": "https://pitchbook.com/profiles/company/118112-95"
+        },
+        {
+          "title": "home (Dec '23 snapshot) \u2014 HelixNano",
+          "url": "https://www.helixnano.com/home-1"
+        },
+        {
+          "title": "",
+          "url": "https://www.sec.gov/Archives/edgar/data/1869105/000121390025056321/ea0237401-05.htm"
+        },
+        {
+          "title": "HelixNano - Company Profile",
+          "url": "https://tracxn.com/d/companies/helixnano/__Lr2uYnU8sKAdXQJJRqUEVFCAjWHD4wDnkK3zxArVfjQ"
+        },
+        {
+          "title": "HelixNano - Products, Competitors, Financials, Employees, Headquarters Locations",
+          "url": "https://www.cbinsights.com/company/helix-nanotechnologies"
+        },
+        {
+          "title": "HelixNano | The Org",
+          "url": "https://theorg.com/org/helixnano"
+        },
+        {
+          "title": "HelixNano \u2014 Company Profile | The Company Check",
+          "url": "https://www.thecompanycheck.com/company/b/helixnano/dqc8fmeqqhdpswbbw"
+        },
+        {
+          "title": "Helix Nanotechnologies - Company Information | YCDB - The Y Combinator Database",
+          "url": "https://www.ycdb.co/company/helix-nanotechnologies"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"Helix Therapeutics Inc\" Massachusetts OpenCorporates",
+      "num_results": 10,
+      "duration_s": 0.66,
+      "results": [
+        {
+          "title": "Helix Therapeutics - Products, Competitors, Financials, Employees, Headquarters Locations",
+          "url": "https://www.cbinsights.com/company/helix-therapeutics"
+        },
+        {
+          "title": "Robert Jerry LEPOFSKY",
+          "url": "https://find-and-update.company-information.service.gov.uk/officers/oLmjx6zPc9WudJSzm0PIFMzsVsE/appointments"
+        },
+        {
+          "title": "Helix Therapeutics Stock Price, Funding, Valuation, Revenue & Financial Statements",
+          "url": "https://www.cbinsights.com/company/helix-therapeutics/financials"
+        },
+        {
+          "title": "HelixNano - Products, Competitors, Financials, Employees, Headquarters Locations",
+          "url": "https://www.cbinsights.com/company/helix-nanotechnologies"
+        },
+        {
+          "title": "HelixNano",
+          "url": "https://ch.linkedin.com/company/helixnano"
+        },
+        {
+          "title": "Helix Nanotechnologies - BioPharmGuy",
+          "url": "https://mail.biopharmguy.com/company.php/Helix%20Nanotechnologies"
+        },
+        {
+          "title": "Helix Technology Corp.",
+          "url": "https://synapse.patsnap.com/organization/5008481cfbec3bbd23c4b1c4982c0c41"
+        },
+        {
+          "title": "Helix BioMedix, Inc.",
+          "url": "https://discovery-patsnap-com.libproxy.mit.edu/company/helix-biomedix/"
+        },
+        {
+          "title": "HelixBind, Inc",
+          "url": "https://nl.linkedin.com/company/helixbind-inc"
+        },
+        {
+          "title": "Helix Innovations LLC",
+          "url": "https://www.sosnc.gov/online_services/search/profile_filings/15269570"
+        }
+      ]
+    }
+  ]
+}

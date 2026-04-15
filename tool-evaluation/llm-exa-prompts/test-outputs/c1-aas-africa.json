@@ -1,0 +1,256 @@
+{
+  "answer": "```yaml\n# Domain ownership fields\ndomain_belongs_to: \"African Academy of Sciences\"\ndomain_is_free_email: false\nfree_email_provider_name: null\ndomain_is_institutional: true\ndomain_institution_matches_claimed: true\ndomain_website_url: \"https://www.aasciences.africa\"\ndomain_appears_impersonation: false\nimpersonation_target: null\n\n# Institution email fields\nclaimed_institution_known_domains: [\"aasciences.africa\"]\nclaimed_institution_email_format: null\n\n# Individual affiliation fields \nperson_institution_link_found: null\nperson_found_on_faculty_page: null\nperson_found_in_publications: null\nperson_link_evidence: null\ncommon_name_risk: false\n\n# Dual affiliation fields \ndual_affiliation_detected: false\ndomain_institution: null\nclaimed_institution_link: null\n\n# Confidence and evidence\nconfidence: high\nfree_text_summary: |\n  The domain aasciences.africa is the official internet domain for the African Academy of Sciences (AAS). The organization's main website is hosted on this domain and the contact pages confirm that its headquarters are located in Nairobi, Kenya, which matches the claimed institution and country.\nsources:\n  - url: \"https://www.aasciences.africa/contact-us\"\n    domain: \"aasciences.africa\"\n    source_type: official_institution_page\n    snippet: \"Our Headquarters. The African Academy of Sciences (AAS). 8 Miotoni Lane, Karen, Nairobi. P.O. Box 24916-00502 Nairobi, Kenya.\"\n  - url: \"https://council.science/member/aas-african-academy-of-sciences/\"\n    domain: \"council.science\"\n    source_type: business_directory\n    snippet: \"The African Academy of Sciences has been a member since 2014. The African Academy of Sciences (The AAS) is a non-aligned, non-political, not-for-profit panAfrican organisation whose vision is to see transformed lives on the African continent through science.\"\n  - url: \"https://www.interacademies.org/organization/african-academy-sciences-aas\"\n    domain: \"interacademies.org\"\n    source_type: business_directory\n    snippet: \"The African Academy of Sciences (AAS) is a non-aligned, non-political, not-for-profit Pan-African organization headquartered in Nairobi, Kenya, with a hosting agreement with the government of Kenya.\"\n\nsearches_performed:\n  - query: \"\\\"aasciences.africa\\\"\"\n    num_results: 9\n  - query: \"\\\"African Academy of Sciences\\\" official website email\"\n    num_results: 8\n  - query: \"\\\"@aasciences.africa\\\" email\"\n    num_results: 8\n  - query: \"\\\"aasciences.africa\\\" email address site:aasciences.africa\"\n    num_results: 8\n```",
+  "model": "google/gemini-3.1-pro-preview",
+  "iterations": 6,
+  "total_exa_cost_usd": 0.042,
+  "tool_calls": [
+    {
+      "tool": "search_web",
+      "query": "\"aasciences.africa\"",
+      "num_results": 9,
+      "duration_s": 0.67,
+      "results": [
+        {
+          "title": "The African Academy of Sciences (AAS)",
+          "url": "https://www.aasciences.africa/"
+        },
+        {
+          "title": "The African Academy of Sciences (AAS)",
+          "url": "https://www.aasciences.africa/about"
+        },
+        {
+          "title": "African Academy of Sciences (AAS)",
+          "url": "https://council.science/member/aas-african-academy-of-sciences/"
+        },
+        {
+          "title": "About Us | The AAS",
+          "url": "https://old.aasciences.africa/about"
+        },
+        {
+          "title": "African Academy of Sciences interrogates its continental role | The AAS",
+          "url": "https://aasciences.africa/news/african-academy-of-sciences-interrogates-its-continental-role"
+        },
+        {
+          "title": "The African Academy Of Sciences (The AAS)",
+          "url": "https://african-network.org/docs/the-african-academy-of-sciences-the-aas"
+        },
+        {
+          "title": "aasciences.africa \u25b7 Welcome | The AAS",
+          "url": "https://webrate.org/site/aasciences.africa/"
+        },
+        {
+          "title": "Feedback Submitted   Received, We'll get back to you",
+          "url": "https://old.aasciences.africa/"
+        },
+        {
+          "title": "Building R&D Infrastructure",
+          "url": "https://www.aasciences.app/Resources"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"African Academy of Sciences\" official website email",
+      "num_results": 8,
+      "duration_s": 0.72,
+      "results": [
+        {
+          "title": "Contact Us | The AAS | The AAS",
+          "url": "https://aasciences.africa/contacts"
+        },
+        {
+          "title": "Contact Us | The AAS | The AAS",
+          "url": "https://www.aasciences.africa/contact-us"
+        },
+        {
+          "title": "The African Academy of Sciences (AAS)",
+          "url": "https://aasciences.africa/"
+        },
+        {
+          "title": "The African Academy of Sciences (AAS)",
+          "url": "https://aasciences.africa/About"
+        },
+        {
+          "title": "About Us | The AAS",
+          "url": "https://old.aasciences.africa/about"
+        },
+        {
+          "title": "Feedback Submitted   Received, We'll get back to you",
+          "url": "https://old.aasciences.africa/"
+        },
+        {
+          "title": "African Academy of Sciences (AAS)",
+          "url": "https://www.interacademies.org/organization/african-academy-sciences-aas"
+        },
+        {
+          "title": "News | The AAS",
+          "url": "https://www.aasciences.africa/news/Contact-us"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"@aasciences.africa\" email",
+      "num_results": 8,
+      "duration_s": 0.73,
+      "results": [
+        {
+          "title": "Contact Us | The AAS | The AAS",
+          "url": "https://aasciences.africa/contacts"
+        },
+        {
+          "title": "Contact Us | The AAS | The AAS",
+          "url": "https://www.aasciences.africa/contact-us"
+        },
+        {
+          "title": "African Academy of Sciences (AAS)",
+          "url": "https://council.science/member/aas-african-academy-of-sciences/"
+        },
+        {
+          "title": "Contacts - African Science Communication Agency (ASCA)",
+          "url": "https://asca.africa/contact/"
+        },
+        {
+          "title": "About Us | The AAS",
+          "url": "https://old.aasciences.africa/about"
+        },
+        {
+          "title": "The African Academy of Sciences (AAS)",
+          "url": "https://www.aasciences.africa/"
+        },
+        {
+          "title": "The African Academy of Sciences (AAS)",
+          "url": "https://www.aasciences.africa/about"
+        },
+        {
+          "title": "The African Academy Of Sciences (The AAS)",
+          "url": "https://african-network.org/docs/the-african-academy-of-sciences-the-aas"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"aasciences.africa\" email format contact or team",
+      "num_results": 8,
+      "duration_s": 0.72,
+      "results": [
+        {
+          "title": "Contact Us | The AAS | The AAS",
+          "url": "https://aasciences.africa/contacts"
+        },
+        {
+          "title": "Contact Us | The AAS | The AAS",
+          "url": "https://www.aasciences.africa/contact-us"
+        },
+        {
+          "title": "Contacts - African Science Communication Agency (ASCA)",
+          "url": "https://asca.africa/contact/"
+        },
+        {
+          "title": "News | The AAS",
+          "url": "https://www.aasciences.africa/news/Contact-us"
+        },
+        {
+          "title": "Contacts - African Science Communication Agency (ASCA)",
+          "url": "https://asca.africa/en/contacts/"
+        },
+        {
+          "title": "About Us | The AAS",
+          "url": "https://old.aasciences.africa/about"
+        },
+        {
+          "title": "The African Academy of Sciences (AAS)",
+          "url": "https://www.aasciences.africa/about"
+        },
+        {
+          "title": "The African Academy of Sciences (AAS)",
+          "url": "https://www.aasciences.africa/"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"aasciences.africa\" email address site:aasciences.africa",
+      "num_results": 8,
+      "duration_s": 0.59,
+      "results": [
+        {
+          "title": "Contact Us | The AAS | The AAS",
+          "url": "https://aasciences.africa/contacts"
+        },
+        {
+          "title": "Contact Us | The AAS | The AAS",
+          "url": "https://www.aasciences.africa/contact-us"
+        },
+        {
+          "title": "The African Academy of Sciences (AAS)",
+          "url": "https://www.aasciences.africa/"
+        },
+        {
+          "title": "About Us | The AAS",
+          "url": "https://old.aasciences.africa/about"
+        },
+        {
+          "title": "The African Academy of Sciences (AAS)",
+          "url": "https://www.aasciences.africa/about"
+        },
+        {
+          "title": "News | The AAS",
+          "url": "https://www.aasciences.africa/news/Contact-us"
+        },
+        {
+          "title": "African Academy of Sciences interrogates its continental role | The AAS",
+          "url": "https://aasciences.africa/news/african-academy-of-sciences-interrogates-its-continental-role"
+        },
+        {
+          "title": "Resources | The AAS",
+          "url": "https://aasciences.africa/Resources"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "email * \"*@aasciences.africa\"",
+      "num_results": 9,
+      "duration_s": 0.71,
+      "results": [
+        {
+          "title": "Contact Us | The AAS | The AAS",
+          "url": "https://aasciences.africa/contacts"
+        },
+        {
+          "title": "Contact Us | The AAS | The AAS",
+          "url": "https://www.aasciences.africa/contact-us"
+        },
+        {
+          "title": "Contacts - African Science Communication Agency (ASCA)",
+          "url": "https://asca.africa/contact/"
+        },
+        {
+          "title": "African Academy of Sciences (AAS)",
+          "url": "https://council.science/member/aas-african-academy-of-sciences/"
+        },
+        {
+          "title": "About Us | The AAS",
+          "url": "https://old.aasciences.africa/about"
+        },
+        {
+          "title": "aasciences.africa \u25b7 Welcome | The AAS",
+          "url": "https://webrate.org/site/aasciences.africa/"
+        },
+        {
+          "title": "The African Academy of Sciences (AAS)",
+          "url": "https://www.aasciences.africa/"
+        },
+        {
+          "title": "The African Academy Of Sciences (The AAS)",
+          "url": "https://african-network.org/docs/the-african-academy-of-sciences-the-aas"
+        },
+        {
+          "title": "The African Academy of Sciences (AAS)",
+          "url": "https://www.aasciences.africa/About"
+        }
+      ]
+    }
+  ]
+}

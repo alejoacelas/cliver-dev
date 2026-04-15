@@ -179,6 +179,7 @@ SEARCH_TOOL_SCHEMA: list[dict[str, Any]] = [
 def run_search(
     prompt: str,
     *,
+    system_prompt: str | None = None,
     model: str = DEFAULT_MODEL,
     max_iterations: int = MAX_ITERATIONS,
     openrouter_key: str | None = None,
@@ -191,6 +192,10 @@ def run_search(
     Sends `prompt` to the model with a web search tool. The model can call
     the tool as many times as it needs. Loop ends when the model produces a
     final text response without requesting more tool calls.
+
+    If `system_prompt` is provided, it is sent as the `instructions` field
+    (system-level context) and `prompt` becomes the user message with the
+    case-specific input fields.
     """
     openrouter_key = openrouter_key or os.environ["OPENROUTER_API_KEY"]
     exa_key = exa_key or os.environ["EXA_API_KEY"]
@@ -210,12 +215,14 @@ def run_search(
         if verbose:
             print(f"  [iter {iteration}] Calling {model}...", file=sys.stderr)
 
-        payload = {
+        payload: dict[str, Any] = {
             "model": model,
             "input": input_items,
             "tools": SEARCH_TOOL_SCHEMA,
             "tool_choice": "auto",
         }
+        if system_prompt:
+            payload["instructions"] = system_prompt
 
         with httpx.Client(timeout=REQUEST_TIMEOUT) as client:
             response = client.post(
@@ -338,6 +345,11 @@ def main() -> None:
         "--prompt-file", type=Path, help="Read prompt from a file instead"
     )
     parser.add_argument(
+        "--system-prompt-file", type=Path,
+        help="System prompt file (the template). When used, --prompt-file or "
+             "positional prompt becomes the user message (case-specific input).",
+    )
+    parser.add_argument(
         "--model", default=DEFAULT_MODEL, help=f"OpenRouter model ID (default: {DEFAULT_MODEL})"
     )
     parser.add_argument(
@@ -363,8 +375,13 @@ def main() -> None:
         parser.error("provide a prompt or --prompt-file")
         return
 
+    system_prompt = None
+    if args.system_prompt_file:
+        system_prompt = args.system_prompt_file.read_text().strip()
+
     result = run_search(
         prompt,
+        system_prompt=system_prompt,
         model=args.model,
         max_iterations=args.max_iterations,
         verbose=args.verbose,

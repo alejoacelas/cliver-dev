@@ -1,0 +1,56 @@
+{
+  "answer": "```yaml\n# Domain ownership fields\ndomain_belongs_to: \"Google LLC\"\ndomain_is_free_email: true\nfree_email_provider_name: \"Gmail\"\ndomain_is_institutional: false\ndomain_institution_matches_claimed: null\ndomain_website_url: \"https://mail.google.com\"\ndomain_appears_impersonation: false\nimpersonation_target: null\n\n# Institution email fields\nclaimed_institution_known_domains: \n  - \"harvard.edu\"\n  - \"g.harvard.edu\"\n  - \"seas.harvard.edu\"\n  - \"dce.harvard.edu\"\n  - \"hms.harvard.edu\"\nclaimed_institution_email_format: \"username@harvard.edu or username@g.harvard.edu\"\n\n# Individual affiliation fields\nperson_institution_link_found: null\nperson_found_on_faculty_page: null\nperson_found_in_publications: null\nperson_link_evidence: null\ncommon_name_risk: true\n\n# Dual affiliation fields\ndual_affiliation_detected: false\ndomain_institution: null\nclaimed_institution_link: null\n\n# Confidence and evidence\nconfidence: high\nfree_text_summary: |\n  The customer provided a generic Gmail email address (gmail.com), which is a free webmail service and cannot be used to verify affiliation with an institution. Additionally, the customer's name (\"John Smith\") is an extremely common name, posing a severe common name risk, making reliable disambiguation and independent verification impossible. Harvard University clearly uses official domains ending in \".harvard.edu\" for legitimate institutional activities.\n\nsources:\n  - url: \"https://www.huit.harvard.edu/gmail\"\n    domain: \"huit.harvard.edu\"\n    source_type: \"official_institution_page\"\n    snippet: \"Gmail for Harvard... Eligibility: Faculty, staff, and researchers in FAS, DCE*, SEAS; Students in FAS, DCE, GSAS, HBS, HLS\"\n\n  - url: \"https://seas.harvard.edu/office-computing/email/changing-your-gharvardedu-outgoing-address\"\n    domain: \"seas.harvard.edu\"\n    source_type: \"official_institution_page\"\n    snippet: \"Changing your g.harvard.edu outgoing address | Harvard John A. Paulson School of Engineering and Applied Sciences\"\n\n  - url: \"https://extension.harvard.edu/registration-admissions/for-students/support-and-services/computer-and-e-mail-services/\"\n    domain: \"extension.harvard.edu\"\n    source_type: \"official_institution_page\"\n    snippet: \"Send an email message to AcademicTechnology@dce.Harvard.edu to create a ticket.\"\n\nsearches_performed:\n  - query: \"\\\"Harvard University\\\" official student faculty email domain format\"\n    num_results: 10\n```",
+  "model": "google/gemini-3.1-pro-preview",
+  "iterations": 2,
+  "total_exa_cost_usd": 0.007,
+  "tool_calls": [
+    {
+      "tool": "search_web",
+      "query": "\"Harvard University\" official student faculty email domain format",
+      "num_results": 10,
+      "duration_s": 3.52,
+      "results": [
+        {
+          "title": "Connecting to",
+          "url": "https://hls.harvard.edu/for-faculty/faculty-resources/faculty-email-policy-faqs"
+        },
+        {
+          "title": "Changing your g.harvard.edu outgoing address | Harvard John A. Paulson School of Engineering and Applied Sciences",
+          "url": "https://seas.harvard.edu/office-computing/email/changing-your-gharvardedu-outgoing-address"
+        },
+        {
+          "title": "Finding Your Harvard Email: A Simple Guide",
+          "url": "https://ccgit.crown.edu/cyber-reels/finding-your-harvard-email-a-simple-guide-1767647082"
+        },
+        {
+          "title": "IT Support Services | Harvard Extension School",
+          "url": "https://extension.harvard.edu/registration-admissions/for-students/support-and-services/computer-and-e-mail-services/"
+        },
+        {
+          "title": "Harvard Explained | Magazine | The Harvard Crimson",
+          "url": "https://www.thecrimson.com/article/2001/11/15/harvard-explained-how-are-harvard-e-mail/"
+        },
+        {
+          "title": "Email | Harvard John A. Paulson School of Engineering and Applied Sciences",
+          "url": "https://seas.harvard.edu/office-computing/email"
+        },
+        {
+          "title": "g.harvard.edu client configuration | Harvard John A. Paulson School of Engineering and Applied Sciences",
+          "url": "https://seas.harvard.edu/office-computing/email/gharvardedu-client-configuration"
+        },
+        {
+          "title": "Gmail for Harvard | Harvard University Information Technology",
+          "url": "https://www.huit.harvard.edu/gmail"
+        },
+        {
+          "title": "Email",
+          "url": "https://its.gse.harvard.edu/services/email-and-calendar/email"
+        },
+        {
+          "title": "Services | HMS IT",
+          "url": "http://imc.hms.harvard.edu/about/policies-and-guidelines/email-policy"
+        }
+      ]
+    }
+  ]
+}

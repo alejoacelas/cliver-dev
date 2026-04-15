@@ -9,7 +9,7 @@
 1. Read `.env` and identify all KYC-related API credentials.
 2. For each credentialed API: make one minimal test call, confirm it returns data.
 3. For each free/no-auth API: make one minimal test call.
-4. For blocked APIs (missing credentials): write setup guides in `setup-guides/`.
+4. For blocked APIs (missing credentials): write setup guides in `00-setup-guides/`.
 5. For each API: determine the rate limit (from docs or testing) and set a `max_test_budget` for stage 3.
 6. Produce the endpoint manifest and credential check log.
 
@@ -19,13 +19,14 @@
 - ROR API v2 — `curl "https://api.ror.org/v2/organizations?query=MIT"`
 - GLEIF API — `curl "https://api.gleif.org/api/v1/lei-records?filter[entity.legalName]=Google"`
 - RDAP — `curl "https://rdap.org/domain/mit.edu"`
-- Consolidated Screening List — `curl "https://api.trade.gov/v1/consolidated_screening_list/search?api_key=$SCREENING_LIST_API_KEY&q=test"`
 - OSM Overpass — `curl -d 'data=[out:json];node[name="MIT"][amenity=university];out;' "https://overpass-api.de/api/interpreter"`
 - binlist.net — `curl "https://lookup.binlist.net/411111"`
 - InCommon/eduGAIN — fetch federation metadata XML from `https://md.incommon.org/InCommon/InCommon-metadata.xml`
 - NIH RePORTER — `curl "https://api.reporter.nih.gov/v2/projects/search" -d '{"criteria":{"org_names":["MASSACHUSETTS INSTITUTE OF TECHNOLOGY"]},"limit":1}'`
 - NSF Awards — `curl "https://api.nsf.gov/services/v1/awards.json?keyword=MIT&printFields=id,title&offset=0&rpp=1"`
 - UKRI Gateway — `curl "https://gtr.ukri.org/gtr/api/organisations?q=Oxford&s=0&p=1"` (Accept: application/json)
+- EU CORDIS — `curl "https://cordis.europa.eu/api/search/project?q=contenttype%3D%27project%27%20AND%20organization%2Fname%3D%27Massachusetts%20Institute%20of%20Technology%27&format=json&num=1"`
+- SEC EDGAR — `curl -H "User-Agent: KYC-Eval admin@example.com" "https://efts.sec.gov/LATEST/search-index?q=%22Pfizer%22&dateRange=custom&startdt=2024-01-01&forms=10-K"`
 - PubMed (NCBI E-utilities) — `curl "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=MIT[Affiliation]&retmax=1&retmode=json"`
 - OpenCorporates — `curl "https://api.opencorporates.com/v0.4/companies/search?q=ginkgo+bioworks"`
 - ORCID public API — `curl -H "Accept: application/json" "https://pub.orcid.org/v3.0/search?q=affiliation-org-name:MIT&rows=1"`
@@ -40,7 +41,9 @@
 - OpenRouter (for LLM+Exa script) — `curl -s https://openrouter.ai/api/v1/models -H "Authorization: Bearer $OPENROUTER_API_KEY" | python3 -c "import json,sys; d=json.load(sys.stdin); print('OK' if 'data' in d else d)"`
 - LLM+Exa end-to-end — `uv run tool-evaluation/llm-exa-search.py --json "Is MIT located in Cambridge, MA?"`
 - GeoNames — `curl "http://api.geonames.org/searchJSON?q=MIT&maxRows=1&username=$GEONAMES_USERNAME"`
-- Google Places (New API) — `curl -H "X-Goog-Api-Key: $GOOGLE_MAPS_API_KEY" -H "X-Goog-FieldMask: places.displayName,places.formattedAddress,places.types,places.primaryType" -H "Content-Type: application/json" -d '{"textQuery":"Massachusetts Institute of Technology"}' "https://places.googleapis.com/v1/places:searchText"`
+- Google Places Text Search — `curl -H "X-Goog-Api-Key: $GOOGLE_MAPS_API_KEY" -H "X-Goog-FieldMask: places.displayName,places.formattedAddress,places.types,places.primaryType" -H "Content-Type: application/json" -d '{"textQuery":"Massachusetts Institute of Technology"}' "https://places.googleapis.com/v1/places:searchText"`
+- Google Places Nearby Search — `curl -H "X-Goog-Api-Key: $GOOGLE_MAPS_API_KEY" -H "X-Goog-FieldMask: places.displayName,places.types,places.primaryType" -H "Content-Type: application/json" -d '{"includedTypes":["shipping_service"],"locationRestriction":{"circle":{"center":{"latitude":40.6602,"longitude":-73.7526},"radius":200}}}' "https://places.googleapis.com/v1/places:searchNearby"` (test with Elmont NY freight cluster coordinates)
+- Melissa Global Address — `curl "https://address.melissadata.net/v3/WEB/GlobalAddress/doGlobalAddress?id=$MELISSA_LICENSE_KEY&a1=77+Massachusetts+Ave&ctry=US&loc=Cambridge&admarea=MA&postal=02139&format=json"` (requires free trial key from melissa.com)
 
 **Local logic (verify the logic works, no network call):**
 - Disposable/free-mail blocklist — test against a known disposable domain and a known legitimate domain
@@ -55,6 +58,8 @@
 **Docs-only (no test call, just note status):**
 - Stripe AVS (production) — document that test mode is deterministic
 - Plaid Identity Match (production) — document that sandbox is synthetic
+- MaxMind minFraud / Binbase — document BIN database coverage, pricing, and field availability vs. binlist.net
+- ORCID OAuth — document the OAuth flow for proof-of-control and what it adds beyond the public API (identity binding vs. association verification)
 
 ## Output: endpoint manifest
 
@@ -142,4 +147,4 @@ Write to `tool-evaluation/00-credential-check.md` — a narrative log of each te
 
 ## Output: setup guides
 
-For each blocked endpoint (if any remain after adding GeoNames and Google Places credentials), write to `tool-evaluation/setup-guides/{endpoint-id}.md`.
+For each blocked endpoint (if any remain after adding GeoNames and Google Places credentials), write to `tool-evaluation/00-setup-guides/{endpoint-id}.md`.

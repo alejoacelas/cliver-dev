@@ -16,9 +16,9 @@ Maximum 3 iterations of the stage 5 → stage 3 loop per endpoint group. After 3
 
 ## Per-agent inputs
 
-- Stage 3 results for this endpoint group: `tool-evaluation/results/{endpoint-slug}.yaml` + `.md` for each endpoint in the group, plus `tool-evaluation/results/{group-name}-comparison.md`
+- Stage 3 results for this endpoint group: `tool-evaluation/03-results/{endpoint-slug}.yaml` + `.md` for each endpoint in the group, plus `tool-evaluation/03-results/{group-name}-comparison.md`
 - The endpoint map: `tool-evaluation/stages/01-endpoint-map.md` (which KYC steps this group serves)
-- The pre-committed reasoning from stage 2: `tool-evaluation/seed-cases/{group-name}.yaml`
+- The pre-committed reasoning from stage 2: `tool-evaluation/02-seed-cases/{group-name}.yaml`
 - The archive's coverage research for relevant ideas: `archive-2026-04-kyc-research/pipeline/outputs/ideas/{idea-slug}/06-coverage.md`
 - The archive's attacker stories for relevant measures: `archive-2026-04-kyc-research/pipeline/attackers/by-measure/measure-{NN}-*.md`
 
@@ -66,7 +66,7 @@ Classify each finding as:
 
 When high- or medium-severity findings exist:
 
-1. Write the findings to `tool-evaluation/adversarial-reviews/{group-name}-v{N}.md` (where N is the iteration number).
+1. Write the findings to `tool-evaluation/05-adversarial-reviews/{group-name}-v{N}.md` (where N is the iteration number).
 2. For each high-severity finding, specify:
    - What additional test cases should be run (be specific — give entity names, addresses, domains, etc., or describe what to search for).
    - Which endpoint(s) to call.
@@ -76,7 +76,7 @@ When high- or medium-severity findings exist:
 
 ## Output
 
-### Per iteration: `tool-evaluation/adversarial-reviews/{group-name}-v{N}.md`
+### Per iteration: `tool-evaluation/05-adversarial-reviews/{group-name}-v{N}.md`
 
 ```markdown
 # Adversarial review: institution-registry (iteration 1)
@@ -108,7 +108,7 @@ Minor gap — dissolved flag is documented in the API response schema.
 ## Stage 3 re-run required: YES (2 high-severity findings)
 ```
 
-### Final state: `tool-evaluation/adversarial-reviews/{group-name}-final.md`
+### Final state: `tool-evaluation/05-adversarial-reviews/{group-name}-final.md`
 
 After the loop completes (either no high-severity findings or 3 iterations exhausted):
 

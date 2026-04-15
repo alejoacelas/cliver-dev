@@ -1,0 +1,152 @@
+{
+  "answer": "```yaml\n# Domain ownership fields\ndomain_belongs_to: \"Institut Pasteur\"\ndomain_is_free_email: false\nfree_email_provider_name: null\ndomain_is_institutional: true\ndomain_institution_matches_claimed: false\ndomain_website_url: \"https://www.pasteur.fr\"\ndomain_appears_impersonation: false\nimpersonation_target: null\n\n# Institution email fields\nclaimed_institution_known_domains: \n  - \"theravectys.com\"\nclaimed_institution_email_format: null\n\n# Dual affiliation fields\ndual_affiliation_detected: true\ndomain_institution: \"Institut Pasteur\"\nclaimed_institution_link: \"TheraVectys is a spin-off company created from the Institut Pasteur in 2005. The two entities have a strong partnership, including an exclusive licensing agreement, and they established the 'Institut Pasteur-TheraVectys Joint Laboratory' in 2017 for preclinical research.\"\n\n# Confidence and evidence\nconfidence: high\nfree_text_summary: |\n  The email domain pasteur.fr belongs to the Institut Pasteur, a major French biomedical research institute, and not directly to TheraVectys. However, there is a prominent, well-documented structural link between the two organizations. TheraVectys is an immunotherapy company that spun off from the Institut Pasteur in 2005. Furthermore, they jointly operate the Institut Pasteur-TheraVectys Joint Laboratory. This deep, formal partnership explains why an individual researching or working for TheraVectys would legitimately possess and use an @pasteur.fr email address.\n\nsources:\n  - url: \"https://theravectys.com/about-us/\"\n    domain: \"theravectys.com\"\n    source_type: \"official_institution_page\"\n    snippet: \"TheraVectys is a spin off from Institut Pasteur with an exclusive and worldwide global Licensing Agreement on Lentiviral Vectors for Vaccine Applications.\"\n  - url: \"https://research.pasteur.fr/en/team/institut-pasteur-theravectys-joint-laboratory/\"\n    domain: \"research.pasteur.fr\"\n    source_type: \"official_institution_page\"\n    snippet: \"Pierre Charneau - Institut Pasteur-TheraVectys Joint Laboratory - Research - Institut Pasteur\"\n  - url: \"https://theravectys.com/pipelines/index.html\"\n    domain: \"theravectys.com\"\n    source_type: \"official_institution_page\"\n    snippet: \"In June 2017, TheraVectys and Pasteur Institute created a Joint-Laboratory to focus the company on its core business, pre-clinical research and reinforce collaboration with the Institut Pasteur\"\n\nsearches_performed:\n  - query: \"\\\"TheraVectys\\\" \\\"Institut Pasteur\\\"\"\n    num_results: 10\n  - query: \"\\\"Pierre Dupont\\\" \\\"TheraVectys\\\" OR \\\"Institut Pasteur\\\"\"\n    num_results: 10\n```",
+  "model": "google/gemini-3.1-pro-preview",
+  "iterations": 4,
+  "total_exa_cost_usd": 0.021,
+  "tool_calls": [
+    {
+      "tool": "search_web",
+      "query": "\"TheraVectys\" \"Institut Pasteur\"",
+      "num_results": 10,
+      "duration_s": 1.22,
+      "results": [
+        {
+          "title": "THERAVECTYS",
+          "url": "https://www.linkedin.com/company/theravectys"
+        },
+        {
+          "title": "ABOUT US - TheraVectys : Immunize - Treat - Cure",
+          "url": "https://www.theravectys.com/about-us/"
+        },
+        {
+          "title": "ABOUT US - TheraVectys : Immunize - Treat - Cure",
+          "url": "https://theravectys.com/about-us/index.html"
+        },
+        {
+          "title": "PIPELINES - TheraVectys : Immunize - Treat - Cure",
+          "url": "https://theravectys.com/pipelines/"
+        },
+        {
+          "title": "Partnerships - TheraVectys : Immunize - Treat - Cure",
+          "url": "https://theravectys.com/partnerships/"
+        },
+        {
+          "title": "Intellectual Property - TheraVectys : Immunize - Treat - Cure",
+          "url": "https://theravectys.com/intellectual-property/"
+        },
+        {
+          "title": "Intellectual Property - TheraVectys : Immunize - Treat - Cure",
+          "url": "https://theravectys.com/intellectual-property/index.html"
+        },
+        {
+          "title": "PIPELINES - TheraVectys : Immunize - Treat - Cure",
+          "url": "https://theravectys.com/pipelines/index.html"
+        },
+        {
+          "title": "TheraVectys : Immunize-Treat-Cure / Immunotherapies",
+          "url": "https://theravectys.com/"
+        },
+        {
+          "title": "TheraVectys : Immunize-Treat-Cure / Immunotherapies",
+          "url": "https://www.theravectys.com/index.html"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"Pierre Dupont\" \"TheraVectys\" OR \"Institut Pasteur\"",
+      "num_results": 10,
+      "duration_s": 1.02,
+      "results": [
+        {
+          "title": "Pierre Charneau - Laboratoire Commun Pasteur \u2013 TheraVectys - Research - Institut Pasteur",
+          "url": "https://research.pasteur.fr/fr/team/institut-pasteur-theravectys-joint-laboratory/"
+        },
+        {
+          "title": "Pierre Charneau - Institut Pasteur-TheraVectys Joint Laboratory - Research - Institut Pasteur",
+          "url": "https://research.pasteur.fr/en/team/institut-pasteur-theravectys-joint-laboratory/"
+        },
+        {
+          "title": "TheraVectys\u00a0: la vaccinologie de nouvelle g\u00e9n\u00e9ration | Entreprendre.fr",
+          "url": "https://www.entreprendre.fr/article/entreprises/2024/08/10/8734/theravectys-la-vaccinologie-de-nouvelle-generation/"
+        },
+        {
+          "title": "THERAVECTYS",
+          "url": "https://www.linkedin.com/company/theravectys"
+        },
+        {
+          "title": "Pierre-Yves Dupont",
+          "url": "https://pydupont.github.io/CV/"
+        },
+        {
+          "title": "Pierre Thouvenot - Research - Institut Pasteur",
+          "url": "https://research.pasteur.fr/fr/member/pierre-thouvenot/"
+        },
+        {
+          "title": "ABOUT US - TheraVectys : Immunize - Treat - Cure",
+          "url": "https://theravectys.com/about-us/"
+        },
+        {
+          "title": "Pierre Thouvenot - Research - Institut Pasteur",
+          "url": "https://research.pasteur.fr/en/member/pierre-thouvenot/"
+        },
+        {
+          "title": "ABOUT US - TheraVectys : Immunize - Treat - Cure",
+          "url": "https://theravectys.com/about-us/index.html"
+        },
+        {
+          "title": "\u202aPierre-Yves Dupont\u202c - \u202aGoogle Scholar\u202c",
+          "url": "https://scholar.google.fr/citations?hl=th&user=22ndE10AAAAJ"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"Pierre Dupont\" \"Institut Pasteur\"",
+      "num_results": 10,
+      "duration_s": 2.17,
+      "results": [
+        {
+          "title": "\u202aPierre E. Dupont\u202c - \u202aGoogle Scholar\u202c",
+          "url": "https://scholar.google.com/citations?user=15g03MoAAAAJ&hl=de"
+        },
+        {
+          "title": "Pierre E. Dupont | Boston Children's Research",
+          "url": "http://www.childrenshospital.org/researchers/pierre-e-dupont"
+        },
+        {
+          "title": "\u202aPierre E. Dupont\u202c - \u202aGoogle Scholar\u202c",
+          "url": "https://scholar.google.co.in/citations?user=15g03MoAAAAJ&hl=th"
+        },
+        {
+          "title": "Jean-Claude Dupont - Research - Institut Pasteur",
+          "url": "https://research.pasteur.fr/fr/member/jean-claude-dupont/"
+        },
+        {
+          "title": "\u202aPierre E. Dupont\u202c - \u202aGoogle Scholar\u202c",
+          "url": "https://scholar.google.com/citations?user=15g03MoAAAAJ&hl=en"
+        },
+        {
+          "title": "\u202aPierre E. Dupont\u202c - \u202aGoogle Acad\u00e9mico\u202c",
+          "url": "https://scholar.google.com/citations?user=15g03MoAAAAJ&hl=es"
+        },
+        {
+          "title": "\u202aPierre Dupont\u202c - \u202aGoogle Scholar\u202c",
+          "url": "https://scholar.google.com/citations?user=Ez3mpD0AAAAJ&hl=en"
+        },
+        {
+          "title": "Pierre Dupont | Universit\u00e9 catholique de Louvain",
+          "url": "https://www.uclouvain.be/en/people/pierre.dupont"
+        },
+        {
+          "title": "Pierre Dupont's bio",
+          "url": "https://webperso.info.ucl.ac.be/~pdupont/pdupont/bio.html"
+        },
+        {
+          "title": "\u202aPierre Dupont\u202c - \u202aGoogle Acad\u00e9mico\u202c",
+          "url": "https://scholar.google.com/citations?user=Ez3mpD0AAAAJ&hl=es"
+        }
+      ]
+    }
+  ]
+}
