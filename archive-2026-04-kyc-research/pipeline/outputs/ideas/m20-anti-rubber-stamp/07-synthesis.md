@@ -1,0 +1,63 @@
+# m20-anti-rubber-stamp — Per-idea synthesis
+
+## Section 1: Filled-in schema
+
+| Field | Value |
+|---|---|
+| **name** | Anti-rubber-stamp voucher SOP (rate-limit + diversity audit) |
+| **measure** | M20 — Voucher-legitimacy (SOC) |
+| **attacker_stories_addressed** | `lab-manager-voucher` (b — PI instant rubber-stamp: CAUGHT partially; b' — BSO volume: CAUGHT partially; c — batch vouching: CAUGHT partially). `community-bio-lab-network` (mutual vouching ring: CAUGHT partially). `bulk-order-noise-cover` (voucher high volume: CAUGHT partially). Does **not** catch: `lab-manager-voucher` (a — self-vouch, b'' — ghost voucher, b''' — stale voucher, d — recruited co-conspirator), `visiting-researcher`, `unrelated-dept-student` (most variants), `shell-nonprofit`, `shell-company`, `insider-recruitment`, `account-hijack`, `credential-compromise`, `inbox-compromise`, `dormant-account-takeover`, `biotech-incubator-tenant`, `cro-framing`, `cro-identity-rotation`, `gradual-legitimacy-accumulation`, `dormant-domain`, `foreign-institution`, `it-persona-manufacturing`. |
+| **summary** | Internal SOP layered on the provider's voucher workflow. Rate-limits the number of distinct customers a single voucher can vouch for per quarter, requires diversity across vouched customers (institution/lab Herfindahl index), detects fast turnaround times (<60s request-to-approval), and checks for ring-vouching cycles of length <=4 in the voucher-customer graph. Vouchers exceeding thresholds are routed to quarterly compliance review with spot-check audit of sampled vouches. |
+| **external_dependencies** | Internal voucher database (provider's own records of who vouched for whom and when). Optional cross-provider sharing via IGSC member portals — [unknown — searched for: "IGSC voucher sharing API", "IBBIS voucher cross-provider", "gene synthesis consortium customer sharing list"]. Reference: IGSC Harmonized Screening Protocol v3.0 (does not stipulate specific anti-rubber-stamp limits). |
+| **endpoint_details** | No external API. Internal database query. Logic: count distinct customers per voucher per quarter (flag if >20); compute Herfindahl concentration index across voucher's customer set (flag if >0.5); detect cycles <=4 in voucher-customer graph; flag approvals with <60s turnaround. Auth: internal IAM. Pricing: internal compute cost negligible. No external ToS. |
+| **fields_returned** | `voucher_id`, `voucher_orcid` (if collected), `voucher_institution`, `quarter`, `vouch_count`, `distinct_customers`, `customer_concentration_hhi`, `customers_list[]` (names, institutions, dates, SOC categories), `prior_audit_outcomes`. |
+| **marginal_cost_per_check** | Per-customer: ~$0 (internal DB query). Per-voucher quarterly audit: [best guess: $100–$300 (1–3 reviewer hours at ~$100/hr). If ~5% of active vouchers are audited per quarter, amortized cost per order is well under $1.] **Setup cost:** [best guess: ~$10k — 2 engineer-weeks for voucher-volume tracking + Herfindahl calculation + reviewer SOP.] |
+| **manual_review_handoff** | Five-step playbook: (1) Pull voucher's quarterly activity packet. (2) Sample 3 random vouches — check relationship duration (>=1 year per M20/IGSC), SOC consistency with customer's stated work, evidence of correspondence vs. instant approval. (3) Actions: all well-documented → mark "high-volume legitimate," increase audit interval; 1+ vouch shows <60s turnaround or no documented relationship → escalate to full audit; ring pattern → block both vouchers pending senior review. (4) Document outcome in voucher record. (5) Customers with invalidated vouches must obtain new voucher. |
+| **flags_thrown** | `voucher_rate_exceeded` (distinct customers >20/quarter), `voucher_diversity_low` (institution HHI >0.5), `voucher_turnaround_fast` (<60s request-to-approval), `voucher_ring_detected` (graph cycle length <=4). |
+| **failure_modes_requiring_review** | Legitimate large-lab PIs (15–30 vouches/quarter); core-facility directors with broad vouching authority; newly-appointed PIs (volume too low to flag — false negative); adversarial spreading across multiple vouchers; no cross-provider visibility. |
+| **false_positive_qualitative** | (1) BSOs at large institutions (50–100+ vouches/quarter) — highest-volume false-positive category, flagged every audit cycle. (2) Large-lab PIs supervising 15–30 trainees. (3) Department chairs vouching for departmental staff. (4) Core-facility directors and shared-instrument managers. (5) Long-term collaborators with mutual vouching that triggers ring detection (cycle length 2). [best guess: 30–60% of `voucher_rate_exceeded` flags are legitimate large labs; `voucher_turnaround_fast` is more discriminating.] |
+| **coverage_gaps** | **Gap 1 — Single-shot/low-volume rubber-stamps (no-signal):** The modal attack — a PI rubber-stamps 1–5 vouches/quarter without reading — is invisible to volume thresholds. ~9,000–12,000 NIH-funded PIs could exhibit this pattern. **Gap 2 — Cross-provider rotation (no-signal):** 65+ global synthesis providers; attacker rotating across 3–5 avoids any single provider's detection. No cross-provider voucher database exists. **Gap 3 — Legitimate high-volume vouchers (false-positive):** ~500–1,000 BSOs at US institutions flagged every quarter, creating recurring alert fatigue. **Gap 4 — Ring-vouching >4 nodes (no-signal):** Rings of 5+ participants across institutions evade cycle-length cap. Size unknown. **Gap 5 — Low-volume providers (weak-signal):** ~50% of 65+ providers process too few orders for meaningful statistical baselines. |
+| **record_left** | Voucher's quarterly audit packet (immutable snapshot), reviewer's free-text findings, decision (clear/restrict/block), graph snapshot of voucher-customer network, timestamp. Auditable internal artifact. |
+| **bypass_methods_known** | PI instant rubber-stamp (<60s) — CAUGHT partially. BSO volume rubber-stamp — CAUGHT partially (audit sampling weak at ~6% detection per malicious vouch). Batch vouching — CAUGHT partially. Community mutual vouching — CAUGHT partially. Bulk-order voucher high volume — CAUGHT partially. |
+| **bypass_methods_uncovered** | PI rubber-stamp with >60s turnaround (modal attack); all single-shot vouching attacks (shells, CROs, visiting researchers, foreign institutions, manufactured personas); self-vouch where attacker holds both roles; recruited co-conspirator voucher; credential/session compromise of voucher; ghost/stale voucher exploitation; cross-provider rotation; graph rings >4 nodes; intercepted voucher email. |
+
+---
+
+## Section 2: Narrative
+
+### What this check is and how it works
+
+The anti-rubber-stamp SOP is an internal monitoring layer on a DNA synthesis provider's voucher workflow. When a provider requires that orders involving sequences of concern be backed by a voucher (a senior researcher, PI, or biosafety officer who attests to the customer's legitimacy), this SOP tracks each voucher's activity over time: how many distinct customers they vouch for per quarter, the institutional diversity of those customers, the time between receiving a vouch request and approving it, and whether the voucher participates in reciprocal vouching cycles. Four flags — rate exceeded, diversity low, turnaround fast, and ring detected — route suspicious vouchers to quarterly compliance review. Reviewers spot-check sampled vouches for relationship duration, SOC consistency, and evidence of genuine engagement.
+
+### What it catches
+
+The SOP targets the tail of voucher abuse: PIs or BSOs who click "approve" instantly on dozens of requests without reading them, batch-vouching events in clinical or affiliate settings, and mutual-vouching rings within small communities. The `voucher_turnaround_fast` flag (<60 seconds) is the most discriminating trigger, as legitimate due diligence requires more than a minute. The `voucher_ring_detected` flag catches small-cycle reciprocal vouching (length <=4). Together, these flags address the `lab-manager-voucher` (instant rubber-stamp variant), `community-bio-lab-network` (mutual vouching), and `bulk-order-noise-cover` (high-volume voucher) attacker stories — partially in each case.
+
+### What it misses
+
+The SOP's fundamental structural weakness is that it detects only high-volume or high-speed patterns. The modal attacker scenario — a single PI who rubber-stamps one vouch in 90 seconds without carefully reviewing the order — generates no signal on any trigger. All single-shot attacks (shell entities, visiting researchers, CRO framings, foreign institutions, manufactured personas) produce 1–2 vouching events that are indistinguishable from legitimate activity. Recruited co-conspirators vouch deliberately with normal patterns. Credential compromise and account hijack bypass the vouching workflow entirely. Cross-provider rotation means no single provider sees the attacker's full vouching footprint, and no cross-provider voucher database exists. The audit spot-check (3 sampled vouches from 50+) has only ~6% detection probability per hidden malicious vouch — the hardening stage flagged that risk-weighted sampling toward SOC orders would improve this.
+
+### What it costs
+
+Per-customer marginal cost is effectively zero (internal database query). The real cost is in quarterly compliance review: $100–$300 per audited voucher in reviewer time, with ~5% of active vouchers flagged. Setup cost is approximately $10k for engineering the tracking infrastructure and writing the reviewer SOP. The ongoing cost burden is primarily from false-positive management: BSOs and large-lab PIs will be flagged every quarter, and each audit cycle requires reviewer attention to clear them.
+
+### Operational realism
+
+The SOP requires the provider's voucher system to instrument request-to-approval timestamps at sub-minute granularity — an implementation detail the SOP should mandate but that many existing systems may not capture. The audit playbook (sample 3 vouches, check relationship and engagement) is straightforward but faces two practical challenges: alert fatigue from recurring BSO/PI false positives, and low statistical power for catching rare malicious vouches in high-volume legitimate flows. The record left (quarterly audit packet, graph snapshot, reviewer findings) is sufficient for external audit and supports longitudinal tracking of voucher behavior.
+
+### Open questions
+
+The hardening stage's most consequential finding (M1) is that the modal rubber-stamp — moderate volume, >60-second turnaround — evades all triggers. A "content-engagement signal" (did the voucher access the order details page before approving?) was suggested but requires UX instrumentation not discussed in the implementation. The 4C claim check noted that the SecureDNA/IBBIS portals announced in October 2025 might include vouching-graph sharing; this would address the cross-provider gap (M4) but remains unconfirmed. The coverage form check flagged that the "30% of PIs rubber-stamp" figure in Gap 1 is an assumption within an assumption, and that the BSO count (~500–1,000) lacks a direct citation.
+
+---
+
+## Section 3: Open issues for human review
+
+- **Moderate hardening finding M1 (surviving):** The modal PI rubber-stamp (2+ minute turnaround, low volume) is invisible to all SOP triggers. A content-engagement signal (voucher accessed order details before approving) would be more discriminating but requires UX instrumentation not currently specified.
+- **Moderate hardening finding M2 (structural):** All single-shot vouching attacks are invisible to rate-based detection. No fix within this SOP; qualitative voucher assessment (m20-coauthor-graph, m20-dkim-institutional-email) needed.
+- **Moderate hardening finding M3 (surviving):** Audit spot-check sampling (3 from 50+) has ~6% detection per malicious vouch. Recommend risk-weighted sampling toward SOC orders and new/unusual customers.
+- **Moderate hardening finding M4 (structural):** No cross-provider voucher visibility. Requires IGSC-level coordination; SecureDNA/IBBIS portal status is [unknown].
+- **[unknown] field:** Cross-provider voucher sharing mechanism — searched for "IGSC voucher sharing API," "IBBIS voucher cross-provider," "gene synthesis consortium customer sharing list." No public API found.
+- **Coverage Gap 1 size estimate:** The "30% of PIs rubber-stamp" figure is an assumed fraction within a best guess. Needs empirical grounding.
+- **Coverage Gap 3 size estimate:** BSO count (~500–1,000) lacks direct citation. NIH IBC registry data might yield a harder number.
+- **No 06C (claim check on coverage) was run.** Coverage citations (Nature, Roots Analysis, NIEHS) were not independently verified in a 06C pass.

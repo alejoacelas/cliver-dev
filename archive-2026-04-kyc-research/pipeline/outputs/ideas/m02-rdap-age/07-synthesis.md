@@ -1,0 +1,64 @@
+# m02-rdap-age — Per-idea synthesis
+
+## Section 1: Filled-in schema
+
+| Field | Value |
+|---|---|
+| **name** | RDAP/WHOIS domain age + registrant |
+| **measure** | M02 — email-affiliation-whois |
+| **attacker_stories_addressed** | `dormant-domain` (CAUGHT: drop-catch reanimation via recent transfer on old domain; typosquat via fresh registration). `lookalike-domain` (CAUGHT: fresh registration). `shell-company`, `cro-framing`, `shell-nonprofit`, `biotech-incubator-tenant`, `community-bio-lab-network` (CAUGHT temporarily on fresh domains; defeated by 12+ month patience or aged-domain auction purchase). `cro-identity-rotation` (CAUGHT temporarily; AMBIGUOUS on aged-domain purchase). `gradual-legitimacy-accumulation` (MISSED: 12-month organic aging exactly defeats threshold). All genuine-institutional-email stories (11 stories: MISSED — no domain registration/transfer involved). |
+| **summary** | For the customer's email domain, query RDAP (via the RDAP.org bootstrap) and parse the JSON response for registration date, transfer events, and registrant entity. Flag domains less than 12 months old, recently transferred (within 365 days on a domain older than 2 years), or with fully redacted registrant on a claimed institutional domain. The check imposes a minimum 12-month lead-time cost on purpose-built-organisation attackers and directly catches drop-catch domain reanimation and typosquats. |
+| **external_dependencies** | RDAP (open standard, free; bootstrap at rdap.org redirects to authoritative registry RDAP server per TLD). Fallback WHOIS for ccTLDs without RDAP (~30-40% of ccTLDs). Optional: `rdap` Python library for bootstrap/parsing; `python-whois` for WHOIS fallback. |
+| **endpoint_details** | **URL:** `GET https://rdap.org/domain/<domain>` → 302 redirect to authoritative registry (e.g., `https://rdap.verisign.com/com/v1/domain/<domain>` for .com). **Auth:** None, public. **Format:** JSON, RFC 9083/7483. **Rate limits:** [unknown — searched for: "RDAP rate limit Verisign", "RDAP throttling per TLD", "rdap.org rate limit"] — per-registry; large registries tolerant at low volumes. **ToS:** No commercial-use restriction; ICANN policy requires registrars to publish RDAP without discrimination. **Pricing:** $0. Optional commercial wrappers (WhoisXML API ~$0.001/query) available but not required. |
+| **fields_returned** | RDAP JSON: `handle`, `ldhName`, `status[]`, `events[]` (registration / last changed / expiration / transfer / last update dates), `entities[]` (registrar, registrant, admin, tech — mostly GDPR-redacted), `nameservers[]`. Derived: `domain_age_days`, `last_transfer_date`, `registrant_redacted` (bool). |
+| **marginal_cost_per_check** | ~$0 against public RDAP. Setup cost: ~1 engineer-day to integrate using the `rdap` Python library. |
+| **manual_review_handoff** | Reviewer sees: domain, claimed institution, registration date, last transfer, registrant (or "[redacted]"), registrar. SOP: (1) `domain_age_days < 365` + claimed established institution → request institutional letter. (2) Recent transfer on old domain → cross-check Wayback + PubMed for dormant-domain reanimation. (3) Registrant redacted + no corroborating institutional signal → request institutional letter. (4) RDAP query fails → fall back to WHOIS via `python-whois`. |
+| **flags_thrown** | `domain_age_lt_12mo` (age < 365d); `domain_age_lt_3mo` (age < 90d — hold order); `domain_recent_transfer` (transfer within 365d on >2y domain); `registrant_redacted` (soft flag — fires on ~89% of gTLD domains); `rdap_unavailable` (bootstrap fails for TLD). |
+| **failure_modes_requiring_review** | ccTLDs without RDAP (~30-40%); transfers visible in events but not in entities (distinguishable from drop-catch only via Wayback); privacy services hiding registrant on legitimate small orgs. |
+| **false_positive_qualitative** | (1) New legitimate biotech startups with domains <12 months old: ~5-10% of active commercial synthesis customers at any time; the check's primary FP source hitting the most desirable customer segment. (2) GDPR-redacted registrant: `registrant_redacted` fires on ~89% of gTLD domains (58.2% proxy/privacy, 31.0% redacted, only 10.8% show actual registrant per Interisle/DNIB 2024); essentially uninformative as a discriminator. (3) WHOIS parsing failures on ccTLDs: `rdap_unavailable` fires for 30-40% of ccTLDs; fallback introduces parsing errors. International academic customers disproportionately affected. |
+| **coverage_gaps** | (1) Legitimate new biotech startups with domains <12 months: ~330 new US biotech firms/year against ~3,000-4,000 active commercial synthesis buyers; false-positive. (2) GDPR/privacy-redacted registrant domains (~89% of gTLDs): no-signal on registrant dimension. (3) ccTLD domains without RDAP (~30-40% of ccTLDs): weak-signal, degrades to domain-age-only. (4) Aged-domain or drop-catch attackers who pre-age or purchase at auction: no-signal (attacker passes after 12+ months). |
+| **record_left** | Full RDAP JSON response (or WHOIS text fallback); parsed `domain_age_days`, `last_transfer_date`, `registrant_redacted`; bootstrap path used (which authoritative RDAP server answered). |
+| **bypass_methods_known** | dormant-domain drop-catch (CAUGHT via `domain_recent_transfer`); typosquat (CAUGHT via `domain_age_lt_12mo`/`domain_age_lt_3mo`); shell-nonprofit 4-12 week pre-aged domain (CAUGHT — within 12mo window); fresh domains on cro-identity-rotation, cro-framing, biotech-incubator-tenant, community-bio-lab-network, shell-company (CAUGHT temporarily). |
+| **bypass_methods_uncovered** | Aged-domain purchase with >365d patience (multiple stories); organic domain aging >12 months (gradual-legitimacy-accumulation); all genuine-institutional-email variants (11 stories); dangling-DNS subdomain takeover; ccTLD RDAP coverage gaps; `registrant_redacted` nearly universal and uninformative. |
+
+---
+
+## Section 2: Narrative
+
+### What this check is and how it works
+
+This check queries the RDAP (Registration Data Access Protocol) system for the customer's email domain. RDAP is the successor to WHOIS, standardised by ICANN and required for all gTLDs since 2019. The query returns a JSON object containing the domain's registration date, expiration date, transfer history, registrant contact information (usually GDPR-redacted), and registrar identity. The check derives three key signals: domain age in days, the date of the most recent transfer event (if any), and whether the registrant is redacted. It then applies threshold-based flags: domains under 12 months old are elevated for review, domains under 3 months old trigger an order hold, and domains older than 2 years that were transferred within the last 365 days are flagged as possible drop-catch reanimations. For ccTLDs that lack RDAP support (~30-40%), the system falls back to traditional WHOIS parsing. The entire check is free and requires no vendor contract or API key.
+
+### What it catches
+
+The check catches two primary patterns. First, freshly registered typosquat or lookalike domains: any domain less than 12 months old is flagged immediately, and domains under 3 months trigger an order hold. This directly addresses the `lookalike-domain` attacker story. Second, dormant-domain drop-catch reanimation: when a long-existing domain shows a recent transfer event, the `domain_recent_transfer` flag fires and the SOP directs the reviewer to cross-check Wayback Machine and PubMed for signs of institutional discontinuity. This is the check's strongest unique contribution and directly addresses the `dormant-domain` attacker story's primary bypass. The check also imposes a meaningful time cost on purpose-built-organisation attackers (shell-company, cro-framing, shell-nonprofit, biotech-incubator-tenant, community-bio-lab-network): at minimum, 12 months of lead time before the domain passes the age threshold.
+
+### What it misses
+
+The check structurally misses all 11 genuine-institutional-email attacker stories (inbox-compromise, credential-compromise, account-hijack, dormant-account-takeover, foreign-institution, it-persona-manufacturing, visiting-researcher, unrelated-dept-student, insider-recruitment, lab-manager-voucher, bulk-order-noise-cover). These attackers operate within existing institutional domains and never register or transfer a domain. The check also fails against patient purpose-built-organisation attackers who age their domains beyond 12 months or purchase aged domains at auction and wait more than 365 days before use — the `gradual-legitimacy-accumulation` branch is explicitly designed to outlast this threshold. The registrant dimension is effectively dead: ~89% of gTLD registrant records are redacted under GDPR, making `registrant_redacted` nearly universal and uninformative. Dangling-DNS subdomain takeovers are invisible because RDAP operates at the registered-domain level.
+
+### What it costs
+
+Marginal cost per check is $0 — RDAP is a free, public, unauthenticated protocol. Setup cost is approximately one engineer-day to integrate using the `rdap` Python library for bootstrap and parsing, plus `python-whois` for ccTLD fallback. No ongoing vendor costs. Optional commercial RDAP wrappers (e.g., WhoisXML API at ~$0.001/query) provide cleaner data but are not required.
+
+### Operational realism
+
+When a flag fires, the reviewer sees the domain, the customer's claimed institution, registration date, last transfer date, registrant (or "[redacted]"), and registrar name. The SOP has four decision paths. The main operational concern is false-positive volume from legitimate new startups: an estimated 5-10% of active commercial synthesis customers have domains under 12 months old at any time, and these are precisely the fast-growing biotechs that providers most want as customers. The `registrant_redacted` flag fires on approximately 89% of gTLD domains and is essentially noise — the 06-coverage stage recommends dropping it or treating it as purely cosmetic. The audit trail is a timestamped RDAP JSON snapshot (or WHOIS text), plus derived fields and flags.
+
+### Open questions
+
+RDAP rate limits are undocumented on a per-registry basis; the implementation marks this as [unknown] but notes that single-query-per-order volume is well within any plausible threshold. The percentage of ccTLDs without RDAP support is estimated at 30-40% but no authoritative census exists. The 06F form check flagged that coverage gap 4 (aged-domain attackers who defeat the threshold) is technically an attacker bypass rather than a customer coverage gap, though it is useful context for policy decisions. The question of whether to raise the age threshold from 12 to 24 months (to catch more patient attackers at the cost of more false positives on legitimate startups) remains unresolved.
+
+---
+
+## Section 3: Open issues for human review
+
+- **No surviving Critical hardening findings.** Stage 5 returned PASS with two Moderate and three Minor findings.
+- **Stage 5 Moderate finding M1:** The 12-month threshold is exactly defeatable by patient attacker stories (gradual-legitimacy-accumulation, cro-identity-rotation with aged-domain purchase, biotech-incubator-tenant with domain age padding). Consider whether raising to 24 months is worthwhile given the false-positive cost on legitimate startups.
+- **Stage 5 Moderate finding M2:** Genuine-institutional-email branches (11 stories) are structurally invisible to any domain-age check. Not addressable by this idea; requires measures 14, 16, 19.
+- **[unknown — searched for: "RDAP rate limit Verisign", "RDAP throttling per TLD", "rdap.org rate limit"]:** Per-registry rate limits are undocumented. Low-volume KYC use is almost certainly fine, but no formal confirmation exists.
+- **[unknown — searched for: "ccTLD RDAP coverage 2025", "which ccTLDs have RDAP"]:** The fraction of ccTLDs without RDAP is estimated at 30-40% but not authoritatively documented. Affects international academic customers.
+- **[unknown — searched for: "number of aged domains sold per year domain auction volume", "expired domain auction market size"]:** The liquidity and volume of the aged-domain market is not quantified. Relevant to assessing how easy the domain-age-padding bypass is.
+- **Stage 5 Minor finding m3:** `registrant_redacted` is nearly universal (~89% of gTLDs) and barely informative. Consider dropping as a flag entirely and focusing the check on domain age + transfer recency only.
+- **06F Minor flag:** Coverage gap 4 (aged-domain attackers) is an attacker bypass, not a customer coverage gap. Useful context but technically out of scope for coverage research.
+- **Pairing recommendation:** RDAP transfer date + Wayback content pivot is a strong combined signal for dormant-domain detection. RDAP young domain + no M365 tenant (m02-mx-tenant) is a strong combined signal for freshly registered shells.

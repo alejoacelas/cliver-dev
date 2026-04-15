@@ -1,0 +1,62 @@
+# Per-idea synthesis: m13-callback-sop
+
+## Section 1: Filled-in schema
+
+| Field | Value |
+|---|---|
+| **name** | Independent-switchboard callback SOP |
+| **measure** | M13 — phone-voip-check (extended: out-of-band callback to verify the human) |
+| **attacker_stories_addressed** | inbox-compromise (fabricated letter with VoIP callback — CAUGHT; helpdesk SE with burner — CAUGHT; real PI's mobile on profile — CAUGHT), account-hijack (inherited phone — CAUGHT; SIM-swap with PBX forwarding — AMBIGUOUS), credential-compromise (SIM swap — CAUGHT), it-persona-manufacturing (no real person at institution — CAUGHT), shell-company / shell-nonprofit / cro-* / community-bio-lab / gradual-legitimacy-accumulation (AMBIGUOUS — attacker controls own "switchboard") |
+| **summary** | When an order escalates (M13 VoIP flag, M12 billing mismatch, suspicious supporting docs, SOC content), the reviewer places an outbound call to the customer's claimed institution by independently looking up the institution's main switchboard number — never the number the customer provided — then asks the switchboard to transfer to the named individual. The reviewer confirms the order with the person who picks up. This is the canonical out-of-band verification recommended by BEC fraud guidance (JPM, FBI, Nacha). |
+| **external_dependencies** | Provider's onboarding/compliance analyst (trained per SOP). Independent-source phone lookup (institution's official .edu/.gov Contact Us page, institutional directory, ROR registry). Outbound call infrastructure (desk phone, softphone, Twilio Programmable Voice, Aircall — anything supporting recording/logging). |
+| **endpoint_details** | Manual SOP, not an API. The "endpoint" is the institution's switchboard number, looked up per case. Outbound call cost: ~$0.013–$0.015/min US PSTN via Twilio [best guess]. BEC out-of-band verification is the documented industry standard (JPM Cybersecurity, FBI BEC guidance, Nacha). |
+| **fields_returned** | Structured call-log record: `lookup_source`, `switchboard_number_used`, `time_of_call`, `duration`, `transferred_to`, `verification_outcome` (confirmed / denied / no-such-person / voicemail-only / transfer-failed), `verifier_voice_notes`, `recording_id` (if jurisdictionally permitted). |
+| **marginal_cost_per_check** | Reviewer time: 5–15 min per case at $30–$60/hr = $2.50–$15 per check. Telephony: $0.05–$0.20 per call. **Setup cost:** Writing the SOP, training reviewers, integrating call-log into case management — ~1 person-week of analyst-lead time. |
+| **manual_review_handoff** | 5-step SOP: (1) Trigger on M13 VoIP flag, M12 mismatch, suspicious docs, or SOC content. (2) Independent lookup: search engine to institution's official domain Contact Us page; if small/ambiguous, verify via ROR. Never use customer-supplied links. (3) Place outbound call to switchboard; ask for transfer to named individual; confirm order with two questions (did you place this order? what billing path?). (4) Outcomes: confirmed → release; denied → block + SAR; no-such-person → block + senior compliance; voicemail-only → pause; transfer-failed → re-attempt, then block. (5) Record call (one-party recording if permitted, else typed transcript). |
+| **flags_thrown** | `callback_confirmed`, `callback_denied`, `callback_no_such_person`, `callback_voicemail_only`, `callback_transfer_failed`. |
+| **failure_modes_requiring_review** | Large institutions where switchboard cannot route to individual researcher. Time-zone/after-hours calls. Legitimate visiting scholars not in directory. Switchboard privacy policy refusing transfer. BEC tactic: PBX forwards to SIM-swapped mobile. Multi-tenant buildings with shared lab phones. |
+| **false_positive_qualitative** | (1) Researchers not in directory (new hires, visiting scholars, postdocs, adjuncts) — fires `callback_no_such_person`, the most damaging false positive since it routes to block + senior compliance. Estimated 5–15% of researchers at large universities. (2) Unreachable researchers (sabbatical, fieldwork, parental leave, time zones) — fires `callback_voicemail_only`, order paused indefinitely. Estimated 10–20% unreachable on any given day. (3) Non-English switchboards — may produce unreliable results. (4) Independent researchers / small entities without switchboard — check cannot execute; should not be applied. |
+| **coverage_gaps** | **Gap 1 — No switchboard customers:** ~15–25% of synthesis customers at organizations too small for a switchboard (small biotechs, solo consultants, contract labs, community bio-labs). No signal. **Gap 2 — Not in directory:** ~5–15% of researchers at institutions with switchboards. False positive (no-such-person). **Gap 3 — Unreachable:** ~10–20% unreachable on any given day. False positive (voicemail-only, indefinite delay). **Gap 4 — Non-English switchboards:** ~30–40% of international institutional customers. Weak signal due to language barriers. **Gap 5 — Privacy-restrictive switchboards:** ~5–10% of institutions refuse to transfer calls to external callers. Weak signal. **Gap 6 — Scalability:** 5–15 min/case limits throughput to ~5–20 escalations/day/analyst. Cannot serve as mass screening; limited to tail of high-risk orders. |
+| **record_left** | Structured call log on the case file plus (where lawful) audio recording. Strongest auditable artifact across all M13 ideas: demonstrates active human verification rather than passive lookup. |
+| **bypass_methods_known** | inbox-compromise VoIP on fabricated letter — CAUGHT. inbox-compromise helpdesk SE with burner — CAUGHT. inbox-compromise real PI mobile on profile — CAUGHT. account-hijack inherited phone (no swap) — CAUGHT. credential-compromise SIM swap — CAUGHT. it-persona-manufacturing — CAUGHT (no-such-person at institution). |
+| **bypass_methods_uncovered** | (1) PBX-to-mobile forwarding for SIM-swap attackers — PBX may forward call to the swapped mobile; attacker answers and knows order details. (2) Purpose-built entities controlling their own switchboard — shell companies, shell nonprofits, CROs, bio-lab networks, incubator tenants all control their own phone, so the independent lookup defeats impersonation but not self-presentation. |
+
+---
+
+## Section 2: Narrative
+
+### What this check is and how it works
+
+The independent-switchboard callback is a manual SOP triggered when other automated checks flag an order for escalation. The reviewer independently looks up the institution's main switchboard number — by typing the institution name into a search engine and navigating to the official .edu or .gov Contact Us page, never by following any link the customer provided. The reviewer then places an outbound call to the switchboard and asks to be transferred to the named individual on the order. If the person picks up, the reviewer asks them to confirm the order and the intended billing path. The call result (confirmed, denied, no-such-person, voicemail-only, or transfer-failed) is logged as a structured record. This is the canonical out-of-band verification that JPM Cybersecurity, FBI BEC guidance, and Nacha all explicitly recommend for high-stakes payment confirmations.
+
+### What it catches
+
+The callback SOP is highly effective against impersonation scenarios. When an inbox-compromise attacker fabricates a supporting letter with an attacker-controlled VoIP callback number, the independent lookup renders that number irrelevant — the reviewer calls the institution, not the attacker. When an account-hijack attacker takes over a PI's account, the switchboard routes to the real PI (or a colleague), who denies the order. For fabricated identities (it-persona-manufacturing), the switchboard has no record of the person, producing a hard "no-such-person" block. The key mechanism is that the switchboard is a communication channel the attacker does not control.
+
+### What it misses
+
+The SOP has two structural blind spots. First, if the institution's PBX forwards calls to faculty mobile numbers and the attacker has SIM-swapped the target's mobile, the call reaches the attacker even though it was routed through the switchboard. The implementation suggests asking verification questions the attacker would not know, but since the attacker placed the order, they know its details. Stage 5 recommended tightening to questions based on prior order history or institutional profile details. Second, the SOP is structurally ineffective against purpose-built entities (shell companies, CROs, community bio-labs) that control their own switchboard. When the "institution" and the attacker are the same entity, the independent lookup simply finds the attacker's own phone number. This is an expected scope limitation — entity-legitimacy is the domain of M9/M18, not M13.
+
+### What it costs
+
+The callback is the most expensive per-check M13 idea: $2.50–$15 per case in analyst time (5–15 minutes at $30–$60/hour loaded) plus $0.05–$0.20 in telephony. Setup cost is modest (~1 person-week to write the SOP, train reviewers, and integrate call logging). However, the scalability constraint is the real cost: at 5–15 minutes per case, a single analyst can handle only 5–20 callbacks per day. A provider with high order volume must reserve this check for the highest-risk escalations, not use it as a mass screening tool.
+
+### Operational realism
+
+The callback SOP produces the strongest auditable artifact of any M13 idea: a structured call log documenting who was called, when, through what switchboard, what was said, and the outcome — plus an audio recording where legally permitted. The main operational challenges are directory-lag false positives (new hires, visiting scholars firing "no-such-person" blocks), unreachable researchers (voicemail-only producing indefinite order delays), and international coverage (non-English switchboards, different time zones). The stage 6 coverage research recommended adding a "directory-not-found but institution confirmed" intermediate state to the SOP rather than routing directly to block, which would reduce the most damaging false-positive category.
+
+### Open questions
+
+Stage 5 flagged that the verification-question mitigation for PBX forwarding is weaker than the implementation acknowledges — the attacker knows the order details because they placed the order. The recommended tightening (questions from prior order history or institutional profile) requires the reviewer to have access to historical customer data, which may not always be available. Stage 5 also recommended the SOP explicitly state that the callback is not applicable to entities without an independent institutional switchboard, and that such entities should route to M18 entity-legitimacy review instead. The Twilio per-minute cost estimate is weakly supported (best guess, not cited).
+
+---
+
+## Section 3: Open issues for human review
+
+- **No surviving Critical findings.** Both Moderate findings are well-understood: PBX-forwarding edge case (narrow, with concrete tightening suggestion) and structural ineffectiveness against purpose-built entities (expected, handled by other measures).
+- **Directory-lag false positive severity:** Stage 6 flagged that `callback_no_such_person` routes to "block + senior compliance" — an aggressive action for what may be a directory-lag issue for a legitimate visiting scholar or new hire. The SOP should add an intermediate outcome state. This was not raised as a Critical finding but has direct customer-experience implications.
+- **[unknown] Directory coverage rates:** No public data on what fraction of researchers at a large university are absent from the online directory at any given time. Estimated 5–15%.
+- **[unknown] Researcher reachability rates:** No public data on what fraction of researchers are unreachable by phone on a given day. Estimated 10–20%.
+- **[unknown] Privacy-restrictive switchboard prevalence:** Estimated 5–10% of institutions, but unsourced.
+- **Scalability as mass screening:** The SOP is explicitly an escalation tool. If the escalation threshold for triggering checks (m13-twilio-lookup, m13-telesign-phoneid) is poorly calibrated, either too many orders escalate (overwhelming analyst capacity) or too few (suspicious orders never reach the callback).
+- **PBX-forwarding mitigation needs design:** Stage 5 suggested asking questions from prior order history, but this requires reviewer access to historical data and a protocol for first-time customers where no history exists.

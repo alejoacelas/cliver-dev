@@ -1,0 +1,67 @@
+# m06-bis-country-groups — Per-idea synthesis
+
+## Section 1: Filled-in schema
+
+| Field | Value |
+|---|---|
+| **name** | BIS Country Group D/E + EAR licensing matrix |
+| **measure** | M06 — shipping-export-country |
+| **attacker_stories_addressed** | foreign-institution (re-export step) |
+| **summary** | Map the destination country to BIS Country Groups (A through E) using the EAR Country Chart (Supplement No. 1 to Part 738/740). Hard-block any destination in Country Group E:1/E:2 (Cuba, Iran, North Korea, Syria; Russia/Belarus de-facto under Part 746 sectoral rules). Raise license-required flag for Country Group D destinations when the order's ECCN is controlled for the relevant Reason for Control. Local table lookup after one-time ingestion of publicly available BIS regulation tables. |
+| **external_dependencies** | BIS Country Groups (15 CFR Part 740, Supp. 1) — interactive HTML/PDF; BIS Commerce Country Chart (15 CFR Part 738, Supp. 1) — interactive HTML/PDF; BIS BioExport guidance PDF; internal ECCN mapping (dependency on m06-hs-eccn-classification); country normalization (dependency on m06-iso-country-normalize). No machine-readable API exists; table must be ingested manually. |
+| **endpoint_details** | **URLs:** https://www.bis.gov/regulations/ear/interactive-country-groups and https://www.bis.gov/regulations/ear/interactive-commerce-country-chart. **Auth:** None (public regulation). **Format:** HTML/PDF only — no JSON/REST API [searched for: "BIS country chart API JSON", "trade.gov country groups API", "EAR Country Chart machine-readable feed" — none found; ITA developer portal confirms only Consolidated Screening List API, not Country Chart]. **Implementation:** ingest once as local lookup (~200 rows × ~15 RfC columns), refresh on Federal Register updates (irregular, several times/year). **Rate limits:** N/A (local). **Pricing:** Free; vendor-maintained table alternative $5K–$50K/yr `[vendor-gated; specific pricing requires sales contact]`. **ToS:** Public regulation, no use restriction. |
+| **fields_returned** | `country_name_bis` (BIS canonical name); `country_groups` (list of group memberships, e.g. `["B","D:1","D:5"]` for China); `is_e1`/`is_e2` (boolean embargoed); `is_d1`…`is_d5` (boolean concern groups); per-RfC column booleans (NS1, NS2, MT1, MT2, NP1, NP2, CB1, CB2, CB3, AT1, RS1, RS2, FC1, EI, SS); combined ECCN+country `license_required` boolean + controlling RfC string. [best guess: field shape after table ingestion; BIS publication is a regulation table, not an API schema] |
+| **marginal_cost_per_check** | $0.00 (local table lookup). **Setup cost:** ~$5K–$15K one-time ingestion + validation; ~$2K/yr Federal Register monitoring and refresh [best guess]. Vendor alternative: `[vendor-gated]` $5K–$50K/yr. |
+| **manual_review_handoff** | **Group E hit:** auto-deny; reviewer documents and reports per BIS Part 764. **Group D + license-required:** escalate to export compliance; compliance evaluates license exceptions (GBS, RPL, TMP) or files license application (30–90 day BIS processing). **Borderline/dual-listed:** reviewer cross-references ECCN × Country Chart by RfC. **Re-export disclosed to E:** treat as Group E. |
+| **flags_thrown** | `country_group_e` (auto-deny); `country_group_d_license_required` (escalate); `country_group_unmapped` (normalization failure — escalate); `reexport_disclosed_to_e` (treat as E); `military_end_use_concern` (MEU list + Supp. No. 2 to Part 744). |
+| **failure_modes_requiring_review** | Country name fails to normalize (e.g., "Korea" without North/South — catastrophic if mismapped); ECCN unknown/disputed (cannot complete chart lookup); US territory or APO/FPO special rules; vessel/aircraft destination; sub-region sanctions (Crimea, DPR, LPR) at country grain only — delegated to m06-iso-country-normalize; stale table between Federal Register updates; license exception applicability is item-specific. |
+| **false_positive_qualitative** | (1) Legitimate institutions in Group D countries (Chinese universities, Indian research institutes, Vietnamese national labs) flagged on every 1C353 order — true regulatory obligation but high review burden on ~25–35% of international orders [best guess]. (2) Overlapping group memberships (China in B+D:1+D:3+D:4+D:5) fire multiple flags per order — review fatigue. (3) EU enlargement lag if BIS table not updated. (4) US-domiciled distributors with invisible re-export intent. (5) Crimea/DPR/LPR addresses over-flagged as Russia/Ukraine when legitimate destination is unaffected. |
+| **coverage_gaps** | (1) Re-export/transshipment invisible to first-hop address check — structural ceiling [unknown size; BIS enforcement actions confirm the vector but base rate unquantified]. (2) ECCN dependency: check cannot run without ECCN from m06-hs-eccn-classification; any gaps there propagate [unknown size]. (3) Sub-national sanctioned territories (Crimea, DPR, LPR) invisible at country grain — delegated to m06-iso-country-normalize. (4) Newly recognized/transitional states (Kosovo, Western Sahara, Somaliland) may be unmapped — correctly escalated via `country_group_unmapped` flag. (5) Non-country destinations (vessels, aircraft, FTZs, APO/FPO) — likely <0.5% of orders [best guess, unsourced]. (6) Group D false-positive volume risks review-pipeline degradation into rubber-stamping for the ~25–35% of international orders going to D-group countries [best guess derivation could be tighter; does not subtract non-D-group APAC countries]. |
+| **record_left** | Per order: `country_name_input` (raw), `country_name_normalized` (ISO + BIS canonical), `bis_country_groups`, `eccn` (from m06-hs-eccn-classification), `chart_lookup_result` (license required y/n + RfC), `chart_table_version` (Federal Register pub date), disposition + reviewer signoff if escalated. Retention: 5 years per 15 CFR § 762.6. |
+| **bypass_methods_known** | foreign-institution Method 1 (freight forwarder to non-restricted country, then re-export) — MISSED; foreign-institution Method 6 (customs broker, same re-export pattern) — MISSED; foreign-institution Methods 2/4/5 (ship to non-restricted country directly) — MISSED (destinations not in E/D for relevant ECCNs). |
+| **bypass_methods_uncovered** | All foreign-institution branch bypass methods are structurally uncovered: the branch deliberately ships to non-embargoed intermediary countries (Brazil, Japan, India, Indonesia, Vietnam) specifically to avoid the export-country flag. Re-export through these intermediaries is invisible to any first-hop address check. |
+
+---
+
+## Section 2: Narrative
+
+### What this check is and how it works
+
+This check maps a customer's declared shipping destination to the BIS Country Groups and Commerce Country Chart — two regulatory tables published by the Bureau of Industry and Security under the Export Administration Regulations (EAR). The Country Groups table assigns every country to one or more lettered groups: Group A countries are close allies, Group D countries raise national-security or nonproliferation concerns, and Group E countries (Cuba, Iran, North Korea, Syria) are under comprehensive embargo. The Commerce Country Chart then cross-references a shipment's ECCN (Export Control Classification Number) against the destination's group memberships to determine whether a license is required. In practice, a synthesis provider would ingest both tables into a local lookup (roughly 200 country rows by 15 Reason-for-Control columns), keep the table current via Federal Register monitoring, and query it at order time. The data is public and free; there is no API — the tables are published as HTML and PDF on the BIS website. The check requires two upstream dependencies: an ECCN classification for the ordered product (from m06-hs-eccn-classification) and a normalized country name (from m06-iso-country-normalize), since BIS uses non-ISO country names.
+
+### What it catches
+
+The check catches two categories of orders: (1) any shipment to an embargoed Group E destination, which is auto-denied, and (2) any shipment of a controlled item (ECCN other than EAR99) to a Group D destination, which triggers license review. It directly addresses the sanctioned-jurisdiction-routing attacker story for cases where the attacker naively ships to an embargoed country. It also provides a regulatory tripwire for controlled items bound for national-security-concern destinations. The military-end-use flag adds a layer for items on the MEU list destined for countries on Supplement No. 2 to Part 744.
+
+### What it misses
+
+The dominant gap is re-export invisibility. The foreign-institution attacker branch — the primary mapped adversary for this idea — deliberately ships to non-embargoed intermediary countries (Brazil, Japan, India, Indonesia, Vietnam) and re-exports from there. This check only sees the first-hop destination and produces no signal on these orders. The `reexport_disclosed_to_e` flag exists but depends on voluntary customer disclosure, which an adversary will not provide. Additionally, for the vast majority of synthesis orders classified as EAR99, the check produces no signal even for Group D destinations, because the Country Chart only triggers a license requirement when the ECCN is controlled. This means the check has zero leverage against attackers shipping non-controlled items to Group D countries. Stage 5 classified all foreign-institution bypass methods as MISSED — the branch was specifically designed to evade this type of screening.
+
+### What it costs
+
+Marginal cost per check is zero (local table lookup). Setup cost is estimated at $5K–$15K for one-time table ingestion and validation, plus roughly $2K/year for Federal Register monitoring and table refresh. Alternatively, a trade-compliance vendor (Descartes, E2open, OCR Global Trade) can supply a maintained table for $5K–$50K/year (specific pricing is vendor-gated). The total cost profile is low, making this a high-leverage check for the narrow class of orders it does catch (direct E-group shipments).
+
+### Operational realism
+
+Group E hits are auto-denied with no manual review needed beyond documentation and BIS reporting per Part 764. Group D + license-required hits escalate to export compliance, where staff evaluate whether a license exception applies or file a license application — BIS processing takes 30–90 days. The practical concern is review volume: Group D countries account for an estimated 25–35% of international orders, and while most will be EAR99 (no flag), the subset of 1C353 orders to these destinations will flag at 100%. If the ECCN classification pipeline over-classifies (labels EAR99 items as 1C353), the false-positive volume could degrade the review pipeline into rubber-stamping. Each screened order leaves an auditable record including raw and normalized country names, group memberships, ECCN, chart lookup result, table version, and reviewer disposition. Records must be retained for 5 years per 15 CFR § 762.6.
+
+### Open questions
+
+The 06F form check flagged three issues that remain partially unresolved: (1) the "most synthesis orders are EAR99" and "<5% are 1C353" claims lack sourcing and appear inconsistently tagged as best-guesses across documents; (2) the 25–35% estimate for Group D countries' share of international orders does not subtract non-D-group APAC countries (Japan, South Korea, Australia, New Zealand, Singapore) from the Asia-Pacific total; and (3) two coverage gap size estimates remain `[unknown]` with thin search lists. None of these affect the structural assessment — the check's value proposition (cheap, deterministic, zero-marginal-cost screening of direct E-group shipments) holds regardless — but the false-positive burden estimates carry meaningful uncertainty.
+
+---
+
+## Section 3: Open issues for human review
+
+- **No surviving Critical hardening findings.** Stage 5 found no Critical issues; the foreign-institution bypass strategy is a known structural limitation of all address-based checks, not a gap in this implementation.
+- **`[unknown]` fields affecting policy implications:**
+  - Coverage Gap 2 (fraction of orders lacking ECCN classification) — searched for provider-reported SOC hit rates and IGSC screening statistics; no public data found. This gap determines how often the check simply cannot run.
+  - Coverage Gap 3 (re-export/transshipment base rate) — searched for gene synthesis transshipment rates; no public data. This is the dominant coverage ceiling.
+  - Coverage Gap 6 (non-country destinations) — best-guess <0.5%, unsourced.
+- **`[vendor-gated]` fields:**
+  - Vendor-maintained table pricing ($5K–$50K/yr range) requires sales contact with Descartes, E2open, or OCR Global Trade for specifics.
+- **06F flags not fully resolved:**
+  - "Most orders are EAR99" / "<5% are 1C353" claims need `[best guess]` tagging in the false-positive section for consistency.
+  - 25–35% Group D international order share estimate needs tighter derivation (subtract non-D-group APAC countries).
+- **Cross-measure dependency risk:** This check is bottlenecked by m06-hs-eccn-classification (no ECCN = no chart lookup) and m06-iso-country-normalize (no normalization = potential catastrophic mismapping of North/South Korea). Both must be deployed together.
+- **Stage 5 Moderate finding:** Re-export to embargoed destinations is structurally invisible. Mitigation requires complementary checks: m06-freight-forwarder-denylist, end-use certificates, or post-shipment monitoring. Not addressable within this idea alone.

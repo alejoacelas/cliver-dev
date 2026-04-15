@@ -1,0 +1,71 @@
+# Per-idea synthesis: m15-drift-detector
+
+## Section 1: Filled-in schema
+
+| Field | Value |
+|---|---|
+| **name** | Cross-order SOC drift detector |
+| **measure** | M15 — soc-self-declaration |
+| **attacker_stories_addressed** | gradual-legitimacy-accumulation (Branch E — the primary intended target), unrelated-dept-student (Branch A — partial, via screening-hit-rate shift), visiting-researcher (Branch D — partial), bulk-order-noise-cover (Branch E — partial, via screening-hit-rate increase), dormant-account-takeover (Branch D — partial, if dormancy handling implemented). |
+| **summary** | Internal time-series detector that ingests every customer's SOC declarations and screening outputs over time and flags when the declared use, organism, or screening hits drift in a direction associated with escalation toward known threats. Uses streaming change-point detectors (River ADWIN and Page-Hinkley in parallel) over a per-customer feature vector, plus hand-curated "concerning trajectory" patterns. Pure internal data — no external vendor. Structurally blind to attackers who maintain consistent declarations from the start. |
+| **external_dependencies** | Internal order database (one row per order with SOC declaration fields, screening output, customer ID, timestamp); open-source streaming-ML library River (ADWIN, Page-Hinkley, KSWIN drift detectors); reviewer queue UI; optional labeled training set of known-bad escalation patterns. |
+| **endpoint_details** | In-house service: stream processor over orders table (nightly batch or Kafka consumer). No external API. Auth: internal RBAC, reviewer queue behind SSO. Throughput: low-overhead streaming update per observation; trivially handles synthesis-provider order volumes. Cost: infrastructure only — one small VM + database storage, no per-check API fee. ToS: internal data; only constraint is provider's own privacy policy on customer data retention. |
+| **fields_returned** | Per flagged customer: `customer_id`, `drift_detected_at`, `drift_type` (vocab_shift / organism_shift / bsl_escalation / screening_hit_rate_increase / concerning_trajectory_match), `window_size`, `mean_before` / `mean_after` from ADWIN window, pointer to most recent N orders (default 20) for reviewer context. |
+| **marginal_cost_per_check** | ~$0 per order (negligible compute). **setup_cost:** [best guess: 4–8 engineer-weeks to define feature vector, wire River into order pipeline, build reviewer queue, curate initial concerning trajectories.] |
+| **manual_review_handoff** | Five-step playbook: (1) Pull customer's last 20 orders + drift summary (which feature shifted, by how much). (2) Check for legitimate research pivot: published preprint in new area, new grant, new collaborator, explanatory note. (3) If benign: close, annotate drift episode, exclude from re-flagging on same trajectory for N months. (4) If unclear: contact customer ("your orders shifted toward X — could you describe the project?"), route response to scientific review. (5) If no plausible explanation or matches curated bad pattern: escalate to scientific review, hold subsequent SOC orders. |
+| **flags_thrown** | `soc_drift_detected` (generic ADWIN/Page-Hinkley change point — reviewer queue), `concerning_trajectory_match` (curated bad pattern — priority queue + scientific review), `screening_hit_rate_increase` (step-up in per-order screening flags — reviewer queue), `narrowing_to_known_threat` (feature embedding moved toward denied-order centroid — priority queue). |
+| **failure_modes_requiring_review** | Cold-start: customers with <10 orders produce no signal. Sparse customers (1 order/quarter): noisy windows. Vocabulary changes in structured form cause artificial drift across entire customer base (requires recalibration event). Legitimate research pivots: high base rate of benign drift. |
+| **false_positive_qualitative** | (1) Legitimate research pivots — 10–20% of PI accounts per 2-year window; dominant FP source. (2) Core-facility accounts with inherently variable order mix — 5–15% of accounts; must be excluded or modeled separately. (3) CRO accounts with diverse client portfolios — 5–10% of commercial accounts; same issue. (4) Free-text-heavy declarations — 10–25% of SOC declarations; noisy embedding drift. (5) Postdocs/new PIs starting new directions — subset of (1). (6) Educational accounts — seasonal drift from course material changes. |
+| **coverage_gaps** | (1) Cold-start: ~30–50% of customer accounts have <10 orders at any given time — zero signal. (2) Sparse/infrequent customers: ~10–20% with >10 lifetime orders but <4/year — weak/noisy signal. (3) Core-facility/shared accounts: ~5–15% — inherently variable, FP-dominated or excluded. (4) CRO accounts: ~5–10% — same issue. (5) Legitimate research pivots: ~10–20% of PI accounts per 2-year window — benign drift dominates alerts. (6) Free-text declarations: ~10–25% — noisy. (7) Consistent attacker: structural blind spot — no drift means no detection; 8 of 14 mapped stories use this strategy. |
+| **record_left** | Drift event log: customer_id, timestamp, detector type, feature deltas, window contents. Reviewer disposition (benign / contacted / escalated / denied) tied to each event. Long-term per-customer drift history auditable for future review ("did this customer ever previously trip the detector?"). |
+| **bypass_methods_known** | Screening-hit-rate step-up from non-SOC to SOC orders (CAUGHT — for customers with sufficient history), BSL escalation feature (CAUGHT — if step is large enough), concerning-trajectory curated match (CAUGHT — if trajectory is curated and recognized). Gradual escalation within detector threshold (AMBIGUOUS — depends on tuning parameters). |
+| **bypass_methods_uncovered** | Consistent deception / no drift signal (Critical — structural; 8 of 14 stories: lab-manager-voucher, cro-framing, cro-identity-rotation, insider-recruitment, it-persona-manufacturing, biotech-incubator-tenant, shell-company, account-hijack); cold-start for new accounts (<10 orders — Moderate); exemption-claim null data (Moderate — feature-encoding gap); facility/CRO exclusion creating blind spot for bulk-order-noise-cover (Moderate); gradual escalation below threshold (Minor — tuning-dependent); dormancy gap handling unspecified (Minor). |
+
+---
+
+## Section 2: Narrative
+
+### What this check is and how it works
+
+The cross-order SOC drift detector is an internally built time-series monitoring system that tracks each customer's pattern of self-declarations and sequence-screening outputs across their order history. It maintains a per-customer feature vector — encoding controlled vocabulary selections, organism taxonomy, declared BSL level, screening hit rates, and optionally embedded free-text content — and runs two streaming change-point detectors (River ADWIN and Page-Hinkley) in parallel. ADWIN is effective at detecting abrupt distributional shifts; Page-Hinkley is a CUSUM-style detector better suited for gradual cumulative drift. When either detector identifies a statistically significant change point, or when the customer's feature trajectory matches a hand-curated "concerning trajectory" pattern (e.g., escalating from BSL2 housekeeping genes toward BSL3 toxin-adjacent sequences), the system flags the customer for manual review. The entire system runs on internal data with no external vendor dependency, at effectively zero marginal cost per order.
+
+### What it catches
+
+The drift detector's intended target is the gradual-legitimacy-accumulation attacker who builds a history of benign orders and then escalates toward sequences of concern. The BSL escalation feature fires when a customer's declared biosafety level steps up. The screening-hit-rate-increase feature detects when a customer's per-order sequence-screening flag rate rises meaningfully. The concerning-trajectory-match feature catches known patterns curated from historical denied orders. For customers with sufficient order history, the detector can also catch the transition from non-SOC to SOC-bearing orders (relevant to the unrelated-dept-student and visiting-researcher branches) and the shared-account predecessor reactivation pattern (dormant-account-takeover, if dormancy handling is implemented).
+
+### What it misses
+
+The drift detector has a Critical structural blind spot: it is inherently unable to detect attackers who maintain consistent declarations from the start. This affects 8 of 14 mapped attacker stories, including lab-manager-voucher (consistent vague language), cro-framing (engineered alignment from day one), cro-identity-rotation (new accounts with self-consistent scope), insider-recruitment (orders within inherited lab scope), it-persona-manufacturing (lift-and-modify IBC paperwork), biotech-incubator-tenant (self-consistent cover story), shell-company (exemption claims), and account-hijack (orders matching real PI's research scope). The implementation acknowledges this directly: "the attacker who maintains a long, consistent fake history is not caught." Additionally, the cold-start gap means the detector provides zero value for the first ~10 orders from any customer — precisely the window when screening matters most for new accounts. Exemption-claim declarations produce null SOC data that the feature vector cannot process. Facility and CRO account exclusions (needed to manage false positives) create blind spots for bulk-order-noise-cover attacks that operate through those exact account types.
+
+### What it costs
+
+Marginal cost is effectively zero — the detector runs as an internal stream processor over the provider's own order database. Setup cost is estimated at 4–8 engineer-weeks to define the feature vector, integrate River into the order pipeline, build the reviewer queue, and curate an initial set of concerning trajectories. No external vendor, no per-check fee, no API key. Infrastructure requirements are minimal: one small VM plus database storage.
+
+### Operational realism
+
+The dominant operational challenge is the false-positive rate. Legitimate research pivots — documented as frequent and systemic in a 2025 Nature paper — are estimated to affect 10–20% of PI-level accounts per 2-year window. Core-facility and CRO accounts produce inherently variable order mixes that will trigger drift constantly, requiring either exclusion from the detector or separate modeling. The reviewer workflow must be designed for a low signal-to-noise ratio: every alert requires a human to determine whether the drift is a legitimate pivot or a potential threat. The implementation specifies a five-step triage playbook including checking for published preprints, new grants, or new collaborators, but this triage is labor-intensive. The detector's value proposition is strongest for the escalation/pivot archetype and weakest for the persistent-liar archetype — it should be positioned as a supplementary signal contributing to a composite risk score, not as a standalone defense.
+
+### Open questions
+
+The most consequential open question is whether the Critical structural finding (C1 — blindness to consistent deception) should be addressed by a complementary static anomaly detector within this idea's scope or by separate M15 ideas (m15-structured-form, m15-llm-extraction) that evaluate declarations themselves rather than their trajectory. The ADWIN `delta` parameter and Page-Hinkley `threshold`/`alpha` sensitivity parameters are not specified — without calibration data, the detector's precision and recall are unverifiable. Dormancy/gap handling in the streaming detector is not documented. How exempt declarations are encoded in the feature vector is not specified. The O(log n) complexity claim for ADWIN was flagged by the 04C claim check as slightly overstated — the original Bifet and Gavalda 2007 paper should be cited.
+
+---
+
+## Section 3: Open issues for human review
+
+- **Surviving Critical finding C1 (consistent deception structural blind spot):** The drift detector is structurally blind to attackers who maintain consistent declarations from the start. This affects 8 of 14 mapped attacker stories and is inherent to the time-series change-detection approach. The implementation acknowledges this. The detector catches escalators but not persistent liars. Complementary M15 checks (structured-form review, IBC attestation, LLM-based extraction) are essential for the stories this detector misses.
+- **Moderate finding M1 (cold-start gap):** Customers with <10 orders produce no signal. ~30–50% of accounts at any time. Structural to time-series detection; not fixable without external signals. Other M15 ideas must cover the first-order window.
+- **Moderate finding M2 (exemption-claim null data):** If a customer declares "exempt / no SOC," the feature vector has no input. The implementation should specify how exempt declarations are encoded (e.g., binary "declared-exempt" feature that triggers drift if it suddenly appears after prior non-exempt orders).
+- **Moderate finding M3 (facility/CRO exclusions):** False-positive handling that excludes CRO and core-facility accounts creates a blind spot for bulk-order-noise-cover. Alternative: per-subcategory drift tracking or absolute screening-hit counts rather than rates.
+- **Minor finding N1 (tuning parameters):** ADWIN `delta` and Page-Hinkley `threshold`/`alpha` not specified. Calibration procedure needed.
+- **Minor finding N2 (dormancy gap handling):** Streaming detector behavior during temporal gaps not documented.
+- **[unknown] fields:**
+  - Synthesis provider annual order volumes (searched but not found).
+  - Free-text declaration usage rates (searched but not found; 10–25% best guess).
+  - Customer order frequency distribution (30–50% with <10 orders is best guess).
+- **[best guess] fields requiring validation:**
+  - 30–50% of accounts with <10 orders.
+  - 10–20% of PI accounts pivoting per 2-year window (Nature paper supports frequency but not this exact synthesis-customer estimate).
+  - 5–15% core-facility accounts.
+  - 4–8 engineer-weeks setup cost.
+- **Overstated claim (flagged by 04C):** "O(log n) per observation" for ADWIN — should be softened to "low-overhead streaming update" or cite the original Bifet and Gavalda 2007 paper.

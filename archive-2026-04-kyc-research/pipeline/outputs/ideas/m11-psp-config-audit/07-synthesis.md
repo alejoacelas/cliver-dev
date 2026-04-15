@@ -1,0 +1,57 @@
+# m11-psp-config-audit — Per-idea synthesis
+
+## Section 1: Filled-in schema
+
+| Field | Value |
+|---|---|
+| **name** | PSP config audit (no crypto methods enabled) |
+| **measure** | M11 (payment-no-crypto) |
+| **attacker_stories_addressed** | crypto-funding. No in-corpus attacker branches route crypto to the synthesis provider. This is a structural defense-in-depth control that prevents accidental enablement of crypto payment methods — a configuration footgun rather than an attacker-behavior check. |
+| **summary** | Periodic CI-driven audit that the live Stripe / Adyen / Braintree configuration does not have any cryptocurrency-related payment methods enabled. A small script fetches active payment-method capabilities from each PSP's management API and asserts the absence of `crypto_payments`, `stablecoin_payments`, Coinbase Commerce, BitPay, or any equivalent. Catches configuration drift (manual dashboard toggles, accidental enablement). |
+| **external_dependencies** | Stripe Account/Capabilities API; Adyen Management API (`paymentMethodSettings`); Braintree Client Token/Configuration endpoint. CI runner (GitHub Actions, GitLab CI, Jenkins). Alerting (pager/Slack). |
+| **endpoint_details** | **Stripe:** `GET /v1/accounts/{account_id}` returns `capabilities` hash including `crypto_payments` and `stablecoin_payments` (added 2025-06-30 API version). Payment Method Configurations endpoint lists all enabled method types. Restricted API key with Account:read and Payment Method Configurations:read scopes. 100 read req/sec rate limit. **Adyen:** `GET /v1/merchants/{merchantId}/paymentMethodSettings` returns list of payment-method settings with type field. Audit asserts no `cryptocurrency` or `stablecoin` paymentMethodVariant. Management API key with read on paymentMethodSettings. **Braintree:** Client Token/Configuration endpoint; inspect `paymentMethods` hash; assert diff is zero against known-good config. **Audit harness:** Python or shell script in CI, daily cron + on every infrastructure-touching PR. Exits non-zero on unexpected enabled method. Posts to Slack on failure. Allowlist in `payment-methods.allowlist.yaml` in repo; changes reviewed via PR. |
+| **fields_returned** | **Stripe:** `capabilities.crypto_payments` (active/inactive/pending), `capabilities.stablecoin_payments`, `capabilities.card_payments`. Payment Method Configurations: id, name, enabled method types. **Adyen:** id, type (visa/mc/cryptocurrency/etc.), currencies, countries, enabled. |
+| **marginal_cost_per_check** | ~$0 per audit (a few API calls; CI runner seconds of compute). Setup: ~4-8 hours engineering [best guess] to build script, define allowlist, hook into CI and Slack. Maintenance: trivial — update allowlist when provider intentionally enables a new non-crypto method. |
+| **manual_review_handoff** | When `crypto_method_enabled` fires: (1) CI fails, Slack alert pages on-call engineer/payments owner. (2) On-call pulls PSP audit-log entries for payment-method changes. (3) If intentional (PR + reviewer approval): update allowlist. (4) If unintentional (manual dashboard toggle, third-party app auto-enablement): revert via dashboard/API, investigate, escalate to security if no human admits to the change. (5) Post-incident: confirm no orders processed via unauthorized method during drift window. SOP target: <=30 min from alert to remediation. |
+| **flags_thrown** | `crypto_method_enabled` — audit detected an active crypto/stablecoin/Coinbase Commerce/BitPay capability or payment method config. Action: page on-call. |
+| **failure_modes_requiring_review** | (1) New PSP method names appear without notice — script doesn't know to check for new crypto-adjacent types. (2) Allowlist scope creep — engineers add methods without verifying non-crypto status. (3) Test vs live mode mismatch — audit runs against one mode but the other differs. (4) Stripe Connect — connected accounts have independent capabilities; audit must enumerate each. (5) API key scope insufficient — audit fails open on permission errors. |
+| **false_positive_qualitative** | (1) Legitimate new non-crypto payment method enablement (Apple Pay, iDEAL, ACH) triggers audit until allowlist updated — a few alerts/year, resolved in minutes. (2) Test-mode crypto enablement for developer experimentation — FP depends on policy scope. (3) Renamed/deprecated capability names — audit may alert on old name's absence while missing new name. Zero customer-facing false positives — this is a significant advantage over other M11 ideas. |
+| **coverage_gaps** | (1) New PSP payment method types not in the disallowed-keyword list — [best guess: 1-2 crypto-adjacent types/year across major PSPs]; window of vulnerability depends on changelog monitoring diligence (days to months). (2) Connected accounts with independent capabilities — affects <5% of synthesis providers [best guess]; total gap for those affected unless explicitly coded. (3) Test vs live mode divergence — minor; low practical risk. (4) Non-PSP crypto payment paths (direct BitPay/Coinbase Commerce integration) — negligible for most providers; requires deliberate engineering effort. (5) API key scope insufficient causing fail-open — one-time implementation bug; mitigated by asserting non-empty responses. |
+| **record_left** | CI run log (full API response, secrets masked), retained per CI policy. Allowlist YAML in version control with full git history. Per-alert incident ticket with timeline, root cause, remediation. Aggregate dashboard: audit runs/day, failure rate, time-to-remediation. Demonstrates to regulators that crypto is administratively impossible to enable without leaving a record. |
+| **bypass_methods_known** | None. No in-corpus attacker stories stress this check. |
+| **bypass_methods_uncovered** | None. No in-corpus attacker stories stress this check. |
+
+## Section 2: Narrative
+
+### What this check is and how it works
+
+This idea is a configuration-integrity audit, not a transaction-time check. A small script runs in CI on a daily cron schedule and on every infrastructure-touching pull request. It queries each PSP's management API — Stripe's Account Capabilities endpoint, Adyen's paymentMethodSettings endpoint, and Braintree's Client Token Configuration — and asserts that no cryptocurrency-related payment method is enabled. On Stripe, it checks for `crypto_payments` and `stablecoin_payments` capabilities set to `active`; on Adyen, it checks for any `cryptocurrency` or `stablecoin` paymentMethodVariant in the enabled method settings. The allowed method types are maintained in a `payment-methods.allowlist.yaml` file in the repository, reviewed via PR. If the audit detects an unexpected enabled method, the CI job exits non-zero and posts to Slack, paging the on-call engineer.
+
+### What it catches
+
+This check catches configuration drift — the accidental or unauthorized enablement of a crypto payment method on the synthesis provider's PSP account. This could happen through a manual dashboard toggle, a third-party app installation that auto-enables a method, or a promotion from test mode to live mode. While no in-corpus attacker branch routes cryptocurrency to a synthesis provider, the audit prevents the structural precondition that would make such an attack possible. It is a negative control: it asserts absence rather than detecting presence. This means it has zero customer-facing interaction and zero customer-side false positives — a significant operational advantage over other M11 ideas.
+
+### What it misses
+
+The primary coverage gap is the lag between a PSP introducing a new crypto-adjacent payment method type and the audit script being updated to check for it. Stripe added the `stablecoin` payment method type in mid-2025; a similar addition could happen at any time. The window of vulnerability ranges from days (for a diligent team subscribed to the PSP changelog) to months (for an inattentive one), estimated at 1-2 crypto-adjacent method types per year across major PSPs. Secondary gaps include Stripe Connect environments where connected accounts have independent capabilities (affecting less than 5% of synthesis providers), test-mode vs live-mode configuration divergence, and non-PSP crypto payment paths (direct BitPay or Coinbase Commerce integrations) that the audit does not cover. The audit is also vulnerable to a fail-open bug if the API key lacks sufficient permissions, though this is a one-time implementation issue mitigated by defensive coding.
+
+### What it costs
+
+Runtime cost is effectively zero — a few API calls and seconds of CI compute. Setup requires approximately 4-8 hours of engineering time to build the audit script, define the initial allowlist, and hook into CI and Slack alerting. Ongoing maintenance is trivial: update the allowlist YAML when the provider intentionally enables a new non-crypto payment method. There is no customer-facing cost and no manual review burden on individual orders — the only human effort is incident response when the audit fires, which for a well-run team takes 30 minutes or less.
+
+### Operational realism
+
+When the audit fires, the on-call engineer receives a Slack page and investigates the PSP's audit-log entries for recent payment-method changes. If the change was intentional (a PR-reviewed allowlist update), the allowlist is updated. If unintentional, the method is reverted via the PSP dashboard or API, the person who made the change is contacted, and if no human claims responsibility, the incident is escalated to security as potential unauthorized access. Post-incident, the team confirms no orders were processed via the unauthorized method during the drift window. The audit trail — CI logs, allowlist git history, and incident tickets — demonstrates to regulators that crypto payment methods cannot be enabled without leaving a visible, reviewable record.
+
+### Open questions
+
+The claim check found no broken URLs, mis-citations, or load-bearing overstatements. Adyen Management API rate limits are marked as [best guess] (documented as "standard" but not numerically specified in public docs). The coverage research noted that Gaps 3, 4, and 5 are implementation-quality and configuration-scenario issues rather than customer-category coverage gaps in the traditional sense, which is appropriate for an infrastructure audit. The primary open question is operational: whether the synthesis provider's team will maintain the discipline to track PSP changelog updates and keep the disallowed-keyword list current over time.
+
+## Section 3: Open issues for human review
+
+- **No surviving Critical hardening findings.** Stage 5 found no findings of any severity — no in-corpus attacker stories stress this check.
+- **[unknown -- searched for] fields affecting policy implications:** None. All fields are populated or marked [best guess] with reasoning.
+- **No [vendor-gated] fields.**
+- **Operational discipline dependency:** The primary coverage gap (new PSP method types) is mitigated by operational discipline (changelog monitoring), not technical architecture. Whether the synthesis provider maintains this discipline over time is a human judgment call, not resolvable by research.
+- **06F minor flag:** Gaps 3, 4, and 5 are infrastructure-scenario gaps rather than customer-category gaps, which stretches the stage 6 framing. Appropriate for this idea type (infrastructure audit) but noted for context.
+- **Adyen rate limits:** Marked [best guess]; not numerically specified in public documentation.

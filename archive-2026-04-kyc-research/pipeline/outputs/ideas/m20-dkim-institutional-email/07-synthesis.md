@@ -1,0 +1,65 @@
+# m20-dkim-institutional-email — Per-idea synthesis
+
+## Section 1: Filled-in schema
+
+| Field | Value |
+|---|---|
+| **name** | DKIM-verified institutional email from voucher |
+| **measure** | M20 — Voucher-legitimacy (SOC) |
+| **attacker_stories_addressed** | `free-mail-voucher` (directly targeted — rejects `@gmail.com` etc.). `lookalike-voucher-domain` (directly targeted — combined with m18 lookalike detection). `fake-voucher` (partial — catches free-mail/lookalike only; attacker with real institutional inbox passes). `shell-nonprofit`, `shell-company`, `cro-framing`, `cro-identity-rotation` (CAUGHT if shell domain not ROR-listed; MISSED if ROR obtained). `community-bio-lab-network` (CAUGHT partially if lab domain not ROR-listed). Does **not** catch: `lab-manager-voucher` (all variants), `visiting-researcher`, `unrelated-dept-student`, `insider-recruitment`, `credential-compromise`, `inbox-compromise`, `account-hijack`, `dormant-account-takeover`, `dormant-domain` (DKIM trivially set up on revived domain), `it-persona-manufacturing`, `gradual-legitimacy-accumulation`, `bulk-order-noise-cover`, `biotech-incubator-tenant`. |
+| **summary** | Provider requires the voucher to send their attestation from an institutional email. The provider verifies: (a) valid DKIM signature on the inbound message, (b) DKIM `d=` domain aligns with the From-header domain, and (c) that domain matches the voucher's claimed institution's canonical email domain (per ROR / m02-ror-domain-match). ARC chain validation serves as fallback when forwarding breaks DKIM. This binds the attestation to the institution's mail infrastructure and blocks free-mail, lookalike-domain, and no-DKIM-shell patterns. |
+| **external_dependencies** | `dkimpy` library (Python, BSD-licensed, supports DKIM + ARC). DNS resolver for DKIM public-key TXT record lookup. Institution-domain canonicalization via ROR API / m02-ror-domain-match. Provider's own receiving MX server (must receive directly to preserve DKIM headers). |
+| **endpoint_details** | No external SaaS needed — local computation + DNS. Library: `dkimpy` (`dkim.verify(message_bytes)` returns True/False; parses `d=`, `s=`, `i=` fields). Auth: none (local). Rate limits: none beyond DNS caching. Pricing: free/open-source (BSD). Critical constraint: provider's MX must accept voucher email directly before any forwarding/content rewriting that invalidates DKIM body hash. ARC fallback for forwarded messages. |
+| **fields_returned** | `dkim_verified` (bool), `dkim_d_domain` (str), `dkim_selector` (str), `from_header_domain` (str), `dkim_d_aligned_with_from` (bool), `from_domain_matches_institution` (bool — against ROR canonical domain), `arc_chain_valid` (bool), `arc_original_dkim_d` (str or null), `verification_failures` (list of reason codes), raw `DKIM-Signature` header text. |
+| **marginal_cost_per_check** | $0 direct cost (open-source + DNS). Compute: ~10–50ms per message. Operational: [best guess: ~$50–$200/month for dedicated MX + ~1 engineer-week integration]. **Setup cost:** [best guess: ~$5k–$10k for verification pipeline, ROR-domain reconciliation, reviewer UI, plus m02 dependency.] |
+| **manual_review_handoff** | Six-case playbook: (1) All pass → accept. (2) DKIM fails but ARC intact from institution domain → accept with note. (3) DKIM fails, no ARC → contact voucher to re-send directly. (4) DKIM passes but `d=` mismatches institution (cloud vendor signing) → accept if cloud vendor is institution's published MX. (5) `d=` is free-mail → reject. (6) `d=` is lookalike → reject. Reviewer packet: full inbound email with headers, DKIM result + reason codes, ARC chain, claimed institution + ROR canonical domain, DNS public-key lookup. |
+| **flags_thrown** | `dkim_invalid` (signature doesn't verify), `dkim_d_misaligned` (`d=` differs from From domain), `voucher_domain_not_institutional` (`d=` is free-mail), `voucher_domain_lookalike` (matches known lookalike pattern), `voucher_domain_unrelated` (real domain but not institution's ROR-canonical or alias), `arc_chain_broken` (DKIM failed + ARC inconsistent). |
+| **failure_modes_requiring_review** | Institution outsources mail to cloud provider signing with its own `d=`; institution misconfigures DKIM [best guess: ~5–15% worldwide]; mailing-list/forwarder traversal breaks DKIM body hash; subdomain alignment issues (relaxed DMARC recommended); IDN handling for international domains; voucher uses personal email by habit. |
+| **false_positive_qualitative** | **Cumulative global estimate:** [best guess: <5% for US R1 universities; 15–25% globally, concentrated in non-OECD and small-institution populations.] Specific categories: (1) Institutions with broken/absent DKIM (~5–15% worldwide). (2) Non-OECD institutions with low DKIM adoption (.fr at ~41% DKIM; non-OECD likely 20–30%). (3) Forwarded/mailing-list-traversed emails without ARC (~5–10%). (4) Cloud-hosted email with third-party DKIM signing (~5–10%). (5) Alumni aliases. |
+| **coverage_gaps** | **Gap 1 — Misconfigured/absent DKIM (false-positive):** ~5–15% of institutional vouchers worldwide; higher for smaller and non-US institutions. **Gap 2 — Non-OECD institutional email infrastructure (false-positive):** .fr at ~41% DKIM adoption; non-OECD likely lower; ~10–15% of all potential vouchers affected. **Gap 3 — Email forwarding breaking DKIM (false-positive):** ~41% DMARC failure at 2-hop forwarding without ARC; ~5–10% of voucher emails. ARC fallback mitigates. **Gap 4 — Attackers with real institutional email (no-signal):** Compromised accounts, insiders, manufactured personas, dormant-domain revivals all produce valid DKIM. Dominant sophisticated-attacker bypass. Size [unknown]. **Gap 5 — Cloud-hosted institutional email with third-party signing (false-positive):** ~5–10% of institutional domains. Adjudicable via MX record lookup. |
+| **record_left** | Full raw inbound voucher email (MIME/EML), DKIM verification trace + DNS lookup, ARC chain if present, reviewer adjudication, voucher_email → claimed institution → ROR domain mapping. Strong audit artifact: email, DNS public key, and verification result are independently re-verifiable by third parties. |
+| **bypass_methods_known** | Free-mail voucher — CAUGHT. Lookalike domain — CAUGHT. Shell domain without ROR listing — CAUGHT. CRO domain without ROR — CAUGHT. |
+| **bypass_methods_uncovered** | All real-institutional-email patterns (insiders, visitors, students, cultivated vouchers, recruited co-conspirators); dormant-domain DKIM revival; compromised/hijacked institutional accounts; IT-manufactured persona email; shell domains with ROR listing; ARC chain injection from untrusted intermediaries. |
+
+---
+
+## Section 2: Narrative
+
+### What this check is and how it works
+
+The DKIM institutional-email check requires the voucher to send their attestation from an institutional email address. The provider's receiving mail server verifies that the inbound message carries a valid DKIM signature, that the signature's `d=` domain aligns with the message's From-header domain, and that this domain matches the voucher's claimed institution (per ROR canonical domain lookup). The verification is local computation: the `dkimpy` library (open-source, BSD-licensed) parses the DKIM-Signature header and validates it against the institution's DNS-published public key. When forwarding breaks the DKIM body hash, an ARC (Authenticated Received Chain) fallback preserves the original authentication results across hops. No external SaaS is required.
+
+### What it catches
+
+The check directly eliminates two low-sophistication attacker patterns: vouching from free-mail addresses (gmail.com, outlook.com, etc.) and vouching from lookalike domains that mimic a real institution. It also catches shell entities, CRO framings, and community-lab vouchers when their domain is not ROR-listed — forcing the attacker to either obtain ROR listing (a non-trivial step) or find a voucher at a recognized institution. The check's real discriminating power comes from its coupling with the ROR domain-match check: DKIM alone only verifies that a domain signed the email, while ROR determines whether that domain belongs to a recognized research institution.
+
+### What it misses
+
+The check provides zero resistance against any attacker who controls a legitimate institutional email account. This includes insiders (lab managers, recruited staff), visiting researchers with real appointments, students with institutional email, PI accounts accessed via credential compromise, IT-manufactured persona accounts, and dormant-domain revivals where the attacker sets up fresh DKIM in minutes. The hardening stage confirmed that DKIM verifies infrastructure, not intent or identity — a compromised `@university.edu` account produces a perfectly valid signature. Shell entities that invest the effort to obtain ROR listing and configure DKIM on their domain also pass. The dominant sophisticated-attacker pattern (real institutional email) is structurally invisible to this check.
+
+### What it costs
+
+Direct cost is zero (open-source library + DNS). The provider must run a dedicated receiving MX server (~$50–$200/month in cloud hosting). Setup cost is approximately $5k–$10k for the verification pipeline, ROR-domain reconciliation, and reviewer UI. Per-message compute is 10–50ms. The main ongoing cost is manual review for DKIM failures and alignment mismatches, which the coverage research estimates at <5% of voucher emails for US R1 institutions but potentially 15–25% globally.
+
+### Operational realism
+
+The check produces a strong, independently re-verifiable audit artifact: the raw email, the DNS public key, and the verification result can all be reproduced by a third party. The six-case reviewer playbook covers the full decision space including ARC fallback and cloud-vendor signing. The critical operational requirement is that the provider's MX must receive the voucher's email directly — any intermediate forwarding or content rewriting that modifies the message body will invalidate the DKIM body hash. The ARC fallback mitigates this for intermediaries that support ARC, but ARC adoption is not yet universal. The 4C claim check flagged that the implementation overstates Google Workspace DKIM as "by default" — it actually requires admin action to publish the DKIM key.
+
+### Open questions
+
+The 4C claim check identified empirical data (dmarcian European HE study) showing that only ~31% of .edu domains are at DMARC enforcement and ~25% of top European HE domains are at enforcement, suggesting the international false-positive estimate (10–25%) may be conservative. The claim that ~5–15% of institutions have intermittent DKIM problems is a best guess without direct citation; the dmarcian data provides a stronger proxy. The implementation does not explicitly state that `dkimpy` supports ARC natively (it does, per the claim check's verification). The hardening stage's minor finding about ARC chain injection from untrusted intermediaries remains open — the playbook should specify which intermediary MTAs are trusted for ARC validation.
+
+---
+
+## Section 3: Open issues for human review
+
+- **Moderate hardening finding M1 (structural):** The check is a floor, not a discriminator, for institutional-access attackers. Any attacker with access to a real institutional mailbox produces valid DKIM. No fix within DKIM — check is correctly framed as complementary to identity/independence checks.
+- **Moderate hardening finding M2 (surviving):** Dormant-domain revival trivially passes DKIM (15-minute setup). Cross-link with m02-rdap-age or m02-wayback for domain-age/history checks recommended.
+- **Moderate hardening finding M3 (surviving):** Shell entities can configure DKIM on fresh domains. The ROR-canonical-domain check (`voucher_domain_unrelated` flag) is the binding element, not DKIM itself. This coupling must be explicit and mandatory.
+- **Moderate hardening finding M4 (structural):** Compromised institutional accounts produce valid DKIM. Authentication-layer attacks (M14/M16) are out of scope for this check.
+- **Minor hardening finding m1 (surviving):** ARC fallback opens a subtle attack surface — fraudulent ARC seals from controlled intermediate MTAs. Recommend validating ARC only from known/trusted intermediaries (Google, Microsoft).
+- **4C claim flag (OVERSTATED):** Google Workspace DKIM is not "by default" — requires admin action to publish DKIM key. Document should weaken this claim.
+- **4C claim flag (UPGRADE-SUGGESTED):** dmarcian European HE study provides empirical proxy data for DKIM/DMARC adoption; should be cited to strengthen the 5–15% misconfiguration estimate and the international false-positive estimate.
+- **Coverage Gap 5 size estimate:** Cloud-hosted DKIM misconfiguration rate (~5–10%) lacks direct citation.
+- **Cumulative false-positive estimate** (15–25% globally) should be more carefully derived from individual gap estimates accounting for overlap.
+- **No 06C (claim check on coverage) was run.** Coverage citations (dmarcchecker, Valimail, AFNIC, DMARCReport) not independently verified.

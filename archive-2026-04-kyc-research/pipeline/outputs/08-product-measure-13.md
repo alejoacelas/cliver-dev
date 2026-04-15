@@ -1,0 +1,34 @@
+# Measure 13 — Phone VoIP Check: Product Prioritization
+
+## Selected stack
+
+### 1. Twilio Lookup v2 — Line Type Intelligence (`m13-twilio-lookup`)
+
+Selected as the first-line automated screen. Twilio Lookup is the cheapest M13 check (~$0.005-$0.015/request), has the simplest integration path (most providers already have Twilio accounts), and returns a clean, deterministic signal: a line type classification from a 12-value enum. The 8-branch decision tree covering all line types provides a well-defined interface that downstream components can consume without ambiguity. It catches the core attacker story — inbox-compromise and credential-compromise attackers registering non-fixed VoIP numbers (Google Voice, TextNow, Skype) — with high reliability. Its structural blind spots (no SIM-swap detection, no supporting-document coverage, invisible real-mobile attackers) are precisely the gaps that the other selected ideas fill, making it the ideal first layer in a composed stack.
+
+### 2. Telesign PhoneID + Score (`m13-telesign-phoneid`)
+
+Selected as the second-line automated screen, adding two capabilities Twilio cannot provide: SIM-swap detection (via the sim_swap risk_indicator) and a composite risk score. The PhoneID line-type classification serves as an independent second opinion on Twilio's result — provider disagreement (`phone_provider_disagreement` flag) is itself a useful signal that neither source produces alone. SIM-swap detection covers the account-hijack and credential-compromise SIM-swap stories that Twilio structurally misses. The Score API adds a risk dimension beyond binary line-type classification, catching numbers associated with fraud patterns even when the line type is benign. The marginal cost is modest (~$0.01-$0.05/call for PhoneID + Score), and the integration reuses the same phone-number input and flag-output contract as Twilio. The main trade-off is score opacity — reviewers cannot decompose a high score — which the SOP addresses by never auto-denying on score alone and routing to the callback SOP for adjudication.
+
+### 3. Independent-switchboard callback SOP (`m13-callback-sop`)
+
+Selected as the escalation-tier human verification. The callback SOP is the only M13 idea that produces a hard identity signal rather than a phone-metadata signal: it confirms whether the named individual at the claimed institution actually placed the order. It catches attacker stories that all automated checks miss — fabricated callback numbers on supporting documents, helpdesk social engineering with burner phones, and real PI mobile on profile without a swap. It produces the strongest auditable artifact (structured call log plus recording). Its high per-case cost ($2.50-$15) and low throughput (5-20 cases/day/analyst) are acceptable because it is positioned as a tail-risk escalation tool, triggered only when the automated layers flag an order, not as mass screening. It composes naturally as the terminal step in the M13 decision tree: Twilio or Telesign flags fire, the order escalates, and the reviewer executes the callback SOP.
+
+### 4. Phone re-verification cadence + SIM-swap monitoring (`m13-rebind-cadence`)
+
+Selected as the temporal-coverage layer. All other M13 ideas operate at a point in time (onboarding or escalation). The rebind cadence closes the gap when a customer's phone status changes after onboarding — phones get ported, SIM-swapped, abandoned, and reissued. By re-running Telesign PhoneID sim_swap on a 6-12 month cadence and on every high-risk event (account recovery, MFA change, billing change, first SOC order), it catches post-onboarding SIM-swap attacks that would otherwise be invisible until the next order. The event-driven triggers are particularly valuable: they fire exactly when an attacker is most likely to act (credential compromise followed by billing change). The false-positive burden from legitimate SIM changes (~10-15% per cadence cycle) is real but manageable — each false positive routes to the callback SOP, which resolves it. Setup cost is the highest of the four ideas (~2-4 person-weeks) but is a one-time investment that keeps the phone binding fresh indefinitely.
+
+## Dropped ideas
+
+None. All four ideas occupy distinct and complementary positions in the M13 stack: Twilio provides cheap first-line classification, Telesign adds SIM-swap detection and disagreement signal, the callback SOP provides human-verified identity confirmation on escalation, and the rebind cadence extends coverage over time. Dropping any one would leave a structural gap that no combination of the remaining three can fill.
+
+## Composition note
+
+The four ideas compose into a layered pipeline with clear hand-off points:
+
+- **Shared input:** Customer profile phone number in E.164 format. All four ideas consume the same field from the customer record.
+- **Automated layer (onboarding):** At signup, Twilio Lookup and Telesign PhoneID run in parallel on the profile phone. Both return independently to the decision engine. If both agree the number is mobile or landline with low risk, the order passes with no human touch. If either flags non-fixed VoIP, or the two disagree on line type, or Telesign's risk score exceeds the threshold, the order escalates.
+- **Automated layer (ongoing):** The rebind cadence runs Telesign PhoneID sim_swap on a scheduled basis and on high-risk events. It reuses the same Telesign integration built for onboarding. SIM-swap detection (risk_indicator >= 3) triggers account freeze and routes to the callback SOP.
+- **Escalation layer:** The callback SOP is the terminal step for all automated flags. Whether triggered by a VoIP classification, provider disagreement, high risk score, or SIM-swap detection, the reviewer executes the same 5-step protocol: independent switchboard lookup, outbound call, transfer to named individual, order confirmation, structured logging.
+- **Combined flag set:** `phone_nonfixed_voip`, `phone_tollfree`, `phone_implausible_for_individual`, `phone_invalid`, `phone_lookup_error` (Twilio); `telesign_nonfixed_voip`, `telesign_high_risk_score`, `telesign_recent_sim_swap`, `telesign_porting_recent`, `telesign_block_recommended`, `phone_provider_disagreement` (Telesign); `rebind_overdue`, `rebind_failed`, `sim_swap_recent`, `sim_swap_with_high_risk_event` (cadence); `callback_confirmed`, `callback_denied`, `callback_no_such_person`, `callback_voicemail_only`, `callback_transfer_failed` (callback SOP). Any non-positive flag routes to the callback SOP. `callback_confirmed` releases the order; `callback_denied` or `callback_no_such_person` blocks it.
+- **Cost profile:** Per customer at onboarding: ~$0.02-$0.07 (Twilio + Telesign). Per customer per year on rebind cadence: ~$0.24. Per escalated case: $2.50-$15 (callback). The expensive step (callback) is only reached when automated checks flag the order, keeping the blended cost low.

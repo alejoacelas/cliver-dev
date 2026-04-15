@@ -1,0 +1,74 @@
+# m07-google-site-search — Per-idea synthesis
+
+## Section 1: Filled-in schema
+
+| Field | Value |
+|---|---|
+| **name** | site:domain name search |
+| **measure** | M07 — institution-affiliation-low-scrutiny |
+| **attacker_stories_addressed** | Negative-signal value (catches no-hit cases) for: inbox-compromise (alumni-for-life forwarder), dormant-account-takeover (fabricated persona without directory entry). Confirmatory (but not discriminating) for: it-persona-manufacturing, visiting-researcher, unrelated-dept-student, lab-manager-voucher, bulk-order-noise-cover, insider-recruitment, account-hijack, credential-compromise, foreign-institution, dormant-domain, shell-company, shell-nonprofit, cro-framing, cro-identity-rotation, biotech-incubator-tenant, gradual-legitimacy-accumulation, community-bio-lab-network. |
+| **summary** | For each new customer, run `site:<institution-domain> "<customer name>"` against a programmatic web-search API. Non-empty hit set on faculty/lab/news/publication pages corroborates claimed affiliation. Complement to m07-directory-scrape for the long tail of institutions where no dedicated scrape adapter exists. |
+| **external_dependencies** | Web-search API supporting `site:` operator. **Google CSE JSON API:** closed to new customers, sunsetting Jan 1 2027. **Bing Web Search API:** retired Aug 11 2025. **Recommended replacements:** Brave Search API (free tier 2k queries/mo; `site:` operator supported but "experimental"), SerpAPI (~$15/1k queries), Firecrawl Search, Linkup. Human reviewer for triage. |
+| **endpoint_details** | **Google CSE (legacy):** `https://www.googleapis.com/customsearch/v1`, API key + cx; 100 free/day, paid at $5/1k, 10k/day cap; sunsetting. **Bing:** retired. **Brave Search API:** free tier 1 query/sec, 2k/month; paid plans ~$3/1k queries [best guess]; `site:` operator supported but documented as "experimental and in the early stages of development" [source: Brave API docs]. **SerpAPI:** ~$75/mo for 5k searches [best guess]; supports Google `site:` operator. **Auth:** API key for all. **ToS:** Google prohibits redistributing results; Brave/SerpAPI standard API ToS; no KYC-specific restrictions surfaced [unknown — searched for "google custom search api terms of service KYC"]. |
+| **fields_returned** | Per result: `title`, `link`, `displayLink`, `snippet`, `htmlSnippet`, `pagemap` (structured data when present); search metadata: `totalResults`, `searchTime`. Brave/SerpAPI equivalents: `organic_results[].title|link|snippet`. [best guess: any SERP API surfaces title + URL + snippet minimum.] |
+| **marginal_cost_per_check** | 1–3 queries per customer. **Google CSE legacy:** $0.005–$0.015/customer. **Brave/SerpAPI replacements:** $0.003–$0.045/customer [best guess]. **Setup cost:** $1K–$5K (1–2 engineer-days to wire API + result-scoring heuristic) [best guess]. |
+| **manual_review_handoff** | 6-step SOP on `no_site_search_hits`: (1) Reviewer opens API response log. (2) Manually re-runs `site:` queries with relaxed parameters. (3) Tries parent domain. (4) If still no hits, searches Google Scholar, ORCID, LinkedIn. (5) If found externally but not on institution site, pass with note. (6) If found nowhere, send templated verification email to institutional contact. `low_quality_hits_only`: human spot-check. `name_collision`: human disambiguation. |
+| **flags_thrown** | `no_site_search_hits` (zero results = human triage); `low_quality_hits_only` (hits limited to cached/Wayback artifacts, generic dept pages, or PDF supplementary material = soft positive, spot-check); `name_collision` (hits include different person with same name = human disambiguation). |
+| **failure_modes_requiring_review** | API quota exceeded / 429 throttle; institution domain sparsely indexed or not crawled; new-hire page lag (2–6 weeks for major indexes [best guess]); customer name in non-Latin script on institution serving only local-script pages; JS-rendered directories not crawled; common-name results buried past first page; API vendor discontinuity (Google CSE sunsetting, Bing retired). |
+| **false_positive_qualitative** | (1) New hires/postdocs before indexing (~5–15% of recently-created pages not yet indexed [best guess]). (2) Poorly indexed small/foreign-language institutions — systematic false negatives. (3) Common-name researchers at large institutions. (4) Stale/historical hits for industry customers (publication from years ago, not current employment). (5) PDF-only or login-gated content not indexed. (6) Non-Latin-script institutions where Latin-script query matches nothing. |
+| **coverage_gaps** | (1) Newly hired researchers: ~5–15% of recently-created pages not yet indexed; ~18K–24K new US postdocs/year [best guess from NSF estimates]. (2) Poorly indexed institutions: ~25K–30K universities worldwide; thousands in China (2,585), India (5,444), Indonesia (2,624) with sparse indexing. (3) Common-name researchers: SERP truncation to first page may miss target [unknown size]. (4) Industry/hospital/government lab employees: ~55% of synthetic biology market by revenue; sparse and inconsistent web mentions. (5) Vendor API continuity: Google CSE sunsetting Jan 2027, Bing retired Aug 2025; Brave `site:` operator is "experimental." (6) Non-Latin-script institutions: Latin-script query cannot match Han/Kanji/Cyrillic/Arabic content; China ~2,585 universities, Japan ~800, Korea ~400; APAC = ~23% of DNA synthesis market. |
+| **record_left** | Exact query string(s), timestamp + API endpoint + version, full JSON response (first N results with link/title/snippet/pagemap), reviewer notes if triaged. Sufficient for auditor to reproduce the check. Retention: 5 years to align with pipeline [best guess]. |
+| **bypass_methods_known** | CAUGHT: inbox-compromise (alumni forwarder — no current web presence); dormant-account-takeover Bypass C (fabricated persona without directory entry). MISSED: all 8 purpose-built-org branches (attacker controls searched domain); all 7 genuine-insider branches (attacker is genuinely listed); foreign-institution (attacker genuinely listed or institution poorly indexed). AMBIGUOUS: it-persona-manufacturing (depends on hit-quality scoring); inbox-compromise (adjunct with legacy page); dormant-account-takeover (departed researcher page persistence). |
+| **bypass_methods_uncovered** | **Structural — self-controlled domains (8 branches):** `site:<domain>` searches the attacker's own website; check confirms what attacker planted. **Structural — genuine insiders (7 branches):** real employees/appointees have genuine web presence; low-scrutiny check cannot discriminate intent. **Implementation-specific:** IT-admin directory injection produces bare listing; hit-quality scoring heuristic not defined. Non-Anglophone coverage: high false-negative rate dilutes signal. |
+
+---
+
+## Section 2: Narrative
+
+### What this check is and how it works
+
+This check queries a web-search API for `site:<institution-domain> "<customer name>"` to determine whether the customer appears on their claimed institution's website. Hits on faculty pages, lab pages, publications, or news articles corroborate the claimed affiliation. The check requires no per-institution adapter (unlike m07-directory-scrape) and works for any institution with a search-engine-indexed web presence, making it the "long tail" complement to the directory scrape. As of 2026, the implementation faces a vendor continuity challenge: Google Custom Search JSON API is closed to new customers and sunsetting January 1, 2027, and Bing Web Search API was retired in August 2025. The recommended replacements are Brave Search API (which supports the `site:` operator but labels it "experimental") or SerpAPI (a Google SERP scraper). Setup cost is minimal ($1K–$5K), and per-check cost is very low ($0.003–$0.045 per customer).
+
+### What it catches
+
+The check's highest-value output is the negative signal: when the search returns zero results (`no_site_search_hits`), the customer cannot be corroborated on their claimed institution's website, triggering a manual review workflow. This catches inbox-compromise scenarios where a departed member or alumni has no current web presence at the institution, and dormant-account-takeover cases where a fabricated persona was created without a corresponding web page. The `low_quality_hits_only` flag provides a weaker but still useful signal — it fires when the only results are cached/archived pages, generic department pages, or PDF supplementary material, suggesting the customer's presence is stale or marginal. Stage 5 found these negative-signal cases to be the only scenarios where the check adds genuine adversarial value.
+
+### What it misses
+
+Stage 5 identified two Critical structural limitations. First, self-controlled domains defeat the check by construction: for 8 attacker branches (dormant-domain, shell-company, shell-nonprofit, cro-framing, cro-identity-rotation, biotech-incubator-tenant, gradual-legitimacy-accumulation, community-bio-lab-network), the attacker controls the domain being searched and therefore controls the search results. The `site:<attacker-domain>` query returns the attacker's own content and confirms the manufactured affiliation. Second, genuine insiders and real appointees pass cleanly across 7 branches (visiting-researcher, unrelated-dept-student, lab-manager-voucher, insider-recruitment, account-hijack, credential-compromise, bulk-order-noise-cover) because they have real web presences at real institutions. These are structural limitations of the M07 low-scrutiny scope, not implementation defects. The check also has minimal utility at non-Anglophone institutions where pages are in non-Latin scripts and the search engine's index is sparse.
+
+### What it costs
+
+Per-customer cost is $0.003–$0.045 depending on the replacement vendor (1–3 queries per customer). Setup cost is $1K–$5K. The dominant ongoing cost is manual review for the `no_site_search_hits` and `low_quality_hits_only` flags: the 6-step SOP involves manual browser searches, Google Scholar checks, ORCID lookups, and potentially an email to the institution — running $15–$30 per flagged case in reviewer time. The rate at which the flag fires depends heavily on the institution mix: for US R1 universities with well-indexed websites, the false-negative rate is low; for small foreign-language institutions, it may be very high, making the check uneconomical as a routine screen for those populations.
+
+### Operational realism
+
+The 6-step manual review SOP is concrete and actionable: it starts with reproducing the query in a browser, escalates through Scholar/ORCID/LinkedIn checks, and ends with a templated verification email if nothing is found. This is a reasonable workflow for a small number of flags per day, but if the institution mix includes many poorly-indexed foreign institutions, the flag rate could overwhelm the review pipeline. The `name_collision` flag is a useful addition for common-name disambiguation but requires human judgment that cannot be automated. Each screen produces a stored JSON response sufficient for audit reproduction. The vendor continuity risk is the most urgent operational concern: the provider must integrate a replacement API before Google CSE sunsets in January 2027, and must accept that Brave's `site:` operator behavior may differ from Google's.
+
+### Open questions
+
+The two Critical stage 5 findings (self-controlled domains, genuine insiders) are structural and cannot be addressed by modifying the site-search implementation. They are routed to human review as open issues. The hit-quality scoring heuristic — which determines whether a bare directory listing is treated differently from a substantive faculty page — is not defined in the implementation. Stage 5 recommended that a PASS should require at least one hit beyond a bare contact listing (e.g., a lab page, publication, news article), and that directory-only hits should route to a visiting-scholar corroboration SOP. Replacement vendor specifics (Brave and SerpAPI pricing, `site:` operator semantics, ToS for screening use) remain at [best guess] and need primary-source verification.
+
+---
+
+## Section 3: Open issues for human review
+
+- **Surviving Critical hardening findings (structural):**
+  - **Finding 1: Self-controlled domains defeat site-search by construction.** 8 purpose-built-organization attacker branches (dormant-domain, shell-company, shell-nonprofit, cro-framing, cro-identity-rotation, biotech-incubator-tenant, gradual-legitimacy-accumulation, community-bio-lab-network) control the domain being searched. Mitigation lives in other measures (M09 institution legitimacy, M02 domain-age checks), not in this idea. The site-search is only meaningful when the institution domain is independently verified as belonging to a third-party organization.
+  - **Finding 2: Genuine insiders and real appointees pass cleanly.** 7 exploit-affiliation branches pass the check with genuine web listings. Not addressable by M07; requires higher-scrutiny measures (M15, M18, M19, M20).
+- **`[unknown]` fields affecting policy implications:**
+  - Common-name false-negative rate [unknown; 1 search query, thin list].
+  - Google CSE ToS for screening use [unknown; 2 searches, no KYC-specific restriction found].
+- **`[vendor-gated]` / `[best guess]` fields needing upgrade:**
+  - Brave Search API pricing and `site:` operator reliability: documented as "experimental"; behavior may change.
+  - SerpAPI pricing (~$15/1k): needs primary-source verification.
+- **06F flags not fully resolved:**
+  - ~5–15% page indexing gap: derivation conflates general web pages with faculty pages at university sites.
+  - ~18K–24K new postdocs/year: NSF NCSES estimate without direct citation.
+  - "15–20% of total web indexed" figure from Zyppy is blog-grade.
+- **Stage 5 Moderate findings (implementable improvements):**
+  - Hit-quality scoring heuristic should be defined: PASS requires at least one non-bare-directory hit (lab page, publication, news article). Bare directory-only hits should route to visiting-scholar corroboration SOP.
+  - Non-Anglophone institutions with poor index coverage: site-search should be deprioritized in favor of federation-based checks (m07-incommon-edugain) or manual institutional-contact verification.
+  - Role-mailbox handling: define fallback query templates for role/facility accounts.
+- **Vendor continuity risk:** Google CSE sunsets Jan 1 2027; Bing retired Aug 2025. Provider must integrate a replacement (Brave or SerpAPI) and accept that `site:` operator behavior may differ. This is the most time-sensitive operational issue.
+- **Structural pairing required:** This check is the long-tail complement to m07-directory-scrape and must be paired with institution-legitimacy checks (M09/M02) to avoid confirming attackers who control their own domains.
