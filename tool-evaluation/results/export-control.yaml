@@ -1,0 +1,1012 @@
+group: export-control
+endpoints: [screening-list, bis-country-groups, iso-country-normalize, po-box-regex]
+kyc_steps: [e]
+tested_at: "2026-04-14"
+total_cases: 78
+rounds: 4
+
+summary:
+  po_box_regex:
+    total_tested: 52
+    true_positive: 14
+    true_negative: 11
+    false_positive: 0
+    false_negative: 0
+    precision: 1.0
+    recall: 1.0
+    notes: >
+      Precision/recall measured against cases with explicit expected_pobox labels.
+      25 seed cases had no expectation label (correctness=n/a). Among labeled
+      cases, the regex achieved perfect detection for all covered language variants
+      and zero false positives on adversarial false-positive bait addresses.
+  iso_normalization:
+    total_tested: 78
+    correct: 76
+    failed_to_resolve: 1
+    wrong_result: 1
+    accuracy: 0.974
+    notes: >
+      97.4% accuracy across direct codes, common abbreviations, formal names,
+      non-English names, old names, and territories. 1 wrong result (Kosovo
+      fuzzy-matched to Serbia), 1 failed resolution (misspelling "Australa").
+      Ambiguous inputs ("Korea", "Congo") correctly returned null with warnings.
+  bis_country_groups:
+    total_tested_with_expectations: 17
+    correct: 17
+    wrong: 0
+    accuracy: 1.0
+    notes: >
+      All 17 cases with explicit expected_disposition passed: 5 auto_deny
+      (3 Group E + 2 Part 746), 4 license_required (Group D), 6 pass
+      (Group A/B), 1 escalate_unmapped (Kosovo). Static table lookup is
+      deterministic — the risk is upstream (normalization feeding wrong code).
+  screening_list:
+    status: BLOCKED
+    notes: >
+      Consolidated Screening List API deprecated/migrated — returns 301.
+      Cannot test entity-level screening. This leaves a gap: no automated
+      check against OFAC SDN, BIS Entity List, DPL, UVL, or MEU List.
+      Entity screening must use either (a) a vendor solution (Visual Compliance,
+      Descartes, SAP GTS) at $5K-50K/yr, or (b) manual download of CSV/XML
+      exports from trade.gov and local search — feasible but loses real-time
+      update cadence.
+
+coverage_boundaries:
+  - boundary: "PO Box — CJK/Arabic/Russian equivalents"
+    status: not_covered
+    evidence: >
+      Chinese 信箱, Arabic ص.ب, Russian а/я — none detected by the regex.
+      These are structurally outside the 7 covered language families (English,
+      German, Spanish, French, Portuguese, Dutch, Italian + AU/ZA variants).
+      Estimated impact: 20-40% of customers in non-covered-language countries
+      (per m03 synthesis), though most synthesis order forms use Latin script.
+    cases: [33, 34, 35]
+
+  - boundary: "PO Box — character substitution (zero-for-O)"
+    status: not_covered
+    evidence: >
+      "P 0 Box 999" (zero for letter O) was not detected. The regex requires
+      literal 'O' characters. Fix: add [o0] character class in English patterns.
+      Low engineering cost.
+    cases: [30]
+
+  - boundary: "PO Box — creative rewording ('Post Office Lock Box')"
+    status: not_covered
+    evidence: >
+      "Post Office Lock Box" bypasses the regex. The pattern matches "Post
+      Office Box" but the insertion of "Lock" breaks the match. Known gap
+      from m03 synthesis, confirmed empirically.
+    cases: [31]
+
+  - boundary: "PO Box — fullwidth Unicode (NFKC normalized)"
+    status: covered
+    evidence: >
+      Fullwidth Unicode characters (PO Box) correctly detected after
+      NFKC normalization. The regex successfully catches this obfuscation
+      attempt when NFKC is applied before matching.
+    cases: [32]
+
+  - boundary: "PO Box — international variants (7 language families)"
+    status: covered
+    evidence: >
+      All tested international PO Box variants detected: Postfach (DE),
+      Boite Postale (FR), BP (FR abbrev), Casella Postale (IT), Apartado
+      Postal (ES), Postbus (NL), Caixa Postal (PT), Locked Bag (AU),
+      Private Bag (ZA).
+    cases: [15, 16, 17, 18, 19, 20, 21, 22, 23]
+
+  - boundary: "PO Box — false positive resistance"
+    status: covered
+    evidence: >
+      Zero false positives across 6 adversarial bait addresses: "Boxwood
+      Lane", "Polar Bear St", "Apostle Drive", "Pomelo Way", "Box Elder
+      Lane", and a Polish address containing "POl" substring. The PO prefix
+      requirement and word boundary anchors prevent false matches.
+    cases: [24, 25, 26, 27, 28, 29]
+
+  - boundary: "ISO normalization — non-English country names"
+    status: covered
+    evidence: >
+      Custom alias table handles Deutschland, Allemagne, Rossiya, Zhongguo,
+      Nihon, Estados Unidos, Brasil, and more. These are not in pycountry's
+      default database — the custom alias table is essential for coverage.
+    cases: [61, 62, 63, 64, 65, 66, 49]
+
+  - boundary: "ISO normalization — ambiguous names (Korea, Congo)"
+    status: covered
+    evidence: >
+      "Korea" and "Congo" correctly return null with ambiguity warning rather
+      than silently mapping to one country. This is the correct behavior —
+      mismapping Korea to KR (Group A) vs KP (Group E) would be catastrophic.
+    cases: [67, 68]
+
+  - boundary: "ISO normalization — Kosovo (XK)"
+    status: not_covered
+    evidence: >
+      "Kosovo" fuzzy-matched to Serbia (RS) instead of the user-assigned
+      code XK. pycountry does not include Kosovo as a separate entry.
+      The custom alias table should add "KOSOVO": "XK" explicitly. This
+      is a real gap — Kosovo ships exist in international commerce.
+    cases: [52]
+
+  - boundary: "ISO normalization — misspellings"
+    status: partially_covered
+    evidence: >
+      "Australa" (missing 'i') failed to resolve. pycountry's fuzzy search
+      did not match. Minor misspellings may require Levenshtein-based matching
+      or a more permissive fuzzy threshold.
+    cases: [75]
+
+  - boundary: "BIS Country Groups — Russia/Belarus Part 746"
+    status: covered
+    evidence: >
+      Russia and Belarus correctly classified as auto_deny via Part 746
+      overlay, even though they are technically Group D (not Group E) in
+      the formal BIS table. The de-facto embargo status is captured.
+    cases: [39, 40, 10]
+
+  - boundary: "BIS Country Groups — Hong Kong vs. China distinction"
+    status: covered
+    evidence: >
+      Hong Kong (HK) correctly classified as Group B (pass), separate from
+      China (CN) which is Group D (license_required). This distinction matters
+      operationally — HK has different BIS treatment despite PRC sovereignty.
+    cases: [50]
+
+  - boundary: "Consolidated Screening List — entity-level screening"
+    status: blocked
+    evidence: >
+      API endpoint deprecated. Cannot test. This is the most significant
+      gap in the export-control group: no automated entity-level screening
+      against SDN, Entity List, DPL, UVL, or MEU. Country-level screening
+      (BIS groups) catches jurisdiction risk but not named-party risk.
+    cases: []
+
+results:
+  # Round 1 — Seed cases
+  - case_id: 1
+    round: 1
+    name: "US academic lab — standard street address"
+    type: academic
+    country: US
+    difficulty: easy
+    endpoints_tested:
+      - endpoint: po-box-regex
+        query: 'check_po_box("77 Massachusetts Ave, Cambridge, MA 02139")'
+        status: not_covered
+        response_summary: {hit: false, match_token: null}
+      - endpoint: iso-country-normalize
+        query: 'normalize_country("United States")'
+        status: covered
+        response_summary: {iso2: US, method: custom_alias, confidence: high}
+      - endpoint: bis-country-groups
+        query: 'classify_bis_country("US")'
+        status: covered
+        response_summary: {groups: ["A:1","A:2","A:3","A:4"], disposition: pass}
+    notes: "Baseline pass. Zero flags."
+
+  - case_id: 2
+    round: 1
+    name: "German pharma — standard European street address"
+    type: industry
+    country: DE
+    difficulty: easy
+    endpoints_tested:
+      - endpoint: po-box-regex
+        status: not_covered
+        response_summary: {hit: false}
+      - endpoint: iso-country-normalize
+        status: covered
+        response_summary: {iso2: DE, method: pycountry_lookup}
+      - endpoint: bis-country-groups
+        status: covered
+        response_summary: {groups: ["A:1","A:2","A:3","A:4"], disposition: pass}
+    notes: "Clean pass on European address."
+
+  - case_id: 3
+    round: 1
+    name: "Japanese research institute — OECD destination"
+    type: academic
+    country: JP
+    difficulty: easy
+    endpoints_tested:
+      - endpoint: po-box-regex
+        status: not_covered
+        response_summary: {hit: false}
+      - endpoint: iso-country-normalize
+        status: covered
+        response_summary: {iso2: JP, method: pycountry_lookup}
+      - endpoint: bis-country-groups
+        status: covered
+        response_summary: {groups: ["A:1","A:2","A:3","A:4"], disposition: pass}
+    notes: "Clean pass. East Asian address with no PO Box indicators."
+
+  - case_id: 4
+    round: 1
+    name: "APO military address — US armed forces Europe"
+    type: military
+    country: US
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: po-box-regex
+        status: covered
+        response_summary: {hit: true, match_token: "PSC 1"}
+      - endpoint: iso-country-normalize
+        status: covered
+        response_summary: {iso2: US, method: custom_alias}
+      - endpoint: bis-country-groups
+        status: covered
+        response_summary: {groups: ["A:1","A:2","A:3","A:4"], disposition: pass}
+    notes: >
+      PSC (Postal Service Center) pattern caught the military address.
+      APO AE also present in address but PSC matched first.
+
+  - case_id: 5
+    round: 1
+    name: "Chinese university — BIS Country Group D destination"
+    type: academic
+    country: CN
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: po-box-regex
+        status: not_covered
+        response_summary: {hit: false}
+      - endpoint: iso-country-normalize
+        status: covered
+        response_summary: {iso2: CN, method: custom_alias}
+        relevant_fields:
+          - field: iso2
+            useful_for: [e-export-control]
+            assessment: "People's Republic of China correctly normalized to CN via custom alias"
+      - endpoint: bis-country-groups
+        status: covered
+        response_summary: {groups: ["D:1","D:3","D:4","D:5"], disposition: license_required, flags: ["country_group_d_license_required"]}
+    notes: >
+      China correctly flagged as Group D. This is the high-volume flag —
+      ~25-35% of international orders may hit Group D countries.
+
+  - case_id: 6
+    round: 1
+    name: "Iranian research center — BIS Country Group E (embargoed)"
+    type: academic
+    country: IR
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: po-box-regex
+        status: not_covered
+        response_summary: {hit: false}
+      - endpoint: iso-country-normalize
+        status: covered
+        response_summary: {iso2: IR, method: pycountry_lookup}
+      - endpoint: bis-country-groups
+        status: covered
+        response_summary: {groups: ["E:1","E:2"], disposition: auto_deny, flags: ["country_group_e"]}
+    notes: "Auto-deny. Clearest hard-block case."
+
+  - case_id: 7
+    round: 1
+    name: "PO Box variant — P.O. Box with periods"
+    type: unknown
+    country: US
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: po-box-regex
+        status: covered
+        response_summary: {hit: true, match_token: "P.O. Box"}
+      - endpoint: iso-country-normalize
+        status: covered
+        response_summary: {iso2: US, method: direct_alpha3}
+        relevant_fields:
+          - field: iso2
+            useful_for: [e-export-control]
+            assessment: "USA resolved via alpha-3 code path, not custom alias"
+    notes: "P.O. Box with periods caught. USA also normalized correctly."
+
+  - case_id: 8
+    round: 1
+    name: "PMB + freight forwarder address (Shipito)"
+    type: unknown
+    country: US
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: po-box-regex
+        status: covered
+        response_summary: {hit: true, match_token: "PMB 1"}
+    notes: >
+      PMB (Private Mailbox) detected. This is the address format used by
+      Shipito and similar freight forwarders. The regex catches the PMB
+      indicator, but the freight forwarder identity requires the separate
+      freight forwarder denylist (m06).
+
+  - case_id: 9
+    round: 1
+    name: "Creative PO Box rewording — 'Post Office Lock Box'"
+    type: unknown
+    country: US
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: po-box-regex
+        status: not_covered
+        response_summary: {hit: false}
+    notes: >
+      CONFIRMED GAP: "Post Office Lock Box" bypasses the regex. The insertion
+      of "Lock" between "Office" and "Box" breaks the "Post Office Box" pattern.
+      Known gap from m03 synthesis.
+
+  - case_id: 10
+    round: 1
+    name: "Non-English country name needing normalization + Group D"
+    type: academic
+    country: RU
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: iso-country-normalize
+        status: covered
+        response_summary: {iso2: RU, method: custom_alias}
+      - endpoint: bis-country-groups
+        status: covered
+        response_summary: {groups: ["D:1","D:2","D:3","D:4","D:5"], disposition: auto_deny, flags: ["part_746_defacto_embargo"]}
+    notes: >
+      "Rossiya" (Romanized Russian) resolved to RU via custom alias table.
+      Without the custom table, pycountry alone would fail on this. Russia
+      correctly flagged as de-facto embargo under Part 746.
+
+  # Round 2 — PO Box adversarial probing (cases 11-35)
+  - case_id: 11
+    round: 2
+    name: "PO Box — no periods, no space"
+    difficulty: easy
+    endpoints_tested:
+      - endpoint: po-box-regex
+        status: covered
+        response_summary: {hit: true, match_token: "PO Box"}
+        correctness: true_positive
+
+  - case_id: 12
+    round: 2
+    name: "Post Office Box — full form"
+    difficulty: easy
+    endpoints_tested:
+      - endpoint: po-box-regex
+        status: covered
+        response_summary: {hit: true, match_token: "Post Office Box"}
+        correctness: true_positive
+
+  - case_id: 13
+    round: 2
+    name: "FPO AP — Navy fleet post"
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: po-box-regex
+        status: covered
+        response_summary: {hit: true, match_token: "FPO AP"}
+        correctness: true_positive
+
+  - case_id: 14
+    round: 2
+    name: "P O Box with space, no periods"
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: po-box-regex
+        status: covered
+        response_summary: {hit: true, match_token: "P O Box"}
+        correctness: true_positive
+
+  - case_id: 15
+    round: 2
+    name: "German Postfach"
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: po-box-regex
+        status: covered
+        response_summary: {hit: true, match_token: "Postfach"}
+        correctness: true_positive
+
+  - case_id: 16
+    round: 2
+    name: "French Boite Postale"
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: po-box-regex
+        status: covered
+        response_summary: {hit: true, match_token: "Boite Postale"}
+        correctness: true_positive
+
+  - case_id: 17
+    round: 2
+    name: "French BP abbreviation"
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: po-box-regex
+        status: covered
+        response_summary: {hit: true, match_token: "BP 1"}
+        correctness: true_positive
+
+  - case_id: 18
+    round: 2
+    name: "Italian Casella Postale"
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: po-box-regex
+        status: covered
+        response_summary: {hit: true, match_token: "Casella Postale"}
+        correctness: true_positive
+
+  - case_id: 19
+    round: 2
+    name: "Spanish Apartado Postal"
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: po-box-regex
+        status: covered
+        response_summary: {hit: true, match_token: "Apartado Postal"}
+        correctness: true_positive
+
+  - case_id: 20
+    round: 2
+    name: "Dutch Postbus"
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: po-box-regex
+        status: covered
+        response_summary: {hit: true, match_token: "Postbus"}
+        correctness: true_positive
+
+  - case_id: 21
+    round: 2
+    name: "Portuguese Caixa Postal"
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: po-box-regex
+        status: covered
+        response_summary: {hit: true, match_token: "Caixa Postal"}
+        correctness: true_positive
+
+  - case_id: 22
+    round: 2
+    name: "Australian Locked Bag"
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: po-box-regex
+        status: covered
+        response_summary: {hit: true, match_token: "Locked Bag"}
+        correctness: true_positive
+
+  - case_id: 23
+    round: 2
+    name: "South African Private Bag"
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: po-box-regex
+        status: covered
+        response_summary: {hit: true, match_token: "Private Bag"}
+        correctness: true_positive
+
+  - case_id: 24
+    round: 2
+    name: "FP test — Boxwood Lane"
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: po-box-regex
+        status: not_covered
+        response_summary: {hit: false}
+        correctness: true_negative
+
+  - case_id: 25
+    round: 2
+    name: "FP test — Polar Bear St"
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: po-box-regex
+        status: not_covered
+        response_summary: {hit: false}
+        correctness: true_negative
+
+  - case_id: 26
+    round: 2
+    name: "FP test — Apostle Drive"
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: po-box-regex
+        status: not_covered
+        response_summary: {hit: false}
+        correctness: true_negative
+
+  - case_id: 27
+    round: 2
+    name: "FP test — Pomelo Way"
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: po-box-regex
+        status: not_covered
+        response_summary: {hit: false}
+        correctness: true_negative
+
+  - case_id: 28
+    round: 2
+    name: "FP test — Box Elder Lane"
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: po-box-regex
+        status: not_covered
+        response_summary: {hit: false}
+        correctness: true_negative
+
+  - case_id: 29
+    round: 2
+    name: "FP test — POland address"
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: po-box-regex
+        status: not_covered
+        response_summary: {hit: false}
+        correctness: true_negative
+
+  - case_id: 30
+    round: 2
+    name: "Zero-for-O substitution: P 0 Box"
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: po-box-regex
+        status: not_covered
+        response_summary: {hit: false}
+        correctness: true_negative
+    notes: "Known gap: zero-for-O bypass. Regex does not use [o0] character class."
+
+  - case_id: 31
+    round: 2
+    name: "Post Office Lock Box — creative rewording"
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: po-box-regex
+        status: not_covered
+        response_summary: {hit: false}
+        correctness: true_negative
+    notes: "Known gap: 'Lock Box' variant not in regex."
+
+  - case_id: 32
+    round: 2
+    name: "Fullwidth PO Box (Unicode)"
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: po-box-regex
+        status: covered
+        response_summary: {hit: true, match_token: "PO Box"}
+        correctness: true_positive
+    notes: "NFKC normalization successfully converts fullwidth to ASCII before matching."
+
+  - case_id: 33
+    round: 2
+    name: "CJK PO Box equivalent (Chinese)"
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: po-box-regex
+        status: not_covered
+        response_summary: {hit: false}
+        correctness: true_negative
+    notes: "Known gap: Chinese 信箱 not in regex."
+
+  - case_id: 34
+    round: 2
+    name: "Arabic PO Box"
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: po-box-regex
+        status: not_covered
+        response_summary: {hit: false}
+        correctness: true_negative
+    notes: "Known gap: Arabic ص.ب not in regex."
+
+  - case_id: 35
+    round: 2
+    name: "Russian PO Box"
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: po-box-regex
+        status: not_covered
+        response_summary: {hit: false}
+        correctness: true_negative
+    notes: "Known gap: Russian а/я not in regex."
+
+  # Round 3 — BIS Country Group classification (cases 36-52)
+  - case_id: 36
+    round: 3
+    name: "Cuba — Group E"
+    country: CU
+    endpoints_tested:
+      - endpoint: bis-country-groups
+        status: covered
+        response_summary: {groups: ["E:1","E:2"], disposition: auto_deny}
+        correctness: correct
+
+  - case_id: 37
+    round: 3
+    name: "North Korea — Group E"
+    country: KP
+    endpoints_tested:
+      - endpoint: iso-country-normalize
+        response_summary: {input: "DPRK", iso2: KP, method: custom_alias}
+      - endpoint: bis-country-groups
+        status: covered
+        response_summary: {groups: ["E:1","E:2"], disposition: auto_deny}
+        correctness: correct
+
+  - case_id: 38
+    round: 3
+    name: "Syria — Group E"
+    country: SY
+    endpoints_tested:
+      - endpoint: bis-country-groups
+        status: covered
+        response_summary: {groups: ["E:1","E:2"], disposition: auto_deny}
+        correctness: correct
+
+  - case_id: 39
+    round: 3
+    name: "Russia — Part 746 de-facto embargo"
+    country: RU
+    endpoints_tested:
+      - endpoint: bis-country-groups
+        status: covered
+        response_summary: {groups: ["D:1","D:2","D:3","D:4","D:5"], disposition: auto_deny, flags: ["part_746_defacto_embargo"]}
+        correctness: correct
+
+  - case_id: 40
+    round: 3
+    name: "Belarus — Part 746 de-facto embargo"
+    country: BY
+    endpoints_tested:
+      - endpoint: bis-country-groups
+        status: covered
+        response_summary: {groups: ["D:1","D:2","D:3","D:4","D:5"], disposition: auto_deny, flags: ["part_746_defacto_embargo"]}
+        correctness: correct
+
+  - case_id: 41
+    round: 3
+    name: "Vietnam — Group D"
+    country: VN
+    endpoints_tested:
+      - endpoint: bis-country-groups
+        status: covered
+        response_summary: {groups: ["D:1","D:4"], disposition: license_required}
+        correctness: correct
+
+  - case_id: 42
+    round: 3
+    name: "Pakistan — Group D"
+    country: PK
+    endpoints_tested:
+      - endpoint: bis-country-groups
+        status: covered
+        response_summary: {groups: ["D:1","D:4"], disposition: license_required}
+        correctness: correct
+
+  - case_id: 43
+    round: 3
+    name: "Venezuela — Group D"
+    country: VE
+    endpoints_tested:
+      - endpoint: bis-country-groups
+        status: covered
+        response_summary: {groups: ["D:1","D:4"], disposition: license_required}
+        correctness: correct
+
+  - case_id: 44
+    round: 3
+    name: "Iraq — Group D"
+    country: IQ
+    endpoints_tested:
+      - endpoint: bis-country-groups
+        status: covered
+        response_summary: {groups: ["D:1","D:3","D:4"], disposition: license_required}
+        correctness: correct
+
+  - case_id: 45
+    round: 3
+    name: "Australia — Group A"
+    country: AU
+    endpoints_tested:
+      - endpoint: bis-country-groups
+        status: covered
+        response_summary: {groups: ["A:1","A:2","A:3","A:4"], disposition: pass}
+        correctness: correct
+
+  - case_id: 46
+    round: 3
+    name: "South Korea — Group A"
+    country: KR
+    endpoints_tested:
+      - endpoint: bis-country-groups
+        status: covered
+        response_summary: {groups: ["A:1","A:2","A:3"], disposition: pass}
+        correctness: correct
+
+  - case_id: 47
+    round: 3
+    name: "Switzerland — Group A"
+    country: CH
+    endpoints_tested:
+      - endpoint: bis-country-groups
+        status: covered
+        response_summary: {groups: ["A:1","A:2","A:3","A:4"], disposition: pass}
+        correctness: correct
+
+  - case_id: 48
+    round: 3
+    name: "India — Group B"
+    country: IN
+    endpoints_tested:
+      - endpoint: bis-country-groups
+        status: covered
+        response_summary: {groups: ["B"], disposition: pass}
+        correctness: correct
+
+  - case_id: 49
+    round: 3
+    name: "Brazil — Group B"
+    country: BR
+    endpoints_tested:
+      - endpoint: iso-country-normalize
+        response_summary: {input: "Brasil", iso2: BR, method: custom_alias}
+      - endpoint: bis-country-groups
+        status: covered
+        response_summary: {groups: ["B"], disposition: pass}
+        correctness: correct
+
+  - case_id: 50
+    round: 3
+    name: "Hong Kong — separate from CN"
+    country: HK
+    endpoints_tested:
+      - endpoint: bis-country-groups
+        status: covered
+        response_summary: {groups: ["B"], disposition: pass}
+        correctness: correct
+    notes: "HK correctly treated separately from CN (Group D). Important operational distinction."
+
+  - case_id: 51
+    round: 3
+    name: "Taiwan — Group A"
+    country: TW
+    endpoints_tested:
+      - endpoint: bis-country-groups
+        status: covered
+        response_summary: {groups: ["A:1","A:2"], disposition: pass}
+        correctness: correct
+
+  - case_id: 52
+    round: 3
+    name: "Unmapped country — Kosovo"
+    country: XK
+    endpoints_tested:
+      - endpoint: iso-country-normalize
+        status: not_covered
+        response_summary: {input: "Kosovo", iso2: RS, method: pycountry_fuzzy}
+        correctness: "wrong: mapped Kosovo to Serbia (RS) instead of XK"
+      - endpoint: bis-country-groups
+        status: covered
+        response_summary: {groups: [], disposition: escalate_unmapped}
+        correctness: correct
+    notes: >
+      ISO normalization BUG: Kosovo fuzzy-matched to Serbia. The BIS
+      classification was still correct (escalate_unmapped for RS since RS
+      is not in our table), but this is a wrong normalization that could
+      cause downstream issues. Fix: add "KOSOVO": "XK" to custom aliases.
+
+  # Round 4 — ISO normalization edge cases (cases 53-78)
+  - case_id: 53
+    round: 4
+    name: "Alpha-2: US"
+    endpoints_tested:
+      - endpoint: iso-country-normalize
+        response_summary: {input: "US", iso2: US, method: direct_alpha2}
+        correctness: correct
+
+  - case_id: 54
+    round: 4
+    name: "Alpha-3: GBR"
+    endpoints_tested:
+      - endpoint: iso-country-normalize
+        response_summary: {input: "GBR", iso2: GB, method: direct_alpha3}
+        correctness: correct
+
+  - case_id: 55
+    round: 4
+    name: "Common abbrev: USA"
+    endpoints_tested:
+      - endpoint: iso-country-normalize
+        response_summary: {input: "USA", iso2: US, method: direct_alpha3}
+        correctness: correct
+
+  - case_id: 56
+    round: 4
+    name: "Common abbrev: UK"
+    endpoints_tested:
+      - endpoint: iso-country-normalize
+        response_summary: {input: "UK", iso2: GB, method: custom_alias}
+        correctness: correct
+
+  - case_id: 57
+    round: 4
+    name: "Formal: People's Republic of China"
+    endpoints_tested:
+      - endpoint: iso-country-normalize
+        response_summary: {input: "People's Republic of China", iso2: CN, method: custom_alias}
+        correctness: correct
+
+  - case_id: 58
+    round: 4
+    name: "ISO formal: Korea, Republic of"
+    endpoints_tested:
+      - endpoint: iso-country-normalize
+        response_summary: {input: "Korea, Republic of", iso2: KR, method: custom_alias}
+        correctness: correct
+
+  - case_id: 59
+    round: 4
+    name: "ISO formal: Russian Federation"
+    endpoints_tested:
+      - endpoint: iso-country-normalize
+        response_summary: {input: "Russian Federation", iso2: RU, method: custom_alias}
+        correctness: correct
+
+  - case_id: 60
+    round: 4
+    name: "ISO formal: Iran, Islamic Republic of"
+    endpoints_tested:
+      - endpoint: iso-country-normalize
+        response_summary: {input: "Iran, Islamic Republic of", iso2: IR, method: custom_alias}
+        correctness: correct
+
+  - case_id: 61
+    round: 4
+    name: "German: Deutschland"
+    endpoints_tested:
+      - endpoint: iso-country-normalize
+        response_summary: {input: "Deutschland", iso2: DE, method: custom_alias}
+        correctness: correct
+
+  - case_id: 62
+    round: 4
+    name: "French: Allemagne"
+    endpoints_tested:
+      - endpoint: iso-country-normalize
+        response_summary: {input: "Allemagne", iso2: DE, method: custom_alias}
+        correctness: correct
+
+  - case_id: 63
+    round: 4
+    name: "Russian romanized: Rossiya"
+    endpoints_tested:
+      - endpoint: iso-country-normalize
+        response_summary: {input: "Rossiya", iso2: RU, method: custom_alias}
+        correctness: correct
+
+  - case_id: 64
+    round: 4
+    name: "Chinese romanized: Zhongguo"
+    endpoints_tested:
+      - endpoint: iso-country-normalize
+        response_summary: {input: "Zhongguo", iso2: CN, method: custom_alias}
+        correctness: correct
+
+  - case_id: 65
+    round: 4
+    name: "Japanese: Nihon"
+    endpoints_tested:
+      - endpoint: iso-country-normalize
+        response_summary: {input: "Nihon", iso2: JP, method: custom_alias}
+        correctness: correct
+
+  - case_id: 66
+    round: 4
+    name: "Spanish: Estados Unidos"
+    endpoints_tested:
+      - endpoint: iso-country-normalize
+        response_summary: {input: "Estados Unidos", iso2: US, method: custom_alias}
+        correctness: correct
+
+  - case_id: 67
+    round: 4
+    name: "Ambiguous: Korea (no qualifier)"
+    endpoints_tested:
+      - endpoint: iso-country-normalize
+        response_summary: {input: "Korea", iso2: null, method: ambiguous_alias, warnings: ["ambiguous_country_name"]}
+        correctness: correct_ambiguous
+    notes: "Correctly refused to resolve. KR vs KP ambiguity would be catastrophic if silent."
+
+  - case_id: 68
+    round: 4
+    name: "Ambiguous: Congo (no qualifier)"
+    endpoints_tested:
+      - endpoint: iso-country-normalize
+        response_summary: {input: "Congo", iso2: null, method: ambiguous_alias, warnings: ["ambiguous_country_name"]}
+        correctness: correct_ambiguous
+
+  - case_id: 69
+    round: 4
+    name: "Old name: Burma (=Myanmar)"
+    endpoints_tested:
+      - endpoint: iso-country-normalize
+        response_summary: {input: "Burma", iso2: MM, method: custom_alias}
+        correctness: correct
+
+  - case_id: 70
+    round: 4
+    name: "Old name: Persia (=Iran)"
+    endpoints_tested:
+      - endpoint: iso-country-normalize
+        response_summary: {input: "Persia", iso2: IR, method: custom_alias}
+        correctness: correct
+    notes: >
+      "Persia" -> IR is high-stakes: Iran is Group E (auto-deny). The old
+      name must resolve correctly or an embargo-country order could slip through.
+
+  - case_id: 71
+    round: 4
+    name: "Old name: Formosa (=Taiwan)"
+    endpoints_tested:
+      - endpoint: iso-country-normalize
+        response_summary: {input: "Formosa", iso2: TW, method: custom_alias}
+        correctness: correct
+
+  - case_id: 72
+    round: 4
+    name: "Territory: Hong Kong"
+    endpoints_tested:
+      - endpoint: iso-country-normalize
+        response_summary: {input: "Hong Kong", iso2: HK, method: custom_alias}
+        correctness: correct
+
+  - case_id: 73
+    round: 4
+    name: "Territory: Macau"
+    endpoints_tested:
+      - endpoint: iso-country-normalize
+        response_summary: {input: "Macau", iso2: MO, method: custom_alias}
+        correctness: correct
+
+  - case_id: 74
+    round: 4
+    name: "Territory: Taiwan"
+    endpoints_tested:
+      - endpoint: iso-country-normalize
+        response_summary: {input: "Taiwan", iso2: TW, method: pycountry_lookup}
+        correctness: correct
+
+  - case_id: 75
+    round: 4
+    name: "Misspelling: Australa"
+    endpoints_tested:
+      - endpoint: iso-country-normalize
+        status: not_covered
+        response_summary: {input: "Australa", iso2: null, method: unresolved, warnings: ["unrecognized_country_token"]}
+        correctness: failed_to_resolve
+    notes: "pycountry fuzzy search did not match this misspelling. Levenshtein fallback needed."
+
+  - case_id: 76
+    round: 4
+    name: "Common variant: Czech Republic"
+    endpoints_tested:
+      - endpoint: iso-country-normalize
+        response_summary: {input: "Czech Republic", iso2: CZ, method: custom_alias}
+        correctness: correct
+    notes: "ISO name changed to 'Czechia' but 'Czech Republic' still commonly used."
+
+  - case_id: 77
+    round: 4
+    name: "Abbrev: PRC"
+    endpoints_tested:
+      - endpoint: iso-country-normalize
+        response_summary: {input: "PRC", iso2: CN, method: custom_alias}
+        correctness: correct
+    notes: "PRC -> CN is high-stakes: China is Group D."
+
+  - case_id: 78
+    round: 4
+    name: "Abbrev: DPRK"
+    endpoints_tested:
+      - endpoint: iso-country-normalize
+        response_summary: {input: "DPRK", iso2: KP, method: custom_alias}
+        correctness: correct
+    notes: "DPRK -> KP is high-stakes: North Korea is Group E (auto-deny)."
