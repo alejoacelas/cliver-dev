@@ -1,0 +1,289 @@
+group: llm-exa
+endpoints: [exa-neural-search]
+kyc_steps: [a, b, c, d, e]
+
+# Unlike other endpoint groups, this group tests a single tool (LLM+Exa web search)
+# across ALL 5 KYC steps. For each seed case, the stage 3 agent formulates a
+# step-specific prompt and runs it through llm-exa-search.py. The same entity
+# appears in multiple steps so we can compare signal quality across questions.
+
+seed_cases:
+  # ── Easy ──────────────────────────────────────────────────────────────
+  - id: 1
+    name: "Massachusetts Institute of Technology"
+    type: academic
+    country: US
+    source: general_knowledge
+    difficulty: easy
+    query_params:
+      institution_name: "Massachusetts Institute of Technology"
+      address: "77 Massachusetts Ave, Cambridge, MA 02139"
+      email_domain: "mit.edu"
+      kyc_steps_to_test: [a, c, d, e]
+    hypothesis: >
+      Baseline easy case. MIT is one of the most web-documented institutions on
+      Earth. Exa should have no trouble confirming the campus address, the .edu
+      domain, and classifying 77 Mass Ave as non-residential / non-PO-box.
+      Step (b) is skipped — no payment entity to test without fabricating one.
+
+  - id: 2
+    name: "Pfizer Inc."
+    type: corporate_pharma
+    country: US
+    source: general_knowledge
+    difficulty: easy
+    query_params:
+      institution_name: "Pfizer Inc."
+      address: "66 Hudson Blvd E, New York, NY 10001"
+      email_domain: "pfizer.com"
+      billing_entity: "Pfizer Inc."
+      kyc_steps_to_test: [a, b, c, d, e]
+    hypothesis: >
+      Large corporate pharma with a well-known HQ address. Tests whether Exa
+      can confirm address-to-institution for a corporate (not just academic)
+      entity. Also tests (b): the billing entity name matches the institution.
+      (d) should be straightforward — commercial high-rise in Manhattan.
+      (e) should be clean — no PO box or freight forwarder signals.
+
+  - id: 3
+    name: "University of Oxford"
+    type: academic
+    country: GB
+    source: general_knowledge
+    difficulty: easy
+    query_params:
+      institution_name: "University of Oxford"
+      address: "University Offices, Wellington Square, Oxford OX1 2JD, UK"
+      email_domain: "ox.ac.uk"
+      kyc_steps_to_test: [a, c, d, e]
+    hypothesis: >
+      Non-US easy case. Tests Exa's coverage of UK academic institutions.
+      The .ac.uk domain is distinctive. The address is a well-known campus
+      building. Should be unambiguous across all tested steps.
+
+  # ── Medium ────────────────────────────────────────────────────────────
+  - id: 4
+    name: "Chulalongkorn University"
+    type: academic
+    country: TH
+    source: general_knowledge
+    difficulty: medium
+    query_params:
+      institution_name: "Chulalongkorn University"
+      address: "254 Phayathai Rd, Wang Mai, Pathum Wan, Bangkok 10330, Thailand"
+      email_domain: "chula.ac.th"
+      kyc_steps_to_test: [a, c, d, e]
+    hypothesis: >
+      Top Thai university — internationally known but far less web presence in
+      English than MIT or Oxford. Tests whether Exa's neural search can handle
+      non-Latin address components and a .ac.th domain. The address format
+      (Thai district names) may confuse the LLM's address interpretation.
+
+  - id: 5
+    name: "BioNTech SE"
+    type: corporate_biotech
+    country: DE
+    source: general_knowledge
+    difficulty: medium
+    query_params:
+      institution_name: "BioNTech SE"
+      address: "An der Goldgrube 12, 55131 Mainz, Germany"
+      email_domain: "biontech.de"
+      billing_entity: "BioNTech SE"
+      kyc_steps_to_test: [a, b, c, d, e]
+    hypothesis: >
+      Mid-size German biotech that became globally known post-COVID. Tests
+      whether Exa can confirm a German street address belongs to BioNTech.
+      The .de domain is corporate but not globally distinctive like .edu.
+      Step (b): billing entity name should be confirmable. Step (d): the Mainz
+      address is a commercial/industrial site, not residential, but confirming
+      that for a German address via web search may be harder than for US ones.
+
+  - id: 6
+    name: "African Academy of Sciences"
+    type: intergovernmental
+    country: KE
+    source: general_knowledge
+    difficulty: medium
+    query_params:
+      institution_name: "African Academy of Sciences"
+      address: "AASCIENCES, 8th Floor, Mwalimu Mutual Towers, Lower Hill Rd, Nairobi, Kenya"
+      email_domain: "aasciences.africa"
+      kyc_steps_to_test: [a, c, d, e]
+    hypothesis: >
+      Non-OECD intergovernmental body in Nairobi. Tests Exa's coverage of
+      African institutions. The .africa TLD is unusual. The office is in a
+      shared commercial tower — can Exa distinguish "tenant in a commercial
+      building" from "residential"? Lower web footprint than Western equivalents.
+
+  # ── Hard / Adversarial ────────────────────────────────────────────────
+  - id: 7
+    name: "Genspace"
+    type: community_biolab
+    country: US
+    source: general_knowledge
+    difficulty: hard
+    query_params:
+      institution_name: "Genspace"
+      address: "150 Broadway, Suite 1202, New York, NY 10038"
+      email_domain: "genspace.org"
+      kyc_steps_to_test: [a, c, d, e]
+    hypothesis: >
+      Community bio lab — not in ROR, not a university, not a traditional
+      company. This is the archetype of a legitimate but hard-to-verify
+      entity. Exa should find Genspace's website, but can the LLM confidently
+      associate this specific suite address with Genspace (they've moved
+      multiple times)? The .org domain is non-distinctive. Step (d): the
+      address is a commercial suite, not residential, but confirming this
+      requires knowing the building. Step (e): suite addresses can superficially
+      resemble mail drops.
+
+  - id: 8
+    name: "Startup at LabCentral (fictional entity, real address)"
+    type: biotech_startup
+    country: US
+    source: general_knowledge
+    difficulty: hard
+    query_params:
+      institution_name: "Helix Therapeutics"
+      address: "700 Main St, Cambridge, MA 02139"
+      email_domain: "helix-tx.com"
+      billing_entity: "Helix Therapeutics Inc."
+      kyc_steps_to_test: [a, b, c, d, e]
+    hypothesis: >
+      Tests the coworking/incubator problem. 700 Main St is LabCentral — a
+      biotech incubator hosting dozens of startups. Exa will find LabCentral
+      at this address, not "Helix Therapeutics" (which is fictional). The key
+      question: does the LLM recognize the address as an incubator and flag
+      the mismatch, or does it hallucinate a confirmation? Step (b): billing
+      entity name won't be findable on the web. Step (c): a recently registered
+      .com domain has no web trail. This case tests hallucination resistance.
+
+  - id: 9
+    name: "Researcher with free email claiming university affiliation"
+    type: individual_researcher
+    country: CN
+    source: general_knowledge
+    difficulty: hard
+    query_params:
+      institution_name: "Wuhan University"
+      address: "299 Bayi Rd, Wuchang District, Wuhan, Hubei 430072, China"
+      email_domain: "163.com"
+      claimed_affiliation: "Wuhan University, School of Life Sciences"
+      kyc_steps_to_test: [a, c, d]
+    hypothesis: >
+      Tests the free-email-with-institutional-claim scenario. 163.com is
+      China's largest free email provider — extremely common among legitimate
+      Chinese researchers. Step (c) is the crux: can Exa/LLM determine whether
+      a 163.com email is affiliated with Wuhan University? It cannot — there's
+      no public link between an arbitrary 163.com address and any institution.
+      The correct answer is "cannot verify," but the LLM may conflate "the
+      institution exists" with "the email is affiliated." Step (a) should pass
+      (Wuhan University is well-documented). Step (d): the campus address is
+      clearly institutional.
+
+  - id: 10
+    name: "PO Box address with institutional name"
+    type: adversarial_address
+    country: US
+    source: general_knowledge
+    difficulty: hard
+    query_params:
+      institution_name: "Pacific Biosystems Research"
+      address: "PO Box 330267, Miami, FL 33233"
+      email_domain: "pacbio-research.com"
+      kyc_steps_to_test: [a, d, e]
+    hypothesis: >
+      Tests PO box detection via web search. The institution name sounds
+      plausible but is fictional. Step (e) is the primary test: can the LLM
+      identify "PO Box 330267" as a PO box? This should be trivially easy
+      from the address string alone, but tests whether the LLM adds value
+      beyond regex. Step (a): Exa should find nothing linking this PO box
+      to any institution. Step (d): a PO box is neither residential nor
+      commercial — tests how the LLM categorizes it. The real question is
+      whether Exa search adds anything over simple pattern matching for PO
+      boxes, or whether its value is limited to the harder freight-forwarder
+      and CMRA cases.
+
+information_sources:
+  - source: "customers.csv"
+    what_to_look_for: >
+      Filter for institutions across different countries and customer types.
+      Particularly useful: Controlled Agent Industry entries (smaller/unusual
+      entities) and non-OECD institutions. Each row has institution, address,
+      email — ready to use across all 5 KYC steps.
+  - source: "iGEM team list"
+    url: "https://igem.org/teams"
+    what_to_look_for: >
+      Student teams at varied institutions worldwide, especially in Africa,
+      Southeast Asia, and Latin America. These institutions are legitimate
+      but may have minimal English-language web presence.
+  - source: "BioCurious / Genspace / community lab directories"
+    url: "https://sphere.diybio.org/"
+    what_to_look_for: >
+      Community biology labs and makerspaces. These are legitimate entities
+      that are not in any institutional registry. Test whether Exa can find
+      and characterize them.
+  - source: "LabCentral / BioLabs / JLabs tenant directories"
+    url: "https://labcentral.org/community/"
+    what_to_look_for: >
+      Biotech incubator addresses — many startups share the same street
+      address. Tests whether the LLM can distinguish the incubator from
+      individual tenant companies.
+  - source: "Regus / WeWork / Spaces locations"
+    url: "https://www.regus.com/en-us/office-space"
+    what_to_look_for: >
+      Coworking and virtual office addresses. A company claiming to be at
+      a known WeWork address should trigger a flag — tests whether Exa can
+      surface the coworking-space identity of an address.
+  - source: "Known freight forwarder addresses"
+    what_to_look_for: >
+      Addresses from the archive idea m06-freight-forwarder-denylist. Test
+      whether Exa can identify these as freight forwarders when the address
+      looks like a normal street address (no "PO Box" in the string).
+  - source: "Free email provider list"
+    url: "https://github.com/disposable-email-domains/disposable-email-domains"
+    what_to_look_for: >
+      Common free-email domains beyond Gmail (163.com, qq.com, mail.ru,
+      yandex.ru). Test whether the LLM correctly refuses to confirm
+      affiliation for these domains.
+
+pre_committed_reasoning: |
+  The LLM+Exa endpoint is fundamentally different from structured APIs: it has
+  no fixed schema, no guaranteed coverage boundary, and its reliability depends
+  on both the LLM's reasoning and Exa's index coverage. This creates a distinct
+  failure mode profile.
+
+  **Where it should excel:** Step (a) address-to-institution for well-known
+  entities. Exa's neural search is good at finding pages that mention an
+  institution together with its address. Step (e) PO box detection should be
+  trivially easy from the address string alone — the LLM barely needs Exa for
+  this. Step (c) for institutional domains (mit.edu, ox.ac.uk) should also work
+  well — institutional websites clearly associate domains with institutions.
+
+  **Where it will likely struggle:**
+  1. Step (c) with free email domains (163.com, gmail.com). There is no web page
+     linking "a random gmail address" to an institution. The correct answer is
+     "cannot verify," but LLMs tend to conflate "the institution exists" with
+     "the email is affiliated." This is the highest-risk failure mode for
+     hallucination.
+  2. Step (a) for entities at shared addresses (coworking spaces, incubators).
+     Exa will find the incubator, not the tenant. The LLM must recognize the
+     mismatch rather than treating "institution nearby" as "institution
+     confirmed at this address."
+  3. Step (b) payment-to-institution in general. Billing entity names rarely
+     appear on public web pages linked to institutional addresses. This step
+     may produce mostly "insufficient information" results, which is actually
+     the correct answer — but the LLM may hallucinate connections.
+  4. Non-English web content. Exa's index skews English. Chinese, Thai, and
+     Arabic-language institutional pages may be underrepresented, causing false
+     negatives for legitimate non-OECD institutions.
+  5. Recently changed information. Institutions that moved, rebranded, or
+     merged will have stale web pages at old addresses competing with current
+     ones. The LLM must handle contradictory search results.
+
+  The key evaluation question for this endpoint group is not "does it get the
+  right answer?" but "does it correctly distinguish what it can verify from what
+  it cannot?" A system that confidently says "yes" for MIT and confidently says
+  "cannot determine" for a gmail address is more valuable than one that says
+  "yes" to everything.
