@@ -1,0 +1,737 @@
+group: address-classification
+test_date: 2026-04-15
+endpoints_tested: [smarty, google-places-new, geonames, osm-overpass]
+api_calls_used:
+  smarty: 19  # of 50 budget
+  google_places: 27  # of 200 budget
+  geonames: 6  # of 200 budget
+  osm_overpass: 3  # of 100 budget
+
+# ============================================================
+# SEED CASES
+# ============================================================
+
+seed_results:
+
+  - id: 1
+    name: "Massachusetts Institute of Technology"
+    type: academic
+    country: US
+    smarty:
+      rdi: Commercial
+      dpv_match_code: "Y"
+      dpv_cmra: "N"
+      dpv_vacant: "N"
+      record_type: S
+      building_default_indicator: null
+      verdict: PASS  # correctly identified as commercial, deliverable
+    google_places:
+      query: "77 Massachusetts Ave, Cambridge, MA 02139"
+      primary_type: premise
+      types: [premise, street_address]
+      display_name: "77 Massachusetts Ave"
+      verdict: FAIL  # returns generic premise, not university
+    google_places_with_name:
+      query: "Massachusetts Institute of Technology, 77 Massachusetts Ave, Cambridge, MA"
+      primary_type: university
+      types: [university, educational_institution, point_of_interest, establishment]
+      display_name: "Massachusetts Institute of Technology"
+      verdict: PASS  # correctly identified when name is included
+    osm_overpass:
+      found: true
+      relation_id: 65066
+      tags: {amenity: university, name: "Massachusetts Institute of Technology", wikidata: Q49108}
+      verdict: PASS
+    geonames:
+      name_search: {found: true, name: "Massachusetts Institute of Technology", fcode: SCH}
+      reverse_geocode: {found: true, name: "Rogers Building", fcode: BLDG}
+      verdict: PARTIAL  # found by name search, but reverse geocode misses
+    hypothesis_confirmed: true
+    notes: >
+      Google Places fails to identify MIT when searched by address alone (returns "premise").
+      Only returns "university" when institution name is included in query. This is a critical
+      dependency: address-only searches provide no institutional signal.
+
+  - id: 2
+    name: "Pfizer Global HQ"
+    type: pharma_hq
+    country: US
+    smarty:
+      rdi: Commercial
+      dpv_match_code: "D"  # building default -- no suite specified
+      dpv_cmra: "N"
+      dpv_vacant: "N"
+      record_type: H  # highrise
+      building_default_indicator: "Y"
+      verdict: PASS  # commercial, but match_code=D means building-level only
+    google_places:
+      query: "66 Hudson Blvd E, New York, NY 10001"
+      primary_type: null  # no primaryType returned
+      types: [subpremise, street_address]
+      display_name: "66 Hudson Blvd E"
+      verdict: FAIL  # returns generic subpremise
+    google_places_with_name:
+      query: "Pfizer, 66 Hudson Blvd E, New York"
+      primary_type: manufacturer
+      types: [health, manufacturer, point_of_interest, establishment]
+      display_name: "Pfizer Inc."
+      verdict: PASS  # identified as manufacturer when name included
+    notes: >
+      Same pattern as MIT. Address-only returns subpremise, name+address returns manufacturer.
+      Smarty dpv_match_code=D indicates building default (multi-tenant, no suite specified).
+
+  - id: 3
+    name: "University of Oxford - Chemistry"
+    type: academic
+    country: GB
+    smarty: null  # US-only
+    google_places:
+      query: "Chemistry Research Laboratory, 12 Mansfield Rd, Oxford OX1 3TA, United Kingdom"
+      primary_type: academic_department
+      types: [academic_department, point_of_interest, establishment]
+      display_name: "Department of Chemistry, University of Oxford"
+      verdict: PASS  # correctly identified as academic_department
+    notes: >
+      Exception to the pattern: Google Places correctly identifies this as academic_department
+      even without explicit "University of Oxford" in the query. The building name "Chemistry
+      Research Laboratory" was sufficient. This is because the building itself is named/mapped
+      in Google as a university department.
+
+  - id: 4
+    name: "Agilent Technologies"
+    type: biotech_industry
+    country: US
+    smarty:
+      rdi: Commercial
+      dpv_match_code: "Y"
+      dpv_cmra: "N"
+      dpv_vacant: "N"
+      record_type: S  # street-level
+      building_default_indicator: null
+      verdict: PASS  # clean commercial address
+    google_places:
+      query: "5301 Stevens Creek Blvd, Santa Clara, CA 95051"
+      primary_type: null  # no primaryType
+      types: [premise, street_address]
+      display_name: "5301 Stevens Creek Blvd"
+      verdict: FAIL  # generic premise, no Agilent identification
+    notes: >
+      Hypothesis confirmed. Agilent is a legitimate biotech company at a generic commercial
+      address. Smarty returns a clean commercial profile. Google Places returns nothing useful
+      from address alone. The pipeline cannot distinguish this from any other commercial address.
+
+  - id: 5
+    name: "Institut Pasteur"
+    type: academic_research
+    country: FR
+    smarty: null  # US-only
+    google_places:
+      query: "25-28 Rue du Docteur Roux, 75015 Paris, France"
+      primary_type: premise
+      types: [premise, street_address]
+      display_name: "25-28 Rue du Dr Roux"
+      verdict: FAIL  # returns generic premise
+    google_places_with_name:
+      query: "Institut Pasteur, 25 Rue du Docteur Roux, Paris"
+      primary_type: association_or_organization
+      types: [research_institute, medical_lab, health, point_of_interest, association_or_organization, establishment]
+      display_name: "Pasteur Institute"
+      verdict: PASS  # correctly identified as research_institute when name included
+    notes: >
+      Same address-only failure as MIT and Pfizer. With name, returns research_institute
+      (in types array) but primaryType is "association_or_organization" -- slightly imprecise
+      but still a positive institutional signal.
+
+  - id: 6
+    name: "LabCentral coworking lab"
+    type: coworking_lab
+    country: US
+    smarty:
+      rdi: Commercial
+      dpv_match_code: "Y"
+      dpv_cmra: "N"
+      dpv_vacant: "N"
+      record_type: S
+      building_default_indicator: null
+      verdict: MISS  # looks like a normal commercial address, no coworking signal
+    google_places:
+      query: "700 Main St, Cambridge, MA 02139"
+      primary_type: null  # no primaryType
+      types: [subpremise, street_address]
+      display_name: "700 Main St"
+      verdict: FAIL  # generic subpremise
+    google_places_with_name:
+      query: "LabCentral, 700 Main St, Cambridge, MA"
+      primary_type: null  # no primaryType even with name!
+      types: [point_of_interest, establishment]
+      display_name: "LabCentral"
+      verdict: FAIL  # found by name but NO useful type (not coworking_space, not university)
+    osm_overpass:
+      found: false
+      nearby: ["MIT campus (relation 65066, 500m away)", "Ragon Institute (600 Main St)"]
+      verdict: FAIL  # not in OSM, nearby MIT polygon does NOT cover this address
+    notes: >
+      CRITICAL GAP CONFIRMED. LabCentral is completely invisible to all four endpoints.
+      Smarty: clean commercial. Google Places: no typed result even by name. OSM: not mapped.
+      GeoNames: not found. A coworking lab incubator for biotech startups generates zero
+      signals distinguishable from any legitimate commercial address. This is the single
+      biggest failure mode for KYC step (a) address-to-institution verification.
+
+  - id: 7
+    name: "Residential home address"
+    type: residential
+    country: US
+    smarty:
+      rdi: Commercial  # UNEXPECTED - 42 Brattle St classified as Commercial
+      dpv_match_code: "Y"
+      dpv_cmra: "N"
+      dpv_vacant: "N"
+      record_type: S
+      building_default_indicator: null
+      verdict: FAIL  # should be Residential but returns Commercial
+    google_places:
+      query: "42 Brattle St, Cambridge, MA 02138"
+      primary_type: premise
+      types: [premise, street_address]
+      display_name: "42 Brattle St"
+      verdict: NEUTRAL  # no residential signal, but also no institutional signal
+    notes: >
+      SURPRISE: 42 Brattle St returns RDI=Commercial from Smarty. This is likely because
+      the address hosts a commercial entity (Brattle Street is mixed commercial/residential
+      near Harvard Square). RDI reflects the building's USPS delivery classification, not
+      occupancy. This means RDI=Residential is only triggered for purely residential
+      buildings, and mixed-use buildings may return Commercial even when a customer is
+      using a residential unit. The hypothesis was wrong: this address is not purely residential.
+
+  - id: 8
+    name: "UPS Store / CMRA"
+    type: cmra
+    country: US
+    smarty:
+      rdi: Commercial
+      dpv_match_code: "Y"
+      dpv_cmra: "N"  # CMRA FLAG FAILS AGAIN
+      dpv_vacant: "N"
+      record_type: H  # highrise
+      building_default_indicator: null
+      verdict: FAIL  # dpv_cmra=N for a known UPS Store location
+    google_places:
+      query: "The UPS Store, 1 Mifflin Pl, Cambridge, MA 02138"
+      primary_type: null  # first result has no primaryType
+      types_first_result: [courier_service, business_center, supplier, shipping_service, transportation_service, finance, consultant, service, manufacturer, store, point_of_interest, establishment]
+      display_name_first_result: "The UPS Store"
+      address_first_result: "955 Massachusetts Ave, Cambridge, MA 02139"  # different location!
+      verdict: PARTIAL  # finds UPS Stores but doesn't match the EXACT location searched
+    google_places_extra:
+      regus_at_same_address: true  # Regus at "Mifflin Pl Suite 400" appeared in results
+      note: "1 Mifflin Pl hosts BOTH a UPS Store AND a Regus coworking space"
+    notes: >
+      CMRA FLAG FAILURE CONFIRMED for third time. Three different UPS Store / CMRA addresses
+      tested (1 Mifflin Pl, 186 Alewife Brook Pkwy from archive, 955 Mass Ave via PMB) all
+      return dpv_cmra=N. The CMRA flag in Smarty's free tier is NOT reliable for CMRA detection.
+      Google Places DOES surface UPS Store with courier_service type when searched by name,
+      but returns a DIFFERENT location than the one searched (955 Mass Ave instead of 1 Mifflin).
+
+  - id: 9
+    name: "Freight forwarder address"
+    type: freight_forwarder
+    country: US
+    smarty:
+      rdi: Commercial
+      dpv_match_code: "D"  # building default
+      dpv_cmra: "N"
+      dpv_vacant: "N"
+      record_type: H  # highrise (multi-tenant commercial)
+      building_default_indicator: "Y"
+      verdict: MISS  # looks like normal commercial building
+    google_places_with_keyword:
+      query: "1975 Linden Blvd, Elmont, NY 11003 freight forwarder"
+      primary_type: shipping_service
+      display_name: "Logistics Express World Wide"
+      verdict: PASS  # finds freight forwarders when "freight forwarder" keyword included
+    google_places_address_only:
+      query: "1975 Linden Blvd, Elmont, NY 11003"
+      primary_type: premise
+      types: [premise, street_address]
+      display_name: "1975 Linden Blvd"
+      verdict: FAIL  # returns generic premise without keyword
+    notes: >
+      CRITICAL: Google Places returns shipping_service ONLY when "freight forwarder" is in
+      the search query. An address-only search returns generic "premise." In a real KYC flow,
+      the customer provides an address, not a business category. The freight forwarder signal
+      is there in Google's database but unreachable via address-only search. The building has
+      5+ freight companies at the same address (Logistics Express, Topocean, US Group, etc).
+
+  - id: 10
+    name: "Community bio lab at residential address"
+    type: community_lab
+    country: US
+    smarty:
+      rdi: Residential
+      dpv_match_code: "Y"
+      dpv_cmra: "N"
+      dpv_vacant: "N"
+      record_type: S
+      building_default_indicator: null
+      verdict: CORRECT  # correctly flags as Residential, but can't know it's a lab
+    google_places:
+      query: "7 Standish St, Cambridge, MA 02138"
+      primary_type: premise
+      types: [premise, street_address]
+      display_name: "7 Standish St"
+      verdict: NEUTRAL  # premise = no institutional signal
+    notes: >
+      Hypothesis confirmed. Residential address correctly flagged as Residential by Smarty.
+      Google Places returns premise. No endpoint can determine whether a residential address
+      hosts a legitimate community bio lab. This is an inherent limit of address classification.
+
+# ============================================================
+# ADVERSARIAL CASES
+# ============================================================
+
+adversarial_results:
+
+  # --- COWORKING / SHARED SPACES ---
+
+  - id: 11
+    name: "BioLabs Cambridge (coworking wet lab)"
+    type: coworking_lab
+    country: US
+    google_places:
+      query: "BioLabs, 1030 Massachusetts Ave, Cambridge, MA"
+      result: "{}"  # EMPTY - not found at all
+      verdict: FAIL  # coworking lab completely absent from Google Places
+    notes: >
+      BioLabs is NOT in Google Places at all. Returns empty JSON. This confirms the LabCentral
+      finding: wet-lab coworking spaces are systematically absent from Google Places' database.
+      Only mainstream coworking offices (WeWork, Regus) are mapped.
+
+  - id: 12
+    name: "WeWork Cambridge (coworking office)"
+    type: coworking_office
+    country: US
+    smarty:
+      rdi: Commercial
+      dpv_match_code: "D"  # building default
+      dpv_cmra: "N"
+      building_default_indicator: "Y"
+      verdict: MISS  # looks like normal commercial multi-tenant
+    google_places:
+      query: "WeWork, 625 Massachusetts Ave, Cambridge, MA"
+      primary_type: coworking_space
+      types: [coworking_space, real_estate_agency, service, point_of_interest, establishment]
+      display_name: "WeWork Office Space & Coworking"
+      verdict: PASS  # correctly identified as coworking_space
+    notes: >
+      CONTRAST WITH LABCENTRAL: WeWork is detected as coworking_space by Google Places.
+      Generic coworking offices ARE detectable; wet-lab coworking spaces are NOT. Smarty
+      returns building default (match_code=D) which is a weak signal for multi-tenant
+      buildings but not specific to coworking.
+
+  - id: 13
+    name: "Regus Cambridge (shared office)"
+    type: coworking_office
+    country: US
+    google_places:
+      query: "Regus, One Broadway, Cambridge, MA"
+      primary_type: real_estate_agency  # not coworking_space
+      types: [business_center, coworking_space, real_estate_agency, point_of_interest, service, establishment]
+      display_name: "CIC Cambridge @ 1 Broadway"  # returns CIC, not Regus
+      verdict: PARTIAL  # coworking_space in types but not primaryType
+    notes: >
+      Regus detected with coworking_space in types array but primaryType is
+      "real_estate_agency." Also, the first result is CIC (Cambridge Innovation Center),
+      not Regus -- the search matched a different coworking space at the same address.
+      This shows address-level coworking detection is possible via types array scanning.
+
+  - id: 14
+    name: "JLABS San Diego (J&J coworking lab)"
+    type: coworking_lab
+    country: US
+    google_places:
+      query: "JLABS, Johnson & Johnson Innovation, San Diego, CA"
+      primary_type: corporate_office
+      types: [corporate_office, point_of_interest, establishment]
+      display_name: "JLABS San Diego"
+      verdict: MISS  # identified as corporate_office, not coworking_space
+    notes: >
+      JLABS is classified as "corporate_office" by Google Places. While technically a J&J
+      subsidiary, it functions as a coworking lab incubator. No API signal distinguishes
+      this from a normal J&J office. The "coworking lab" category simply doesn't exist in
+      Google's type taxonomy.
+
+  # --- CMRA / PO BOX ---
+
+  - id: 15
+    name: "UPS Store PMB address (955 Mass Ave)"
+    type: cmra
+    country: US
+    smarty:
+      rdi: Commercial
+      dpv_match_code: "D"  # building default
+      dpv_cmra: "N"  # THIRD CMRA FAILURE
+      building_default_indicator: "Y"
+      pmb_designator: "PMB"  # parsed correctly in components
+      pmb_number: "123"
+      verdict: FAIL  # CMRA not detected, but PMB designator IS parsed
+    google_places:
+      query: "955 Massachusetts Ave, Cambridge, MA 02139"
+      primary_type: premise
+      display_name: "955 Massachusetts Ave"
+      verdict: FAIL  # returns premise, no UPS Store signal
+    notes: >
+      KEY FINDING: Smarty parses the PMB designator in components.pmb_designator but still
+      returns dpv_cmra=N. The presence of PMB/# in the address components is a STRONGER
+      signal than the dpv_cmra flag itself. A KYC pipeline should check for pmb_designator
+      or secondary_designator containing "PMB" or "#" as a heuristic CMRA indicator,
+      rather than relying on the dpv_cmra field.
+
+  - id: 16
+    name: "UPS Store at Alewife (archive baseline)"
+    type: cmra
+    country: US
+    smarty:
+      rdi: Commercial
+      dpv_match_code: "D"
+      dpv_cmra: "N"  # FOURTH CMRA FAILURE
+      building_default_indicator: "Y"
+      verdict: FAIL  # confirms archive finding
+    notes: >
+      Reproduces the archive investigation finding. dpv_cmra=N for a confirmed UPS Store
+      at 186 Alewife Brook Pkwy. The CMRA flag is systematically unreliable across all
+      tested UPS Store locations.
+
+  - id: 17
+    name: "PO Box 425 Cambridge"
+    type: po_box
+    country: US
+    smarty:
+      result: "[]"  # EMPTY - PO Boxes not supported by US Street API
+      verdict: N/A  # requires separate Smarty US-ZIP or Autocomplete API
+    notes: >
+      Smarty US Street API does not process PO Box addresses. Returns empty array.
+      PO Box validation requires a different Smarty endpoint (US ZIP Code or US Autocomplete)
+      or simply string pattern matching for "PO Box" / "P.O. Box" in the address.
+
+  # --- FREIGHT FORWARDERS ---
+
+  - id: 18
+    name: "Freight forwarder cluster near LAX"
+    type: freight_forwarder
+    country: US
+    smarty:
+      rdi: Commercial
+      dpv_match_code: "D"
+      dpv_cmra: "N"
+      building_default_indicator: "Y"
+      verdict: MISS  # indistinguishable from any commercial building
+    google_places_with_keyword:
+      query: "freight forwarder, 11099 S La Cienega Blvd, Los Angeles, CA"
+      primary_type: shipping_service
+      results_count: 8  # 8 shipping companies at this address!
+      display_names: ["Onboard Logistics USA", "Commodity Forwarders Inc", "Prologis", "Mairon International", "3 Plus Logistics", "Global Entry Enrollment Center", "I2U International", "Dsecargonet USA"]
+      verdict: PASS  # when keyword used
+    google_places_address_only:
+      query: "11099 S La Cienega Blvd, Los Angeles, CA 90045"
+      primary_type: premise
+      display_name: "11099 S La Cienega Blvd"
+      verdict: FAIL  # returns premise without keyword
+    notes: >
+      Same pattern as JFK freight forwarder. Google Places has the data but requires the
+      freight-related keyword to surface it. Smarty shows building_default_indicator=Y
+      (multi-tenant building), which is consistent with freight forwarding clusters but
+      also applies to any large office building. 8 separate shipping companies at one
+      address is a strong signal that could be extracted with a nearby-search query.
+
+  # --- INTERNATIONAL UNIVERSITIES ---
+
+  - id: 19
+    name: "IIT Bombay (India)"
+    type: academic
+    country: IN
+    google_places:
+      query: "IIT Bombay, Powai, Mumbai, India"
+      primary_type: university
+      display_name: "Indian Institute of Technology Bombay"
+      verdict: PASS
+
+  - id: 20
+    name: "Tsinghua University (China)"
+    type: academic
+    country: CN
+    google_places:
+      query: "Tsinghua University, Beijing, China"
+      primary_type: university
+      display_name: "Tsinghua University"
+      verdict: PASS
+
+  - id: 21
+    name: "Universidade de Sao Paulo (Brazil)"
+    type: academic
+    country: BR
+    google_places:
+      query: "Universidade de Sao Paulo, Sao Paulo, Brazil"
+      primary_type: university
+      display_name: "Universidade de Sao Paulo"
+      verdict: PASS
+      extra: "Also returned Federal University of Sao Paulo as second result (research_institute)"
+
+  - id: 22
+    name: "Makerere University (Uganda)"
+    type: academic
+    country: UG
+    google_places:
+      query: "Makerere University, Kampala, Uganda"
+      primary_type: university
+      display_name: "Makerere University"
+      verdict: PASS
+
+  - id: 23
+    name: "University of Ibadan (Nigeria)"
+    type: academic
+    country: NG
+    google_places:
+      query: "University of Ibadan, Ibadan, Nigeria"
+      primary_type: consultant  # WRONG
+      types: [consultant, university, school, educational_institution, point_of_interest, service, establishment]
+      display_name: "University of Ibadan"
+      verdict: PARTIAL  # university in types but primaryType is "consultant"
+    notes: >
+      INTERESTING FAILURE: University of Ibadan's primaryType is "consultant" despite
+      having "university" in the types array. This is a Google Places classification error
+      specific to this Nigerian university. A KYC pipeline must scan the full types array,
+      not just primaryType.
+
+  - id: 24
+    name: "NUST Islamabad (Pakistan)"
+    type: academic
+    country: PK
+    google_places:
+      query: "National University of Sciences and Technology, Islamabad, Pakistan"
+      primary_type: university
+      display_name: "National University of Sciences & Technology"
+      verdict: PASS
+
+  # --- SENSITIVE / SANCTIONED INSTITUTIONS ---
+
+  - id: 25
+    name: "Wuhan Institute of Virology (China)"
+    type: sensitive_research
+    country: CN
+    google_places:
+      query: "Wuhan Institute of Virology, Wuhan, China"
+      primary_type: research_institute
+      display_name: "Wuhan Institute of Virology, CAS: Hubei Engineering and Technology Research Center for Viral Diseases"
+      verdict: NEUTRAL  # found as research_institute, same type as Institut Pasteur
+    notes: >
+      Returns research_institute -- identical to how Institut Pasteur is classified.
+      No API provides sanctions or concern-level signals. Address classification cannot
+      distinguish sanctioned from non-sanctioned research institutes. Sanctions screening
+      requires a separate endpoint (OFAC SDN list, denied parties screening).
+
+  - id: 26
+    name: "VECTOR State Research Center (Russia)"
+    type: sanctioned_institution
+    country: RU
+    google_places:
+      query: "VECTOR State Research Center of Virology and Biotechnology, Koltsovo, Russia"
+      primary_type: research_institute
+      display_name: "Vektor, Gosudarstvennyy Nauchnyy Tsentr Virusologii I Biotekhnologii"
+      verdict: NEUTRAL  # found but no sanctions signal
+    notes: >
+      VECTOR is on OFAC sanctions lists but Google Places returns research_institute with
+      no distinguishing signal. Address classification is the wrong layer for sanctions.
+
+  # --- COMMUNITY BIO LABS ---
+
+  - id: 27
+    name: "Genspace (Brooklyn community bio lab)"
+    type: community_lab
+    country: US
+    smarty:
+      rdi: Commercial
+      dpv_match_code: "Y"
+      dpv_cmra: "N"
+      record_type: H
+      verdict: MISS  # looks like normal commercial suite
+    google_places:
+      query: "Genspace, Brooklyn, NY"
+      primary_type: non_profit_organization
+      types: [non_profit_organization, community_center, event_venue, educational_institution, service, association_or_organization, point_of_interest, establishment]
+      display_name: "Genspace"
+      address: "132 32nd St #108, Brooklyn, NY 11232"
+      verdict: INTERESTING  # non_profit_organization + community_center + educational_institution
+    notes: >
+      Genspace is classified as non_profit_organization with community_center and
+      educational_institution in types. This is actually a useful signal -- the combination
+      of non_profit + community_center + educational_institution is distinctive. However,
+      Smarty returns clean Commercial with match_code=Y, so the Smarty path alone misses it.
+
+  - id: 28
+    name: "BioCurious (Sunnyvale community bio lab)"
+    type: community_lab
+    country: US
+    google_places:
+      query: "BioCurious, 845 Stewart Dr, Sunnyvale, CA"
+      primary_type: non_profit_organization
+      types: [non_profit_organization, association_or_organization, point_of_interest, establishment]
+      display_name: "BioCurious"
+      address: "3108 Patrick Henry Dr, Santa Clara, CA 95054"  # different address than queried!
+      verdict: INTERESTING  # found as non_profit but at different address (they moved)
+    notes: >
+      BioCurious found as non_profit_organization but at a different address (they appear
+      to have moved from 845 Stewart Dr to 3108 Patrick Henry Dr). The non_profit_organization
+      type is shared with Genspace -- this may be a useful heuristic for community bio labs.
+
+  # --- RESIDENTIAL EDGE CASES ---
+
+  - id: 29
+    name: "Harvard science building (52 Oxford St)"
+    type: academic_building
+    country: US
+    smarty:
+      rdi: Residential  # WRONG - this is a university science building
+      dpv_match_code: "Y"
+      dpv_cmra: "N"
+      record_type: S
+      verdict: FAIL  # misclassifies university building as Residential
+    google_places:
+      query: "52 Oxford St, Cambridge, MA 02138"
+      primary_type: null
+      types: [subpremise, street_address]
+      display_name: "52 Oxford St"
+      verdict: FAIL  # returns generic subpremise
+    notes: >
+      CRITICAL FALSE POSITIVE: 52 Oxford St is Harvard's Science Center / Northwest Science
+      Building area. Smarty classifies it as Residential. A KYC pipeline relying on RDI=Residential
+      as a flag would incorrectly flag legitimate university shipments to this address.
+      This demonstrates that RDI reflects USPS delivery infrastructure, not actual building use.
+
+  - id: 30
+    name: "NYC residential high-rise (200 E 89th St)"
+    type: residential_highrise
+    country: US
+    smarty:
+      rdi: Commercial  # UNEXPECTED for a residential building
+      dpv_match_code: "D"
+      dpv_cmra: "N"
+      record_type: H  # highrise
+      building_default_indicator: "Y"
+      verdict: FAIL  # misclassifies residential high-rise as Commercial
+    google_places:
+      query: "200 E 89th St, New York, NY 10128"
+      primary_type: premise
+      types: [premise, street_address]
+      display_name: "200 E 89th St"
+      verdict: NEUTRAL  # no residential signal
+    notes: >
+      CRITICAL FALSE NEGATIVE: Large NYC residential buildings get classified as Commercial
+      by Smarty because they have managed mail rooms and commercial-style USPS delivery.
+      A customer ordering to a residential high-rise would NOT trigger the Residential flag.
+      RDI=Commercial does NOT mean the address is non-residential.
+
+  - id: 31
+    name: "Moderna HQ (200 Technology Sq)"
+    type: biotech_hq
+    country: US
+    smarty:
+      rdi: Commercial
+      dpv_match_code: "D"
+      dpv_cmra: "N"
+      record_type: H
+      building_default_indicator: "Y"
+      verdict: PASS  # correctly Commercial
+    notes: >
+      Moderna HQ returns building_default (multi-tenant building). Same profile as
+      WeWork, Pfizer, freight forwarders. The match_code=D + building_default_indicator=Y
+      pattern appears for ANY multi-tenant commercial building regardless of its nature.
+
+  - id: 32
+    name: "Kendall Square biotech (100 Binney St)"
+    type: biotech_area
+    country: US
+    smarty:
+      rdi: Commercial
+      dpv_match_code: "D"
+      dpv_cmra: "N"
+      record_type: H
+      building_default_indicator: "Y"
+      verdict: PASS  # correctly Commercial
+
+  # --- HOSPITAL ---
+
+  - id: 33
+    name: "Massachusetts General Hospital"
+    type: hospital
+    country: US
+    google_places:
+      query: "Massachusetts General Hospital, 55 Fruit St, Boston, MA"
+      primary_type: general_hospital
+      types: [general_hospital, hospital, service, medical_clinic, health, point_of_interest, establishment]
+      display_name: "Massachusetts General Hospital"
+      verdict: PASS  # correctly identified as hospital
+    notes: >
+      Google Places correctly classifies MGH as general_hospital. This is a legitimate
+      institutional address for KYC purposes. The hospital type is in Google's taxonomy
+      and works reliably when the institution name is included.
+
+  # --- GOVERNMENT RESEARCH ---
+
+  - id: 34
+    name: "CSIR-CCMB Hyderabad (Indian government lab)"
+    type: government_research
+    country: IN
+    google_places:
+      query: "CSIR-Centre for Cellular and Molecular Biology, Hyderabad, India"
+      primary_type: research_institute
+      display_name: "CSIR-CCMB"
+      verdict: PASS  # correctly identified as research_institute
+
+  # --- VIRTUAL OFFICE ---
+
+  - id: 35
+    name: "Virtual office provider (Davinci)"
+    type: virtual_office
+    country: US
+    google_places:
+      query: "Davinci Virtual Office Solutions, 1 Broadway, Cambridge, MA"
+      primary_type: premise
+      types: [premise, street_address]
+      display_name: "1 Broadway"
+      verdict: FAIL  # returns the building address, not the virtual office provider
+    notes: >
+      Virtual office providers are completely invisible. Google Places returns the
+      building address as a generic premise. No signal that this address is used by
+      a virtual office provider.
+
+# ============================================================
+# SUMMARY STATISTICS
+# ============================================================
+
+summary:
+  total_cases: 35
+  smarty_calls: 19
+  google_places_calls: 27
+  geonames_calls: 6
+  osm_overpass_calls: 3
+
+  smarty_verdicts:
+    PASS: 6  # MIT, Pfizer, Agilent, community-lab-residential, Moderna, Binney-St
+    FAIL: 4  # Brattle(Commercial-expected-Res), Harvard-Res, NYC-highrise-Commercial, UPS-CMRA
+    MISS: 5  # LabCentral, WeWork, Genspace, freight-JFK, freight-LAX
+    N_A: 4   # PO-Box, PMB(CMRA failure but with useful PMB parse)
+
+  google_places_verdicts:
+    address_only_PASS: 1  # Oxford Chemistry (building has named entity)
+    address_only_FAIL: 10 # MIT, Pfizer, Agilent, Pasteur, LabCentral, UPS, freight(x2), Harvard, mixed-use
+    name_plus_address_PASS: 9  # MIT, Pfizer, Pasteur, WeWork, Regus, IIT, Tsinghua, USP, Makerere, NUST, MGH
+    name_plus_address_FAIL: 3  # LabCentral, BioLabs, virtual-office
+    name_plus_address_PARTIAL: 2  # Ibadan(wrong-primaryType), Regus(coworking in types not primaryType)
+
+  geonames_verdicts:
+    useful: 1  # MIT name search found
+    useless: 5  # all other searches returned empty or city-level only
+
+  osm_overpass_verdicts:
+    PASS: 1  # MIT campus polygon
+    FAIL: 2  # LabCentral not mapped, Genspace not mapped
