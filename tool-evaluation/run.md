@@ -118,6 +118,10 @@ After the pipeline completes:
 3. Spot-check 2-3 API responses by re-running calls manually.
 4. Cost numbers in the final synthesis are internally consistent.
 
+## Cloud execution
+
+Running from a Claude Code cloud session? Read [`cloud-execution.md`](cloud-execution.md) first — it covers API key setup, fetching `customers.csv`, and the rate-limit strategy.
+
 ## Notes
 
 - **Resumability:** Each stage writes outputs before the next starts. If interrupted, re-run from the last incomplete stage. YAML outputs are source of truth; markdown is derived.
