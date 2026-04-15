@@ -1,0 +1,285 @@
+group: export-control
+endpoints: [screening-list, bis-country-groups, iso-country-normalize, po-box-regex]
+kyc_steps: [e]
+notes: |
+  Screening List is blocked (API endpoint deprecated/migrated, returns 301).
+  Skip it for now. Focus seed cases on the three local-logic endpoints:
+  BIS Country Groups, ISO 3166 normalization, and PO Box regex.
+
+seed_cases:
+  # --- Easy (2-3): standard street addresses, OECD countries ---
+
+  - id: 1
+    name: "US academic lab — standard street address"
+    type: academic
+    country: US
+    source: general_knowledge
+    difficulty: easy
+    query_params:
+      address: "77 Massachusetts Ave, Cambridge, MA 02139"
+      country_raw: "United States"
+      destination_country: US
+    hypothesis: >
+      Baseline pass on all three endpoints. PO Box regex: no match.
+      ISO normalization: "United States" -> US trivially. BIS country groups:
+      US is Group A — no export control flag. Should produce zero flags.
+
+  - id: 2
+    name: "German pharma — standard European street address"
+    type: industry
+    country: DE
+    source: general_knowledge
+    difficulty: easy
+    query_params:
+      address: "Binger Strasse 173, 55216 Ingelheim am Rhein, Germany"
+      country_raw: "Germany"
+      destination_country: DE
+    hypothesis: >
+      Clean pass. PO Box regex: no match (no PO Box variant present).
+      ISO normalization: "Germany" -> DE trivially. BIS: Germany is Group A —
+      no export control concerns. Tests European street address format.
+
+  - id: 3
+    name: "Japanese research institute — OECD destination"
+    type: academic
+    country: JP
+    source: general_knowledge
+    difficulty: easy
+    query_params:
+      address: "2-1 Hirosawa, Wako, Saitama 351-0198, Japan"
+      country_raw: "Japan"
+      destination_country: JP
+    hypothesis: >
+      Clean pass. Japan is Group A (close ally). Tests East Asian address
+      format that contains no PO Box indicators. Confirms normalization
+      handles "Japan" -> JP correctly.
+
+  # --- Medium (2-3): military addresses, BIS Group D destinations ---
+
+  - id: 4
+    name: "APO military address — US armed forces Europe"
+    type: military
+    country: US
+    source: general_knowledge
+    difficulty: medium
+    query_params:
+      address: "PSC 1005 Box 25, APO AE 09009"
+      country_raw: "United States"
+      destination_country: US
+    hypothesis: >
+      PO Box regex should catch this — APO AE + "Box" is a standard military
+      mail pattern. The m03-pobox-regex-sop synthesis lists APO/FPO/DPO as
+      explicitly covered patterns. ISO normalization is trivial (US). BIS
+      groups: US is Group A. The interesting question is whether the regex
+      flags the APO pattern specifically or just the "Box" substring.
+
+  - id: 5
+    name: "Chinese university — BIS Country Group D destination"
+    type: academic
+    country: CN
+    source: general_knowledge
+    difficulty: medium
+    query_params:
+      address: "No. 5 Yiheyuan Road, Haidian District, Beijing 100871"
+      country_raw: "People's Republic of China"
+      destination_country: CN
+    hypothesis: >
+      PO Box regex: no match (standard street address). ISO normalization:
+      "People's Republic of China" should normalize to CN, but this is the
+      formal name — tests whether the normalizer handles it vs. just "China".
+      BIS country groups: China is in D:1, D:3, D:4, D:5 — should flag
+      license-required for controlled items (1C353). High false-positive
+      concern per the synthesis (~25-35% of international orders hit Group D).
+
+  - id: 6
+    name: "Iranian research center — BIS Country Group E (embargoed)"
+    type: academic
+    country: IR
+    source: general_knowledge
+    difficulty: medium
+    query_params:
+      address: "Keshavarz Blvd, Tehran 1417614411, Iran"
+      country_raw: "Iran"
+      destination_country: IR
+    hypothesis: >
+      PO Box regex: no match. ISO normalization: "Iran" -> IR (note: ISO
+      official name is "Iran, Islamic Republic of" — test both directions).
+      BIS country groups: Iran is Group E:1 — should trigger auto-deny.
+      This is the clearest hard-block case. Also tests that the system
+      distinguishes Iran from Iraq (IR vs. IQ).
+
+  # --- Hard/Adversarial (4): PO Box variants, freight forwarders, creative rewording ---
+
+  - id: 7
+    name: "PO Box variant — P.O. Box with periods"
+    type: unknown
+    country: US
+    source: general_knowledge
+    difficulty: hard
+    query_params:
+      address: "P.O. Box 4523, Sunnyvale, CA 94089"
+      country_raw: "USA"
+      destination_country: US
+    hypothesis: >
+      PO Box regex should catch "P.O. Box" — this is a standard variant
+      listed in the synthesis. Also tests ISO normalization of "USA" -> US
+      (common abbreviation, not the ISO alpha-2 code). The real adversarial
+      question is what happens with less standard variants (see cases 8-9).
+
+  - id: 8
+    name: "PMB + freight forwarder address (Shipito)"
+    type: unknown
+    country: US
+    source: archive_research
+    difficulty: hard
+    query_params:
+      address: "PMB 1234, 1396 W Herndon Ave, Fresno, CA 93711"
+      country_raw: "US"
+      destination_country: US
+    hypothesis: >
+      Tests two things: (1) PO Box regex should catch "PMB" (Private Mailbox)
+      — listed as a covered pattern in the synthesis. (2) This is the address
+      format used by Shipito and similar freight forwarders (PMB at a
+      commercial address). The PO Box regex catches the PMB indicator, but
+      the freight forwarder identity is invisible to regex alone — that
+      requires the freight forwarder denylist (separate idea m06). Tests
+      whether PMB is actually in the regex pattern set.
+
+  - id: 9
+    name: "Creative PO Box rewording — 'Post Office Lock Box'"
+    type: unknown
+    country: US
+    source: archive_research
+    difficulty: hard
+    query_params:
+      address: "Post Office Lock Box 77, Rural Route 3, Macon, GA 31201"
+      country_raw: "United States of America"
+      destination_country: US
+    hypothesis: >
+      The m03 synthesis explicitly calls out "Post Office Lock Box" as a
+      creative phrasing that bypasses the standard regex. The regex requires
+      a "PO" prefix — "Post Office Lock Box" does not contain "PO Box" as a
+      substring. This should be a MISS for the regex, confirming the known
+      gap. Also tests ISO normalization of the full formal name "United
+      States of America" -> US.
+
+  - id: 10
+    name: "Non-English country name needing normalization + Group D"
+    type: academic
+    country: RU
+    source: general_knowledge
+    difficulty: hard
+    query_params:
+      address: "Universitetskaya nab. 7-9, St. Petersburg 199034"
+      country_raw: "Rossiya"
+      destination_country: RU
+    hypothesis: >
+      Three-way adversarial case. (1) PO Box regex: no match. (2) ISO
+      normalization: "Rossiya" is the Romanized Russian name for Russia —
+      tests whether the normalizer handles non-English country names beyond
+      the standard variants (Russia, Russian Federation). If it fails,
+      the country_group_unmapped flag should fire. (3) BIS country groups:
+      Russia is de-facto Group E under Part 746 sectoral rules — should
+      trigger auto-deny or at minimum a license-required flag. Also probes
+      the normalization gap for Cyrillic-transliterated names that the
+      m06-iso-country-normalize synthesis flagged as a failure mode.
+
+information_sources:
+  - source: "BIS Country Groups interactive table"
+    url: "https://www.bis.gov/regulations/ear/interactive-country-groups"
+    what_to_look_for: >
+      Full country-to-group mapping for validation. Check edge cases:
+      recently added/removed countries, countries in multiple D subgroups,
+      territories vs. sovereign states.
+
+  - source: "OFAC Sanctions Programs list"
+    url: "https://ofac.treasury.gov/sanctions-programs-and-country-information"
+    what_to_look_for: >
+      Comprehensively sanctioned countries and sub-national territories.
+      Cross-reference with BIS Group E. Check for any programs not reflected
+      in the BIS Country Groups table.
+
+  - source: "ISO 3166-1 online browser"
+    url: "https://www.iso.org/obp/ui/#search"
+    what_to_look_for: >
+      Edge-case country names: territories (Guam, Puerto Rico, Hong Kong,
+      Macau), disputed states (Kosovo XK, Taiwan TW), countries with multiple
+      common names (Cote d'Ivoire vs. Ivory Coast, Myanmar vs. Burma).
+
+  - source: "Unicode CLDR territory names"
+    url: "https://github.com/unicode-org/cldr-json/tree/main/cldr-json/cldr-localenames-full"
+    what_to_look_for: >
+      Non-English country name variants in major languages (Spanish, French,
+      German, Arabic, Chinese, Russian). Use to build adversarial test cases
+      for the ISO normalizer — e.g., "Allemagne" for Germany, "Zhongguo"
+      for China.
+
+  - source: "USPS PO Box format guide"
+    url: "https://pe.usps.com/text/pub28/28c2_007.htm"
+    what_to_look_for: >
+      Official USPS PO Box addressing formats, including caller service,
+      highway contract route, and general delivery. Also APO/FPO/DPO
+      addressing standards per USPS Pub 28.
+
+  - source: "Known freight forwarder addresses (archive idea m06-freight-forwarder-denylist)"
+    url: null
+    what_to_look_for: >
+      Cross-reference with archive at
+      archive-2026-04-kyc-research/pipeline/outputs/ideas/m06-freight-forwarder-denylist/07-synthesis.md.
+      Known US-based freight forwarders: Shipito (Fresno, CA), MyUS
+      (Sarasota, FL), Planet Express (various), Stackry (Portland, ME).
+      Test whether their address formats trigger PO Box regex (most use
+      PMB or Suite numbers, not PO Boxes).
+
+  - source: "customers.csv"
+    what_to_look_for: >
+      Filter for country diversity — especially customers in Group D/E
+      countries (China, Russia, Iran) and customers whose country_raw field
+      uses non-standard names. Also check for any addresses containing
+      PO Box or APO/FPO patterns.
+
+  - source: "German/Dutch/Spanish PO Box formats"
+    url: null
+    what_to_look_for: >
+      The m03 synthesis covers 7 language families: English (PO Box, P.O.
+      Box, POB), German (Postfach), Spanish (Casilla, Apartado), French
+      (Boite Postale, BP), Portuguese (Caixa Postal), Dutch (Postbus).
+      Build test cases for each to verify regex coverage. Also test CJK
+      equivalents that the synthesis identifies as NOT covered.
+
+pre_committed_reasoning: |
+  This group is unusual because three of four endpoints are local logic (no
+  API calls) and the fourth is blocked. The testing challenge is not "does the
+  API return useful data" but "does the local logic handle edge cases correctly."
+
+  PO Box regex: The easy cases (standard "PO Box", "P.O. Box") will pass
+  trivially. The interesting adversarial surface is: (1) creative rewording
+  that avoids the "PO" prefix ("Post Office Lock Box", "Postal Box"),
+  (2) character substitution (zero-for-O: "P 0 Box"), (3) Unicode lookalikes
+  (Cyrillic, fullwidth characters), (4) non-English PO Box equivalents the
+  regex does cover (Postfach, Casilla, Postbus) vs. those it doesn't (CJK,
+  Arabic, Russian), and (5) false positives from legitimate addresses
+  containing "Box" (e.g., "123 Box Elder Lane"). The regex's value is mostly
+  deterrent — attackers avoid PO Boxes because they know this class of check
+  exists — so the adversarial testing should focus on what happens when an
+  attacker tries to sneak one past.
+
+  BIS Country Groups: The lookup itself is trivial (static table). The hard
+  part is upstream: ISO normalization must deliver the correct country code,
+  or the lookup fails catastrophically. The nightmare scenario is "Korea"
+  without a North/South qualifier mapping to the wrong one (Group A:1 vs.
+  Group E:1). Stage 3 should test: ambiguous country names, non-English names,
+  transliterated names, territory names (Hong Kong, Macau, Taiwan), and
+  recently changed country statuses. The false-positive burden for Group D
+  countries (~25-35% of international orders) is a known operational concern
+  but not something testable at the endpoint level — it's a policy question.
+
+  ISO normalization: This is the linchpin. If it fails, BIS country group
+  lookup fails. The adversarial surface includes: common abbreviations
+  (USA, UK, UAE, PRC), formal names vs. short names ("Iran, Islamic Republic
+  of" vs. "Iran"), non-English names ("Deutschland", "Rossiya", "Zhongguo"),
+  territories and special regions (Hong Kong as CN vs. HK, Taiwan as TW vs.
+  CN), disputed states (Kosovo XK), and the occupied-territory geofence
+  (Crimea, DPR, LPR — declared as "Russia" or "Ukraine"). The pycountry /
+  CLDR datasets handle many of these, but the geofence for sub-national
+  sanctioned territories is a custom addition that needs careful testing.
