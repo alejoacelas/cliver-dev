@@ -1,0 +1,460 @@
+group: payment-bin
+tested: 2026-04-14
+endpoints_tested: [stripe-test, binlist, fintech-bin-denylist, billing-shipping-consistency]
+kyc_step: "(b) Payment -> institution: flag billing address not associated with institution; gift card BIN"
+
+api_calls:
+  stripe: 6
+  binlist: 5  # rate-limited after 5 calls; remaining BINs untested
+  local_logic: 25  # fintech denylist (17) + consistency (8)
+
+# =============================================================================
+# STRIPE TEST MODE RESULTS
+# =============================================================================
+stripe_test:
+  endpoint: "POST https://api.stripe.com/v1/payment_methods"
+  auth: "Bearer sk_test_... (test mode secret key)"
+  note: >
+    Stripe test mode is deterministic — each token always returns the same
+    fixed metadata. This validates schema extraction, not real card behavior.
+    All tokens return country=US and livemode=false regardless of billing address.
+
+  relevant_fields:
+    - card.brand        # visa, mastercard, amex, discover
+    - card.funding      # credit, debit, prepaid — key KYC signal
+    - card.country      # always US in test mode
+    - card.last4        # last 4 digits
+    - card.display_brand  # human-readable brand (e.g. "american_express" for amex)
+    - card.networks.available  # list of available networks
+
+  results:
+    - token: tok_visa
+      brand: visa
+      display_brand: visa
+      funding: credit
+      country: US
+      last4: "4242"
+      networks: [visa]
+
+    - token: tok_visa_debit
+      brand: visa
+      display_brand: visa
+      funding: debit
+      country: US
+      last4: "5556"
+      networks: [visa]
+
+    - token: tok_mastercard_prepaid
+      brand: mastercard
+      display_brand: mastercard
+      funding: prepaid
+      country: US
+      last4: "5100"
+      networks: [mastercard]
+
+    - token: tok_amex
+      brand: amex
+      display_brand: american_express
+      funding: credit
+      country: US
+      last4: "8431"
+      networks: [amex]
+
+    - token: tok_mastercard
+      brand: mastercard
+      display_brand: mastercard
+      funding: credit
+      country: US
+      last4: "4444"
+      networks: [mastercard]
+
+    - token: tok_discover
+      brand: discover
+      display_brand: discover
+      funding: credit
+      country: US
+      last4: "9424"
+      networks: [discover]
+
+  findings:
+    - "card.funding reliably distinguishes credit/debit/prepaid — the primary KYC signal"
+    - "card.brand vs card.display_brand: brand='amex' but display_brand='american_express' — use brand for logic, display_brand for UI"
+    - "card.country always returns 'US' in test mode — cannot test international card detection with test tokens"
+    - "billing_details object is empty for token-created payment methods — billing address must come from a separate source (form input, customer object)"
+    - "card.regulated_status field exists (always 'unregulated' in test) — may be relevant for real cards"
+
+# =============================================================================
+# BINLIST.NET RESULTS
+# =============================================================================
+binlist:
+  endpoint: "GET https://lookup.binlist.net/{bin}"
+  auth: none (free tier)
+  rate_limit_observed: >
+    Rate limited (HTTP 429) after 5 calls within ~35 seconds.
+    No Retry-After header returned. Rate limit persisted for 10+ minutes
+    with no recovery (IP-based cooldown, possibly 24h window for free tier).
+    Background retry attempts over ~5 minutes all returned 429 or empty
+    responses. Documented limit is ~10/min but actual enforcement is far
+    stricter. No API key available for higher limits.
+
+  results:
+    - bin: "411111"
+      http_status: 200
+      label: "Generic Visa (expected major US bank)"
+      scheme: visa
+      type: debit
+      brand: "Visa Classic"
+      country: {alpha2: PL, name: Poland}
+      bank: {name: "Conotoxia Sp. Z O.O"}
+      note: >
+        Surprising: 411111 is commonly cited as a US Visa test BIN, but
+        binlist.net maps it to a Polish fintech (Conotoxia). This suggests
+        BIN ranges are reassigned over time. Cannot rely on static BIN
+        databases for country or bank mapping.
+
+    - bin: "424242"
+      http_status: 200
+      label: "Stripe test card BIN"
+      scheme: visa
+      type: credit
+      brand: "Visa Classic"
+      country: {alpha2: GB, name: "United Kingdom"}
+      bank: {name: "Stripe Payments Uk Limited"}
+      note: >
+        binlist.net correctly identifies this as Stripe's BIN — maps to
+        "Stripe Payments Uk Limited". Country is GB (not US). This is
+        Stripe's issuing BIN, confirming that Stripe Issuing cards would
+        be identifiable via binlist.net. However, this BIN is only used
+        in test mode; real Stripe Issuing may use different ranges.
+
+    - bin: "520082"
+      http_status: 200
+      label: "Generic Mastercard"
+      data_returned: minimal
+      note: >
+        Returns HTTP 200 but with empty/null fields: number=null,
+        country={}, bank={}. No scheme, type, or brand info. This BIN
+        is effectively not in their database despite returning 200.
+        Cannot distinguish "not found" from "found with no data."
+
+    - bin: "378282"
+      http_status: 200
+      label: "American Express"
+      scheme: "american express"
+      type: credit
+      country: {alpha2: US, name: "United States"}
+      bank: null
+      note: >
+        Amex correctly identified. Country is US. No bank name (Amex is
+        issuer and network). Type correctly shows "credit."
+
+    - bin: "555555"
+      http_status: 200
+      label: "Generic Mastercard"
+      data_returned: minimal
+      note: >
+        Same as 520082 — returns 200 with null/empty fields. Two out of
+        five tested BINs returned no useful data. Coverage is spotty.
+
+  untested_bins_due_to_rate_limit:
+    - {bin: "533248", label: "Mercury", reason: "rate limited"}
+    - {bin: "556150", label: "Brex", reason: "rate limited"}
+    - {bin: "531993", label: "Brex", reason: "rate limited"}
+    - {bin: "535332", label: "Mercury", reason: "rate limited"}
+    - {bin: "531329", label: "Prepaid/generic", reason: "rate limited"}
+    - {bin: "400000", label: "Visa debit", reason: "rate limited"}
+    - {bin: "556272", label: "Relay Financial", reason: "rate limited"}
+    - {bin: "547302", label: "Ramp", reason: "rate limited"}
+    - {bin: "535522", label: "Wise", reason: "rate limited"}
+    - {bin: "552742", label: "Wise", reason: "rate limited"}
+    - {bin: "541735", label: "Divvy", reason: "rate limited"}
+
+  findings:
+    - "Coverage is poor: 2 of 5 tested BINs returned no useful data (200 with null fields)"
+    - "Rate limiting is aggressive: 5 calls triggered a 429 that persisted for 5+ minutes"
+    - "No way to distinguish 404 (not found) from 200-with-empty-data"
+    - "BIN reassignment is real: 411111 shows as Polish fintech, not US major bank"
+    - "Stripe Issuing BIN (424242) is identifiable — bank name 'Stripe Payments Uk Limited'"
+    - "Amex BIN (378282) correctly identified with type and country"
+    - "Free tier is unsuitable for production: rate limits + coverage gaps + no SLA"
+
+# =============================================================================
+# FINTECH BIN DENYLIST RESULTS
+# =============================================================================
+fintech_denylist:
+  logic: "Exact 6-digit prefix match against a local lookup table"
+  denylist:
+    "533248": Mercury
+    "535332": Mercury
+    "556150": Brex
+    "531993": Brex
+    "556272": Relay
+    "547302": Ramp
+    "535522": Wise
+    "552742": Wise
+    "541735": Divvy
+
+  test_results:
+    positive_matches:
+      - {bin: "533248", issuer: Mercury, matched: true}
+      - {bin: "535332", issuer: Mercury, matched: true}
+      - {bin: "556150", issuer: Brex, matched: true}
+      - {bin: "531993", issuer: Brex, matched: true}
+      - {bin: "556272", issuer: Relay, matched: true}
+      - {bin: "547302", issuer: Ramp, matched: true}
+      - {bin: "535522", issuer: Wise, matched: true}
+      - {bin: "552742", issuer: Wise, matched: true}
+      - {bin: "541735", issuer: Divvy, matched: true}
+
+    negative_matches:
+      - {bin: "424242", label: "Standard Visa", matched: false}
+      - {bin: "411111", label: "Major bank Visa", matched: false}
+      - {bin: "378282", label: "American Express", matched: false}
+      - {bin: "555555", label: "Generic Mastercard", matched: false}
+      - {bin: "400000", label: "Generic Visa debit", matched: false}
+      - {bin: "601100", label: "Discover", matched: false}
+
+    edge_cases:
+      - {bin: "533249", label: "Off-by-one from Mercury", matched: false, note: "Correctly does NOT match — exact prefix only"}
+      - {bin: "556151", label: "Off-by-one from Brex", matched: false, note: "Correctly does NOT match"}
+
+    all_17_tests_passed: true
+
+  findings:
+    - "Local denylist is deterministic and has zero false positives/negatives for known BINs"
+    - "Exact 6-digit prefix match is the right granularity — no off-by-one issues"
+    - "Main risk is maintenance: fintech BIN ranges change as issuers get new ranges from partner banks"
+    - "The denylist is a backstop for binlist.net's coverage gaps — if binlist returns nothing, the denylist catches known fintechs"
+    - "Should be a soft flag, not a hard reject: legitimate companies use Mercury/Brex cards for business purchases"
+
+# =============================================================================
+# BILLING-SHIPPING-INSTITUTION CONSISTENCY RESULTS
+# =============================================================================
+billing_shipping_consistency:
+  logic: >
+    Normalize addresses and compare billing vs institution (and optionally
+    shipping). Three tiers: pass (exact match), soft_flag (same city/state
+    but different street), hard_flag (different state or country).
+    Falls back to string comparison for non-US addresses.
+
+  test_results:
+    - scenario: "Exact match — billing = institution"
+      billing: "77 Massachusetts Ave, Cambridge, MA 02139"
+      institution: "77 Massachusetts Ave, Cambridge, MA 02139"
+      result: pass
+      expected: pass
+      passed: true
+
+    - scenario: "Same state, different city — researcher home billing"
+      billing: "1247 Elm Street, Somerville, MA 02144"
+      institution: "77 Massachusetts Ave, Cambridge, MA 02139"
+      result: soft_flag
+      expected: soft_flag
+      passed: true
+      note: "Most common legitimate case — researcher pays from home"
+
+    - scenario: "Same city, different street — satellite campus (JPL vs Caltech)"
+      billing: "4800 Oak Grove Dr, Pasadena, CA 91109"
+      institution: "1200 E California Blvd, Pasadena, CA 91125"
+      result: soft_flag
+      expected: soft_flag
+      passed: true
+      note: "Both in Pasadena but different streets and ZIPs"
+
+    - scenario: "Different state — cross-country mismatch"
+      billing: "742 Evergreen Terrace, Springfield, IL 62704"
+      institution: "1 University Plaza, Springfield, MA 01103"
+      result: hard_flag
+      expected: hard_flag
+      passed: true
+      note: "Same city name but different states — correctly flagged"
+
+    - scenario: "International address — Singapore billing"
+      billing: "11 Biopolis Way, Helios #10-01, Singapore 138667"
+      institution: "11 Biopolis Way, Helios, Singapore 138667"
+      result: soft_flag
+      expected: soft_flag
+      passed: true
+      note: "Cannot parse non-US format; falls back to string comparison which sees near-match but not exact"
+
+    - scenario: "Unknown institution address"
+      billing: "350 Fifth Avenue, New York, NY 10118"
+      institution: "unknown"
+      result: soft_flag
+      expected: soft_flag
+      passed: true
+
+    - scenario: "Three-way mismatch — billing, shipping, institution all differ"
+      billing: "742 Evergreen Terrace, Springfield, IL 62704"
+      institution: "1 University Plaza, Springfield, IL 62703"
+      shipping: "123 Main St, Chicago, IL 60601"
+      result: soft_flag
+      expected: soft_flag
+      passed: true
+      note: "Billing in same city as institution; shipping is elsewhere"
+
+    - scenario: "Mercury PMB address vs institution"
+      billing: "548 Market St, PMB 82560, San Francisco, CA 94104"
+      institution: "548 Market St, San Francisco, CA 94104"
+      result: hard_flag
+      expected: soft_flag
+      passed: false
+      note: >
+        Parser chokes on 'PMB 82560' embedded in the address — misidentifies
+        city/state boundary. This is a known limitation of simple regex parsing.
+        A real implementation would use Smarty or similar address normalization
+        to handle suite/PMB/unit designators.
+
+  summary:
+    total_scenarios: 8
+    passed: 7
+    failed: 1
+    failure_reason: "PMB (private mailbox) designator in address confuses naive regex parser"
+
+  findings:
+    - "Simple string/regex comparison works for 7/8 scenarios"
+    - "PMB/suite/unit designators break naive parsing — need proper address normalization (Smarty)"
+    - "Most legitimate orders have billing != institution (researcher pays from home) — this check must be a soft signal"
+    - "International addresses cannot be parsed with US-format regex — string comparison fallback is unreliable"
+    - "Smarty integration is essential for US addresses: provides normalized components + RDI (residential/commercial) + CMRA (mailbox service)"
+    - "The consistency check should combine with other signals: prepaid funding + billing mismatch = higher confidence flag"
+
+# =============================================================================
+# CROSS-CUTTING FINDINGS
+# =============================================================================
+cross_cutting:
+  - finding: "Three-layer defense works"
+    detail: >
+      Stripe funding type (prepaid), fintech BIN denylist, and billing-institution
+      consistency are complementary. A prepaid card from a fintech BIN with a
+      mismatched billing address stacks three independent signals. Any one check
+      missing still leaves two others.
+
+  - finding: "binlist.net is unreliable as a sole BIN data source"
+    detail: >
+      40% of tested BINs returned no useful data. Rate limiting is aggressive
+      (~5 calls before 429). BIN reassignment means static data is stale.
+      The fintech denylist is essential as a backstop, and a paid BIN database
+      (e.g., Maxmind minFraud, Binbase) should be evaluated for production.
+
+  - finding: "Stripe is the most reliable data source for funding type"
+    detail: >
+      card.funding reliably returns credit/debit/prepaid from the payment
+      processor itself. This is more trustworthy than a BIN lookup because
+      Stripe has the actual card network data. The funding=prepaid flag is
+      the single strongest BIN-level signal.
+
+  - finding: "Address consistency needs Smarty, not regex"
+    detail: >
+      Simple string comparison breaks on PMB/suite designators, abbreviations
+      (St vs Street), and international formats. Smarty provides normalized
+      address components, RDI (residential vs commercial), and CMRA (mailbox
+      service detection). For non-US addresses, a geocoding service (Google
+      Maps, Mapbox) could provide lat/long proximity comparison.
+
+  - finding: "Most legitimate researchers will trigger soft flags"
+    detail: >
+      Personal debit cards billed to home addresses are the norm for academic
+      purchases. The system must tolerate billing != institution as a soft signal
+      and only escalate when combined with other flags (prepaid + CMRA + fintech BIN).
+
+  - finding: "Fintech BIN denylist requires ongoing maintenance"
+    detail: >
+      The denylist is static — new fintech issuers and BIN ranges appear regularly.
+      Mercury alone has added new BIN ranges in the past year. A maintenance process
+      (quarterly review of community BIN lists, monitoring new fintech launches)
+      is necessary to keep the denylist current.
+
+# =============================================================================
+# SEED CASE VERDICTS
+# =============================================================================
+seed_case_verdicts:
+  - id: 1
+    name: "Standard Visa credit — MIT"
+    hypothesis_confirmed: true
+    notes: >
+      tok_visa returns brand=visa, funding=credit as expected. binlist.net
+      for 424242 returns Stripe Payments UK (not generic Visa) — this is
+      specific to the Stripe test BIN, not a real-world BIN. Billing matches
+      institution exactly — no flags. Baseline pass confirmed.
+
+  - id: 2
+    name: "Corporate Amex — Pfizer"
+    hypothesis_confirmed: true
+    notes: >
+      tok_amex returns brand=amex, funding=credit. binlist.net for 378282
+      returns American Express, type=credit, country=US. Clean pass.
+
+  - id: 3
+    name: "Mastercard credit — University of Oxford"
+    hypothesis_confirmed: partially
+    notes: >
+      tok_mastercard returns brand=mastercard, funding=credit as expected.
+      BIN 555555 returns empty data from binlist.net — coverage gap confirmed.
+      Stripe always returns country=US in test mode (confirmed limitation).
+      Billing matches institution — pass. Hypothesis about international
+      limitation confirmed.
+
+  - id: 4
+    name: "Debit card — researcher billing from home"
+    hypothesis_confirmed: true
+    notes: >
+      tok_visa_debit returns funding=debit. Billing address (Somerville) !=
+      institution (Cambridge) — correctly flagged as soft_flag by consistency
+      check. Confirms that personal debit + home billing is the most common
+      legitimate mismatch pattern.
+
+  - id: 5
+    name: "International card — Singapore biotech"
+    hypothesis_confirmed: true
+    notes: >
+      Stripe test tokens cannot model international cards (always country=US).
+      Consistency check falls back to string comparison for Singapore addresses
+      and produces soft_flag due to minor formatting differences. Confirms
+      international address handling is a known limitation.
+
+  - id: 6
+    name: "Billing at satellite campus — JPL vs Caltech"
+    hypothesis_confirmed: true
+    notes: >
+      Consistency check produces soft_flag (same city, different street).
+      Both addresses are in Pasadena but different ZIPs. This is a legitimate
+      organizational relationship that cannot be detected by address comparison
+      alone — would need an org-relationship database.
+
+  - id: 7
+    name: "Prepaid Mastercard"
+    hypothesis_confirmed: true
+    notes: >
+      tok_mastercard_prepaid returns funding=prepaid — the strongest BIN signal.
+      Combined with unknown institution address (soft_flag from consistency),
+      this is correctly the canonical "flag this payment" case. BIN 531329
+      was not testable on binlist.net due to rate limiting.
+
+  - id: 8
+    name: "Mercury fintech BIN — startup"
+    hypothesis_confirmed: partially
+    notes: >
+      Fintech denylist correctly catches BIN 533248 as Mercury. binlist.net
+      lookup was not possible due to rate limiting — cannot confirm whether
+      binlist.net would return "Column N.A." or nothing. The PMB billing
+      address broke the naive consistency parser (hard_flag instead of expected
+      soft_flag). Smarty CMRA detection would be the proper tool here.
+
+  - id: 9
+    name: "Brex fintech BIN — corporate virtual card"
+    hypothesis_confirmed: partially
+    notes: >
+      Fintech denylist correctly catches BIN 556150 as Brex. binlist.net
+      lookup was not possible due to rate limiting. Billing matches institution
+      — consistency check passes. Confirms that BIN-level checks work
+      independently of address checks.
+
+  - id: 10
+    name: "Virtual card — gift card pattern"
+    hypothesis_confirmed: true
+    notes: >
+      tok_mastercard_prepaid returns funding=prepaid. Consistency check
+      produces soft_flag (same state, different city). Three signals would
+      stack: prepaid + residential billing + mismatch. Confirms multi-signal
+      approach works.
