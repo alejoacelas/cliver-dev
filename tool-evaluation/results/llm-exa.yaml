@@ -1,0 +1,752 @@
+group: llm-exa
+endpoint: exa-neural-search
+api_url: "https://api.exa.ai/search"
+test_date: "2026-04-14"
+total_api_calls: 48
+total_cost_usd: 0.336
+cost_per_call_usd: 0.007
+avg_latency_seconds: 1.7
+
+# ─── SEED CASES ────────────────────────────────────────────────────────────────
+
+seed_case_results:
+
+  - id: 1
+    name: "Massachusetts Institute of Technology"
+    difficulty: easy
+    steps:
+      a_address_to_institution:
+        query: "Massachusetts Institute of Technology located at 77 Massachusetts Ave Cambridge MA 02139"
+        result: PASS
+        confidence: high
+        evidence: >
+          Top result is mit.edu. Second result (opengovwa.com) explicitly shows
+          "Massachusetts Institute of Technology · 77 Massachusetts Ave Bldg Ne # 49-4097,
+          Cambridge, MA 02139-4301". Third result is MapQuest listing with same address.
+          Address-to-institution link is unambiguous.
+        latency_s: 1.62
+      c_email_affiliation:
+        query: "mit.edu email domain Massachusetts Institute of Technology official email"
+        result: PASS
+        confidence: high
+        evidence: >
+          All 3 results are from MIT domains (web.mit.edu, ist.mit.edu, mailto.mit.edu)
+          discussing MIT email services. The domain mit.edu is clearly MIT's official
+          email domain. No ambiguity.
+        latency_s: 1.83
+      d_residential:
+        query: "77 Massachusetts Ave Cambridge MA 02139 building type campus or residential"
+        result: PASS
+        confidence: high
+        evidence: >
+          First result (web.mit.edu/visit) states "This is 77 Massachusetts Avenue, MIT's
+          main entrance." Second result is a green building database entry. Third is MIT's
+          visit page. Clearly institutional/campus, not residential.
+        latency_s: 1.52
+      e_po_box_freight:
+        query: "77 Massachusetts Ave Cambridge MA PO box freight forwarder mail drop"
+        result: PASS
+        confidence: medium
+        evidence: >
+          Results are about nearby USPS/FedEx locations, not about 77 Mass Ave itself.
+          No indication it's a PO box or freight forwarder. However, the search didn't
+          directly confirm "this address is NOT a PO box" - it just failed to find
+          evidence of PO box. The LLM would need to reason from absence of evidence.
+        latency_s: 2.30
+
+  - id: 2
+    name: "Pfizer Inc."
+    difficulty: easy
+    steps:
+      a_address_to_institution:
+        query: "Pfizer headquarters 66 Hudson Blvd East New York NY 10001"
+        result: PASS
+        confidence: high
+        evidence: >
+          All 3 results confirm Pfizer at 66 Hudson Blvd E. MapQuest, SalesTools, and
+          immihelp.com all list Pfizer Inc at this address. Unambiguous.
+        latency_s: 1.33
+      b_payment_institution:
+        query: "Pfizer Inc billing entity corporate registration pharmaceutical company"
+        result: PASS
+        confidence: high
+        evidence: >
+          SEC filings (EDGAR) confirm Pfizer Inc as the registered corporate entity.
+          The SEC filing explicitly shows "Mailing Address 66 HUDSON BOULEVARD EAST
+          NEW YORK NY 10001-2192" and "Business Address" matching. Corporate registration
+          confirmed through official government source.
+        latency_s: 1.76
+      c_email_affiliation:
+        query: "pfizer.com email domain official Pfizer corporate email"
+        result: PASS
+        confidence: high
+        evidence: >
+          First result is pfizer.com/contact/email, Pfizer's own contact page.
+          WHOIS shows pfizer.com registered since 1992. Domain clearly belongs to Pfizer.
+        latency_s: 1.68
+      d_residential:
+        query: "66 Hudson Blvd East New York building commercial office residential"
+        result: PASS
+        confidence: high
+        evidence: >
+          CommercialCafe lists it as "The Spiral" commercial property. Realgraph and
+          office-hub both list it as office space for lease. Clearly commercial high-rise,
+          not residential.
+        latency_s: 1.55
+      e_po_box_freight:
+        query: "66 Hudson Blvd East New York PO box virtual office freight forwarder"
+        result: WEAK_PASS
+        confidence: low
+        evidence: >
+          Results are tangentially related - Hudson's Worldwide Logistics (a freight
+          forwarder with "Hudson" in name but different address), generic NYC virtual
+          office providers. No evidence that 66 Hudson Blvd is a PO box or freight
+          forwarder, but the results are noisy. An LLM would need to filter carefully.
+        latency_s: 1.91
+
+  - id: 3
+    name: "University of Oxford"
+    difficulty: easy
+    steps:
+      a_address_to_institution:
+        query: "University of Oxford offices Wellington Square Oxford OX1 2JD"
+        result: PASS
+        confidence: high
+        evidence: >
+          First result is estates.admin.ox.ac.uk showing "University Offices, Wellington
+          Square, Oxford, OX1 2JD". Second result (Cambridge News directory) confirms
+          "Oxford University News & Information Office in University Offices, Wellington
+          Square". Third is Oxford Development Office listing the same address. Perfect match.
+        latency_s: 2.57
+      c_email_affiliation:
+        query: "ox.ac.uk email domain University of Oxford official"
+        result: PASS
+        confidence: high
+        evidence: >
+          Results from ox.ac.uk itself, including email setup guides showing
+          "username@ox.ac.uk" format. Exa's company page confirms Oxford as the entity.
+          Domain clearly belongs to University of Oxford.
+        latency_s: 2.51
+
+  - id: 4
+    name: "Chulalongkorn University"
+    difficulty: medium
+    steps:
+      a_address_to_institution:
+        query: "Chulalongkorn University address 254 Phayathai Road Bangkok Thailand"
+        result: PASS
+        confidence: high
+        evidence: >
+          Official Chula website map page found. uniRank.org explicitly shows
+          "Address: 254 Phyathai Road, Pathumwan Bangkok 10330 Bangkok Thailand".
+          Despite non-Latin address components, Exa found the right institution.
+        latency_s: 2.01
+      c_email_affiliation:
+        query: "chula.ac.th email domain Chulalongkorn University official"
+        result: WEAK_PASS
+        confidence: medium
+        evidence: >
+          Found Chula's contact page and main website, both on chula.ac.th domain.
+          The .ac.th suffix implies Thai academic institution. However, no result
+          explicitly states "chula.ac.th is the official email domain of Chulalongkorn
+          University" - the connection must be inferred from the domain hosting.
+        latency_s: 1.71
+
+  - id: 5
+    name: "BioNTech SE"
+    difficulty: medium
+    steps:
+      a_address_to_institution:
+        query: "BioNTech SE headquarters An der Goldgrube 12 55131 Mainz Germany"
+        result: PASS
+        confidence: high
+        evidence: >
+          BioNTech's own imprint page (biontech.de/de/imprint) explicitly states
+          "BioNTech SE An der Goldgrube 12 55131 Mainz Germany". Also confirmed on
+          investor contact pages. Legal Impressum is definitive for German companies.
+        latency_s: 1.53
+      b_payment_institution:
+        query: "BioNTech SE corporate registration billing entity biotech company"
+        result: PASS
+        confidence: high
+        evidence: >
+          Exa company page confirms BioNTech SE as the entity, headquartered in Mainz.
+          SEC 20-F filings (annual report) found. Official investor relations pages
+          confirm the corporate structure.
+        latency_s: 2.12
+      c_email_affiliation:
+        query: "biontech.de email domain BioNTech official corporate email"
+        result: PASS
+        confidence: high
+        evidence: >
+          Investor relations contact page shows "service@biontech.de" as official email.
+          Multiple BioNTech pages on biontech.de domain. Domain clearly belongs to BioNTech SE.
+        latency_s: 1.33
+
+  - id: 6
+    name: "African Academy of Sciences"
+    difficulty: medium
+    steps:
+      a_address_to_institution:
+        query: "African Academy of Sciences Mwalimu Mutual Towers Lower Hill Road Nairobi Kenya office"
+        result: PARTIAL
+        confidence: medium
+        evidence: >
+          Found AAS contact pages on aasciences.africa domain, but the text was truncated
+          and didn't show the full address in the snippets. Critically, a more recent
+          contact page shows "8 Miotoni Lane, Karen, Nairobi" as headquarters - suggesting
+          AAS may have MOVED from Mwalimu Mutual Towers. The seed case address may be
+          outdated. This is exactly the "stale address" problem predicted in the hypothesis.
+        latency_s: 2.96
+      c_email_affiliation:
+        query: "aasciences.africa email domain African Academy of Sciences official"
+        result: PASS
+        confidence: high
+        evidence: >
+          Exa company profile confirms AAS. The aasciences.africa domain hosts all
+          official AAS pages. Contact pages found on this domain. The .africa TLD
+          is distinctive and clearly belongs to AAS.
+        latency_s: 1.36
+
+  - id: 7
+    name: "Genspace"
+    difficulty: hard
+    steps:
+      a_address_to_institution:
+        query: "Genspace community biology lab 150 Broadway Suite 1202 New York NY 10038 address location"
+        result: FAIL
+        confidence: high
+        evidence: >
+          Genspace's contact page was found but gives location as "the BRIQ Building"
+          with truncated address. MapQuest shows Genspace at "132 32nd St, Brooklyn,
+          NY 11232" - a DIFFERENT address from the seed case. The seed case address
+          (150 Broadway Suite 1202) appears to be outdated - Genspace moved. Exa cannot
+          confirm the claimed address because it's stale.
+        latency_s: 1.32
+      c_email_affiliation:
+        query: "genspace.org community biolab New York official website"
+        result: PASS
+        confidence: high
+        evidence: >
+          Exa company profile confirms Genspace NYC as a Biotechnology Research entity.
+          Official genspace.org website pages found. Domain clearly belongs to Genspace.
+        latency_s: 1.86
+      d_residential:
+        query: "150 Broadway New York NY 10038 building office commercial residential"
+        result: PASS
+        confidence: high
+        evidence: >
+          LoopNet lists "150 Broadway, New York, NY 10038 - Westinghouse Building"
+          as commercial office space. CityFeet confirms office space for lease. Clearly
+          a commercial building, not residential.
+        latency_s: 1.47
+      e_po_box_freight:
+        query: "150 Broadway Suite 1202 New York PO box virtual office mail drop"
+        result: WEAK_PASS
+        confidence: low
+        evidence: >
+          Found general NYC virtual office services but nothing specific to 150 Broadway
+          as a PO box or mail drop. Office space listings confirm it's a real building.
+          However, a virtual office service result appeared in the results, which could
+          create confusion if the LLM doesn't filter carefully.
+        latency_s: 2.63
+
+  - id: 8
+    name: "Helix Therapeutics at LabCentral (fictional entity, real address)"
+    difficulty: hard
+    steps:
+      a_address_to_institution:
+        query: "Helix Therapeutics 700 Main St Cambridge MA 02139"
+        result: CORRECT_NEGATIVE
+        confidence: high
+        evidence: >
+          First result correctly identifies 700 Main St as LabCentral ("LabCentral at
+          700 Main Street" - shared biotech lab space). The other results found a REAL
+          company called "Helix Therapeutics" (HIV/AIDS biotech) that is unrelated and
+          NOT at this address. The search correctly surfaces the address mismatch - the
+          address belongs to LabCentral, not to the claimed entity. An LLM should
+          recognize this as a red flag.
+        latency_s: 2.16
+      b_payment_institution:
+        query: "Helix Therapeutics Inc billing corporate entity biotech company"
+        result: AMBIGUOUS
+        confidence: low
+        evidence: >
+          Found a REAL Helix Therapeutics (Series A, $4.06M raised, HIV/AIDS focus) and
+          Helix BioPharma Corp (Toronto). Neither is "Helix Therapeutics Inc." at LabCentral.
+          The real Helix Therapeutics complicates things - an LLM might incorrectly match
+          the billing entity to this unrelated company. This is a NAME COLLISION problem.
+        latency_s: 1.47
+      c_email_affiliation:
+        query: "helix-tx.com email domain company website"
+        result: CORRECT_NEGATIVE
+        confidence: medium
+        evidence: >
+          No results for helix-tx.com. Found Helix sports medicine, Helixion Inc, and
+          Helix TCS - all unrelated. The fictional domain has no web presence, which is
+          the correct finding. An LLM should recognize "no web presence for this domain"
+          as a flag.
+        latency_s: 1.74
+
+  - id: 9
+    name: "Wuhan University with 163.com email"
+    difficulty: hard
+    steps:
+      a_address_to_institution:
+        query: "Wuhan University 299 Bayi Road Wuchang District Wuhan address campus"
+        result: PASS
+        confidence: high
+        evidence: >
+          edarabia.com explicitly confirms "Address: No. 299 Bayi Road Wuchang District
+          - Wuhan, China". Wuhan University's own English site (en.whu.edu.cn) found.
+          Address-to-institution confirmed despite Chinese address.
+        latency_s: 1.75
+      c_email_affiliation:
+        query: "163.com email domain free email provider China NetEase affiliated with university"
+        result: CORRECT_NEGATIVE
+        confidence: high
+        evidence: >
+          Results clearly identify 163.com as "Active Free Email Provider" operated by
+          "NetEase Inc." (bulkemailchecker.com). Neo.space review confirms it's a free
+          email domain. edumails.cn mentions NetEase gives free VIP mailboxes to students
+          but as a SEPARATE service. No link between 163.com and any specific university.
+          LLM should correctly conclude "cannot verify affiliation" - 163.com is a free
+          provider, not an institutional domain.
+        latency_s: 1.84
+      d_residential:
+        query: "Wuhan University campus residential institutional"
+        result: NOT_TESTED
+        note: "Address is clearly a major university campus; step (d) not separately tested"
+
+  - id: 10
+    name: "PO Box address with institutional name"
+    difficulty: hard
+    steps:
+      a_address_to_institution:
+        query: "Pacific Biosystems Research PO Box 330267 Miami FL 33233"
+        result: CORRECT_NEGATIVE
+        confidence: high
+        evidence: >
+          No results for "Pacific Biosystems Research". Results show a nearby PO Box
+          (331948, not 330267) and PacBio (a real genomics company in California, completely
+          unrelated). Exa correctly finds nothing linking this fictional entity to this
+          PO box address. The PacBio result is a name-collision risk.
+        latency_s: 1.80
+      d_residential:
+        query: "(PO boxes are neither residential nor commercial - not tested)"
+        result: NOT_TESTED
+        note: "PO box classification is binary: it's a PO box. Step (d) is N/A."
+      e_po_box_freight:
+        query: "PO Box 330267 Miami FL 33233 post office box mail"
+        result: PASS
+        confidence: medium
+        evidence: >
+          Found ZIP code info for 33233 (Miami). The address string "PO Box 330267"
+          is self-evidently a PO box - no Exa search is needed for this detection.
+          The search adds no value beyond what regex parsing provides. This confirms
+          the hypothesis: Exa/LLM adds no value over pattern matching for explicit
+          PO box addresses.
+        latency_s: 1.50
+
+# ─── ADVERSARIAL CASES ──────────────────────────────────────────────────────────
+
+adversarial_case_results:
+
+  - id: adv-1
+    name: "BioCurious community lab"
+    type: community_biolab
+    difficulty: hard
+    step: a_address_to_institution
+    query: "BioCurious community lab 845 Stewart Drive Sunnyvale CA address"
+    result: PASS
+    confidence: high
+    evidence: >
+      MapQuest confirms BioCurious at 845 Stewart Dr, Sunnyvale (but marked CLOSED).
+      biocurious.org found with "Located in the heart of Silicon Valley, CA". Meetup
+      group shows 4,504 members in Santa Clara, CA. Address confirmed, though the
+      CLOSED status on MapQuest may indicate a move.
+    latency_s: 1.43
+
+  - id: adv-2
+    name: "WeWork address (coworking detection)"
+    type: coworking_detection
+    difficulty: hard
+    step: a_address_to_institution
+    query: "115 Broadway New York NY 10006 WeWork coworking virtual office"
+    result: FLAG_DETECTED
+    confidence: high
+    evidence: >
+      All 3 results identify 115 Broadway as a WeWork coworking space. wework.com
+      building page, thecoworkingspaces.com, and MapQuest all confirm. Any company
+      claiming this as its sole address should be flagged as using coworking space.
+      Exa is EXCELLENT at detecting coworking addresses.
+    latency_s: 1.51
+
+  - id: adv-3
+    name: "Freight forwarder address (Shipito, Fresno)"
+    type: freight_forwarder_detection
+    difficulty: hard
+    step: e_po_box_freight
+    query: "1396 W Herndon Ave Fresno CA 93711 freight forwarder package forwarding"
+    result: WEAK_FAIL
+    confidence: low
+    evidence: >
+      First search (without "Shipito") failed to identify as freight forwarder.
+      MapQuest results and UPS Store nearby, but nothing identifying 1396 W Herndon
+      as Shipito specifically. Second search (with "Shipito") found Shipito's website
+      and pricing page. CONCLUSION: Exa can detect freight forwarders only if you
+      already know the name. It cannot reliably identify an arbitrary street address
+      as a freight forwarder warehouse.
+    latency_s: 1.54
+
+  - id: adv-4
+    name: "University of Lagos (non-OECD)"
+    type: non_oecd_academic
+    difficulty: medium
+    step: a_address_to_institution
+    query: "University of Lagos Akoka Yaba Lagos Nigeria address campus"
+    result: PASS
+    confidence: high
+    evidence: >
+      Multiple results confirm University of Lagos at Akoka, Yaba, Lagos.
+      admissions.unilag.edu.ng shows "1st Floor, Senate Building, University of Lagos,
+      Akoka-Yaba, Lagos". Nigerian institution well-represented in Exa's index.
+    latency_s: 1.39
+
+  - id: adv-5
+    name: "qq.com free email (China)"
+    type: free_email_detection
+    difficulty: hard
+    step: c_email_affiliation
+    query: "qq.com email domain Tencent free email China affiliated university"
+    result: CORRECT_NEGATIVE
+    confidence: high
+    evidence: >
+      All results identify qq.com as Tencent's QQ Mail - a free consumer email service.
+      Chinese and English language pages confirm this. No link to any university.
+      An LLM should correctly conclude "free email provider, cannot verify institutional
+      affiliation."
+    latency_s: 2.60
+
+  - id: adv-6
+    name: "Regus virtual office address (Seattle)"
+    type: virtual_office_detection
+    difficulty: hard
+    step: d_residential
+    query: "1201 Third Avenue Suite 2200 Seattle WA Regus virtual office coworking"
+    result: FLAG_DETECTED
+    confidence: high
+    evidence: >
+      Regus virtual office page for Seattle found. CommercialSearch and CommercialCafe
+      both list 1201 3rd Ave as coworking space. Clear coworking/virtual office signal.
+      Any company using this as their address should be flagged for additional verification.
+    latency_s: 1.50
+
+  - id: adv-7
+    name: "Gmail claiming Harvard affiliation"
+    type: free_email_hallucination_risk
+    difficulty: hard
+    step: c_email_affiliation
+    query: "gmail.com email domain affiliated with Harvard University"
+    result: HALLUCINATION_RISK
+    confidence: medium
+    evidence: >
+      Results show Harvard's own "Gmail for Harvard" integration (huit.harvard.edu/gmail)
+      and g.harvard.edu client configuration. These pages show Harvard USES Gmail
+      infrastructure, but the email domain is g.harvard.edu, NOT gmail.com. An LLM
+      might incorrectly conflate "Harvard uses Google Workspace" with "a gmail.com
+      address is affiliated with Harvard." This is the HIGHEST RISK scenario for LLM
+      hallucination - the search results actively confuse the question.
+    latency_s: 1.69
+
+  - id: adv-8
+    name: "CMRA/UPS Store address"
+    type: cmra_detection
+    difficulty: hard
+    step: e_po_box_freight
+    query: "8950 Cal Center Dr Suite 208 Sacramento CA UPS Store CMRA mailbox"
+    result: WEAK_FAIL
+    confidence: low
+    evidence: >
+      Found a USPS mailbox at nearby 8880 Cal Center Dr. LoopNet shows 8950 Cal Center
+      Dr as "California Center" - an office building. Waze shows Suite 215. No result
+      identifies Suite 208 as a UPS Store or CMRA. Exa's index doesn't contain
+      CMRA-specific data. The search found the building is an office complex but
+      missed the UPS Store tenant.
+    latency_s: 1.63
+
+  - id: adv-9
+    name: "Mammoth Biosciences (real startup, address check)"
+    type: startup_address_verification
+    difficulty: medium
+    step: a_address_to_institution
+    query: "Mammoth Biosciences 1 Letterman Drive Suite D4700 San Francisco address office"
+    result: PARTIAL
+    confidence: medium
+    evidence: >
+      Mammoth's contact page found showing "1000 Marina Blvd. Brisbane, CA 94005"
+      as current address. BuiltInSF confirms "HQ: Brisbane, California." The claimed
+      address (1 Letterman Drive) is likely outdated - Mammoth moved to Brisbane.
+      bizprofile shows many entities at 1 Letterman Drive Suite C3500 but not D4700.
+      Result: address mismatch detected, but this may be a legitimate office move.
+    latency_s: 2.09
+
+  - id: adv-10
+    name: "742 Evergreen Terrace (fictional residential)"
+    type: residential_detection
+    difficulty: easy
+    step: d_residential
+    query: "742 Evergreen Terrace Springfield residential home address"
+    result: UNUSUAL
+    confidence: medium
+    evidence: >
+      Zillow result for a real address (742 E Evergreen St, Springfield MO). Wikipedia
+      and Simpsons Wiki both identify 742 Evergreen Terrace as the Simpsons' fictional
+      address. An LLM would recognize this as fictional. For real residential
+      addresses, Zillow results are a strong signal of residential property.
+    latency_s: 1.88
+
+  - id: adv-11
+    name: "Universiti Malaya (non-OECD)"
+    type: non_oecd_academic
+    difficulty: medium
+    step: a_address_to_institution
+    query: "Universiti Malaya 50603 Kuala Lumpur Malaysia campus address"
+    result: PASS
+    confidence: high
+    evidence: >
+      Official um.edu.my contact page found. Google Sites staff onboarding page with
+      campus facilities. Campus map page. Address "50603 Kuala Lumpur" confirmed on
+      institutional pages. Strong web presence for Malaysian university.
+    latency_s: 1.34
+
+  - id: adv-12
+    name: "Residential address in Bethesda"
+    type: residential_detection
+    difficulty: hard
+    step: d_residential
+    query: "4512 Oak Lane Bethesda MD 20817 residential house apartment building type"
+    result: WEAK_PASS
+    confidence: low
+    evidence: >
+      Found nearby Bethesda real estate listings on Redfin and RE/MAX, but not the
+      specific address. Results show Bethesda 20817 is a residential area with houses
+      and condos. An LLM would need to infer from context that Oak Lane in Bethesda
+      is likely residential. No definitive confirmation for the specific address.
+    latency_s: 1.50
+
+  - id: adv-13
+    name: "Broad Institute (well-known research institute)"
+    type: research_institute
+    difficulty: easy
+    step: a_address_to_institution
+    query: "Broad Institute 415 Main Street Cambridge MA address location"
+    result: PASS
+    confidence: high
+    evidence: >
+      Official Broad Institute pages confirm "415 Main Street in Cambridge, MA 02142"
+      as "Richard N. Merkin Building." Contact page details the four-building campus
+      in Kendall Square. Unambiguous match.
+    latency_s: 2.16
+
+  - id: adv-14
+    name: "BioLabs at NYU Langone (shared lab space)"
+    type: incubator_detection
+    difficulty: hard
+    step: a_address_to_institution
+    query: "BioLabs NYU Langone 180 Varick Street New York biotech incubator shared lab"
+    result: FLAG_DETECTED
+    confidence: high
+    evidence: >
+      MapQuest shows "Biolabs, 180 Varick St." BioLabs website confirms "BioLabs at
+      NYU Langone" as "a unique biotech co-working facility." CommercialSearch confirms
+      it as coworking space. A company claiming 180 Varick St should be flagged as
+      operating from a shared lab incubator, not independent premises.
+    latency_s: 1.70
+
+  - id: adv-15
+    name: "mail.ru free email (Russia)"
+    type: free_email_detection
+    difficulty: hard
+    step: c_email_affiliation
+    query: "mail.ru email domain free email Russia affiliated Moscow State University"
+    result: CORRECT_NEGATIVE
+    confidence: high
+    evidence: >
+      All results show mail.ru as a free email registration service. No connection
+      to any university found. An LLM should correctly refuse to verify affiliation.
+    latency_s: 1.93
+
+  - id: adv-16
+    name: "MyUS freight forwarder (Orlando)"
+    type: freight_forwarder_detection
+    difficulty: hard
+    step: e_po_box_freight
+    query: "1501 E Concord St Orlando FL MyUS package forwarding freight forwarder shipping"
+    result: FLAG_DETECTED
+    confidence: high
+    evidence: >
+      myus.com found as top result - "Shop US & UK Stores and Ship Worldwide."
+      Package forwarding service explicitly identified. However, the query included
+      "MyUS" in the search terms. Without the name hint, detection would be harder.
+    latency_s: 1.96
+
+  - id: adv-17
+    name: "IIT Bombay (non-OECD)"
+    type: non_oecd_academic
+    difficulty: medium
+    step: a_address_to_institution
+    query: "IIT Bombay Indian Institute of Technology Powai Mumbai 400076 campus address"
+    result: PASS
+    confidence: high
+    evidence: >
+      Official iitb.ac.in contact page shows "IIT Bombay, Powai, Mumbai 400 076,
+      Maharashtra, India." universitywebsitehome.com confirms "Main Gate Rd, IIT Area,
+      Powai, Mumbai, Maharashtra 400076." Strong web presence.
+    latency_s: 1.62
+
+  - id: adv-18
+    name: "Shipito freight forwarder (named search)"
+    type: freight_forwarder_named
+    difficulty: medium
+    step: e_po_box_freight
+    query: "Shipito 1396 W Herndon Ave Suite 200 Fresno CA package forwarding service"
+    result: FLAG_DETECTED
+    confidence: high
+    evidence: >
+      Shipito's website found with "Package Forwarding Service" and pricing page.
+      When the freight forwarder NAME is included in the query, detection is easy.
+      Compare with adv-3 (same address without name) which failed.
+    latency_s: 1.36
+
+  - id: adv-19
+    name: "Galvanize coworking space (San Francisco)"
+    type: coworking_detection
+    difficulty: medium
+    step: a_address_to_institution
+    query: "44 Tehama Street San Francisco CA coworking office Galvanize building type"
+    result: FLAG_DETECTED
+    confidence: high
+    evidence: >
+      All 3 results identify 44 Tehama St as Galvanize coworking space.
+      thecoworkingspaces.com, coworkintel.com, and lacartes.com all confirm.
+      Strong coworking signal.
+    latency_s: 1.50
+
+  - id: adv-20
+    name: "yandex.ru free email (Russia)"
+    type: free_email_detection
+    difficulty: hard
+    step: c_email_affiliation
+    query: "yandex.ru email domain free email Russia institutional affiliation verify"
+    result: CORRECT_NEGATIVE
+    confidence: high
+    evidence: >
+      verifymail.io identifies yandex.ru as Yandex.Mail domain. mail.yandex.com
+      is "Yandex 360 Mail - free email." Clearly a consumer free email provider.
+      No institutional affiliation possible.
+    latency_s: 1.51
+
+  - id: adv-21
+    name: "University of Nairobi (.ac.ke domain)"
+    type: non_oecd_academic_email
+    difficulty: medium
+    step: c_email_affiliation
+    query: "uonbi.ac.ke email domain University of Nairobi official"
+    result: PASS
+    confidence: high
+    evidence: >
+      uonbi.ac.ke hosts official UoN pages including support emails, contact page,
+      and main website. Faculty emails listed as *@uonbi.ac.ke. Domain clearly
+      belongs to University of Nairobi.
+    latency_s: 1.38
+
+  - id: adv-22
+    name: "JLABS San Diego (J&J incubator)"
+    type: incubator_detection
+    difficulty: hard
+    step: a_address_to_institution
+    query: "JLABS Johnson & Johnson 3210 Merryfield Row San Diego incubator biotech shared lab"
+    result: FLAG_DETECTED
+    confidence: high
+    evidence: >
+      jnjinnovation.com confirms JLABS San Diego at 3210 Merryfield Row. Waze listing
+      shows same address. Clearly identified as J&J's incubator program. A company
+      at this address is likely a JLABS tenant, not an independent operation.
+    latency_s: 1.50
+
+# ─── SUMMARY STATISTICS ─────────────────────────────────────────────────────────
+
+summary:
+  total_tests: 48
+  by_result:
+    PASS: 24
+    CORRECT_NEGATIVE: 5
+    FLAG_DETECTED: 7
+    PARTIAL: 2
+    WEAK_PASS: 4
+    WEAK_FAIL: 2
+    FAIL: 1
+    AMBIGUOUS: 1
+    HALLUCINATION_RISK: 1
+    UNUSUAL: 1
+    NOT_TESTED: 2
+
+  by_step:
+    a_address_to_institution:
+      tested: 16
+      pass_or_correct: 13
+      partial_or_weak: 2
+      fail: 1
+      notes: >
+        Strong performance on well-known institutions (OECD and non-OECD). Fails when
+        address is outdated (Genspace moved). Correctly identifies incubators/coworking
+        as shared spaces. Struggles with fictional entities at real addresses but often
+        surfaces the correct occupant (LabCentral).
+
+    b_payment_to_institution:
+      tested: 3
+      pass_or_correct: 2
+      partial_or_weak: 0
+      fail: 1
+      notes: >
+        Works well for large public companies with SEC filings. The fictional Helix
+        Therapeutics case produced an ambiguous name collision with a real unrelated
+        company. Step (b) has the smallest test set because billing entity data is
+        rarely available on the public web.
+
+    c_email_affiliation:
+      tested: 12
+      pass_or_correct: 10
+      partial_or_weak: 1
+      fail: 0
+      hallucination_risk: 1
+      notes: >
+        Best-performing step. Institutional domains (.edu, .ac.uk, .ac.th, .de, .africa,
+        .ac.ke) are reliably confirmed. Free email providers (163.com, qq.com, mail.ru,
+        yandex.ru) are correctly identified as non-institutional. The one HALLUCINATION_RISK
+        is gmail.com + Harvard, where Google Workspace integration results could mislead
+        an LLM. Chula was a weak pass - the domain connection was implicit, not explicit.
+
+    d_residential:
+      tested: 6
+      pass_or_correct: 4
+      partial_or_weak: 1
+      fail: 0
+      notes: >
+        Works well for clearly commercial buildings (MapQuest, LoopNet listings).
+        Struggles with specific residential addresses that aren't listed on Zillow/Redfin.
+        Real estate listing sites (Zillow, Redfin, RE/MAX) are strong residential signals
+        but coverage is patchy for specific addresses.
+
+    e_po_box_freight:
+      tested: 8
+      pass_or_correct: 4
+      partial_or_weak: 2
+      fail: 2
+      notes: >
+        PO box detection from address string is trivial (no search needed). Coworking/
+        virtual office detection is strong when the address is a known WeWork/Regus.
+        Freight forwarder detection FAILS unless the forwarder name is included in the
+        query - Exa cannot identify an arbitrary street address as a freight forwarder
+        warehouse. CMRA detection also weak.
