@@ -1,0 +1,246 @@
+group: docs-only
+endpoints: [stripe-avs-prod, plaid-prod]
+kyc_steps: [b]
+
+# These endpoints cannot be tested live. Stripe AVS requires real charges against
+# real cards; Plaid Identity Match requires production credentials and real bank
+# connections via Plaid Link. The "seed cases" below are scenarios we WOULD test
+# if we had production access, informed by documentation review and sandbox observations.
+
+seed_cases:
+  - id: 1
+    scenario: "US credit card, billing address matches institution"
+    endpoint: stripe-avs-prod
+    difficulty: easy
+    description: |
+      US-issued Visa credit card. Customer enters billing address that matches
+      the card issuer's records and geocodes to the claimed institution.
+    expected_avs:
+      address_line1_check: pass
+      address_postal_code_check: pass
+    hypothesis: |
+      Should return full AVS pass. US issuers have the strongest AVS support.
+      This is the baseline "everything works" case. In production, the interesting
+      question is whether the risk_score differs meaningfully from test mode's
+      deterministic 26.
+
+  - id: 2
+    scenario: "International card from non-AVS country"
+    endpoint: stripe-avs-prod
+    difficulty: hard
+    description: |
+      Card issued in a country where issuers do not support AVS (e.g., India,
+      Brazil, most of Africa/Southeast Asia). Customer enters a billing address,
+      but the issuer returns no AVS data.
+    expected_avs:
+      address_line1_check: unavailable
+      address_postal_code_check: unavailable
+    hypothesis: |
+      This is the critical gap. Documentation says many international issuers return
+      null/unavailable for AVS. Production testing would reveal the actual fraction
+      of international cards that return usable AVS data. For KYC purposes, an
+      "unavailable" AVS result means the billing-to-institution check cannot be
+      performed via Stripe alone -- you must fall back to other signals.
+
+  - id: 3
+    scenario: "Corporate procurement card (P-card) with centralized billing"
+    endpoint: stripe-avs-prod
+    difficulty: medium
+    description: |
+      University or corporate P-card where the billing address on file with the
+      issuer is the finance department's address, not the lab's shipping address.
+      AVS line1 may fail while postal code passes (if same city) or both may fail
+      (if finance office is in a different city).
+    expected_avs:
+      address_line1_check: fail
+      address_postal_code_check: uncertain  # depends on whether finance office is same zip
+    hypothesis: |
+      Legitimate institutional purchases via P-cards will produce AVS mismatches
+      that look identical to suspicious ones. Production testing would quantify
+      how often P-card billing addresses differ from lab/shipping addresses at
+      major universities. This is a known false-positive generator.
+
+  - id: 4
+    scenario: "Prepaid card with registered address"
+    endpoint: stripe-avs-prod
+    difficulty: hard
+    description: |
+      Prepaid Visa/Mastercard where the buyer registered an address when activating
+      the card. AVS may pass (matches the activation address), but the card is
+      still anonymous. The funding=prepaid field is the real signal, not AVS.
+    expected_avs:
+      address_line1_check: pass  # matches activation address, not institution
+      address_postal_code_check: pass
+    hypothesis: |
+      AVS pass on a prepaid card is meaningless for institutional verification --
+      the activation address can be anything. Production testing would confirm
+      that funding type detection (credit/debit/prepaid) is reliable across
+      issuers. Test mode already shows this field, but production may reveal
+      edge cases (corporate virtual cards classified as prepaid, etc.).
+
+  - id: 5
+    scenario: "US ACH payment, name and address match bank records"
+    endpoint: plaid-prod
+    difficulty: easy
+    description: |
+      US customer pays via ACH. They complete Plaid Link, connecting their
+      Chase/BofA/Wells Fargo checking account. The name and address they entered
+      on the order match what the bank has on file.
+    expected_match:
+      legal_name_score: ">= 90"
+      address_score: ">= 80"
+      email_score: varies
+      phone_score: varies
+    hypothesis: |
+      Should return high match scores. The interesting production question is how
+      the continuous scores (0-100) behave for slight variations -- middle name
+      included vs. omitted, apartment number differences, etc. Sandbox only
+      returns binary 0/100.
+
+  - id: 6
+    scenario: "Third-party payment -- different person's bank account"
+    endpoint: plaid-prod
+    difficulty: hard
+    description: |
+      Customer claims to be Dr. X at University Y, but pays via ACH using a bank
+      account belonging to a different person (spouse, lab manager, or unrelated
+      third party). Name mismatch is the primary signal.
+    expected_match:
+      legal_name_score: "< 30"
+      address_score: varies
+      email_score: "< 30"
+      phone_score: varies
+    hypothesis: |
+      Production testing would reveal how well Plaid handles legitimate third-party
+      payment scenarios (e.g., lab manager pays from departmental account, joint
+      account with spouse). The is_business_name_detected flag is relevant -- if
+      the bank account is in the university's name, it may trigger differently.
+      Also need to test how many US banks actually return identity data via Plaid
+      vs. returning empty/null fields.
+
+documentation_findings:
+  stripe_avs:
+    summary: |
+      Stripe AVS checks the billing address a customer enters at checkout against
+      what the card-issuing bank has on file. Results are returned per-field:
+      address_line1_check and address_postal_code_check, each returning pass/fail/
+      unavailable/unchecked. AVS is performed as part of the charge -- you cannot
+      get AVS results without creating a charge or SetupIntent.
+
+    coverage_by_region:
+      strong: [US, UK, CA]
+      partial: [AU, NZ, IE]
+      weak_or_null: |
+        Most countries outside the above. Many European, Asian, African, and South
+        American issuers return "unavailable" for AVS. Stripe documentation does
+        not publish an exhaustive country-by-country matrix -- it depends on the
+        individual issuing bank, not just the country.
+
+    key_fields:
+      - field: "payment_method_details.card.checks.address_line1_check"
+        values: [pass, fail, unavailable, unchecked]
+        notes: "Street address match. Only available after charge."
+      - field: "payment_method_details.card.checks.address_postal_code_check"
+        values: [pass, fail, unavailable, unchecked]
+        notes: "Postal/zip code match. Only available after charge."
+      - field: "card.funding"
+        values: [credit, debit, prepaid]
+        notes: "Available on PaymentMethod creation (before charge). Prepaid = hard flag."
+      - field: "card.country"
+        values: "ISO 3166-1 alpha-2"
+        notes: "Card-issuing country from BIN. Available before charge."
+      - field: "outcome.risk_score"
+        values: "0-100"
+        notes: "Stripe Radar score. Requires Radar (included on standard pricing)."
+
+    limitations:
+      - "AVS is US/UK/CA-centric. Many international issuers return unavailable."
+      - "AVS pass does NOT prove institutional affiliation -- only that the billing address is correct."
+      - "Prepaid cards can pass AVS (against their activation address) while being anonymous."
+      - "No issuer bank name in standard API. Need Radar or third-party BIN lookup."
+      - "Corporate virtual cards may show as funding=prepaid, creating false positives."
+      - "Test mode returns deterministic results per token -- cannot validate real issuer behavior."
+
+    cost: "$0.30 + 2.9% per charge (standard Stripe pricing). No separate AVS fee."
+
+  plaid_identity_match:
+    summary: |
+      Plaid Identity Match compares customer-provided identity fields (name,
+      address, email, phone) against identity data held by the customer's bank.
+      Returns per-field match scores from 0 to 100. Requires the customer to
+      complete Plaid Link (bank authentication widget) -- cannot run silently.
+
+    coverage:
+      geographic: "US bank accounts only. No international coverage."
+      bank_support: |
+        Not all US banks return identity data via Plaid. Larger banks (Chase, BofA,
+        Wells Fargo, Citi) generally do. Smaller credit unions and community banks
+        may not. Plaid does not publish a bank-by-bank support matrix.
+
+    key_fields:
+      - field: "legal_name.score"
+        type: "0-100 continuous"
+        notes: "Fuzzy name match. Handles nicknames (is_nickname_match), partial matches (is_first_name_or_last_name_match), business names (is_business_name_detected)."
+      - field: "address.score"
+        type: "0-100 continuous"
+        notes: "Address match with is_postal_code_match boolean for partial match cases."
+      - field: "email_address.score"
+        type: "0-100 continuous"
+        notes: "Email match. Many bank customers don't update their email, so mismatches may be benign."
+      - field: "phone_number.score"
+        type: "0-100 continuous"
+        notes: "Phone match. Same caveat as email -- bank records may be stale."
+
+    limitations:
+      - "US only. International ACH alternatives (SEPA, etc.) are not covered."
+      - "Requires Plaid Link -- adds UX friction. Customer must authenticate with their bank."
+      - "Not all banks return identity data. Coverage is bank-dependent."
+      - "Sandbox returns binary 0/100 scores only. Production scores are continuous but we cannot validate the scoring curve without production access."
+      - "Joint accounts return multiple owners -- partial name match on a joint account is not suspicious."
+      - "Business accounts: matching business name to individual orderer is harder."
+      - "Bank identity data can be stale (old addresses, maiden names)."
+
+    cost: "$0.20-$1.00 per /identity/match call (volume-dependent, requires sales conversation)"
+
+    integration_complexity: |
+      Moderate. Requires:
+      1. Plaid Link frontend (JavaScript SDK, ~50 lines)
+      2. Token exchange backend (one API call)
+      3. Identity Match backend (one API call)
+      4. Webhook handling (optional, for async data availability)
+      The frontend Plaid Link widget is the most involved piece.
+
+pre_committed_reasoning: |
+  These two endpoints represent the strongest available signals for the payment-to-
+  institution KYC step (b), but neither can be tested empirically without production
+  infrastructure.
+
+  **Stripe AVS:** The fundamental limitation is geographic. US/UK/CA cards will
+  generally return usable AVS data; most other countries will return "unavailable."
+  For a global DNA synthesis provider, this means AVS is a useful signal for maybe
+  40-60% of card payments (weighted by where biotech customers are concentrated --
+  heavily US/EU). Production testing would be most valuable for quantifying the
+  exact "unavailable" rate by country and issuer, and for understanding how P-card
+  billing mismatches present (fail on line1 but pass on zip? fail on both?). The
+  prepaid/funding type detection is likely the more reliable signal -- it works
+  globally and does not depend on issuer AVS support.
+
+  **Plaid Identity Match:** The US-only limitation is severe but less damaging than
+  it sounds, because ACH is itself a US-only payment method. If a customer is paying
+  via ACH, they have a US bank account, so Plaid can reach them. The bigger unknowns
+  are: (1) what fraction of US banks actually return identity data via Plaid, (2) how
+  the continuous 0-100 scores behave for edge cases (name variations, stale addresses,
+  business accounts), and (3) whether the Plaid Link UX friction causes legitimate
+  customers to abandon checkout. None of these can be answered without production
+  testing.
+
+  **What we can conclude from documentation alone:**
+  - Stripe: card.funding (credit/debit/prepaid) is the highest-value field -- works
+    globally, available before charge, binary decision. AVS is supplementary.
+  - Plaid: legal_name.score is the highest-value field -- directly answers "is the
+    payer who they claim to be?" Address score is secondary.
+  - Together they cover the two main payment rails (card and ACH) but leave wire
+    transfers and international payment methods uncovered.
+  - Neither tool verifies institutional affiliation directly. They verify identity
+    and address consistency. The institution link must come from cross-referencing
+    the verified billing address against institutional address databases (ROR, etc.).
