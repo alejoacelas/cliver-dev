@@ -1,0 +1,1321 @@
+group: institution-registry
+endpoints: [ror, gleif, companies-house]
+# OpenCorporates excluded — blocked (API requires paid account)
+kyc_steps: [a]
+tested_at: "2026-04-14"
+total_cases: 35
+rounds: 2
+
+summary:
+  covered: 14
+  partially_covered: 9
+  not_covered: 12
+
+coverage_boundaries:
+  - boundary: "Community bio labs and makerspaces"
+    status: not_covered
+    evidence: >
+      Tested 5 community labs (Genspace, BioCurious, La Paillasse, Hackuarium, BioClub Tokyo).
+      Zero results in ROR (all returned 0 or only irrelevant matches), zero in GLEIF, zero in
+      Companies House. These entities exist in no institutional registry. This is a hard gap —
+      community labs are the canonical synthesis customer type that falls through all lookups.
+    cases: [10, 11, 12, 13, 14]
+
+  - boundary: "Small biotech startups (<50 employees, not publicly traded)"
+    status: not_covered
+    evidence: >
+      Tested 6 small biotechs from customer data (Lay Sciences, Virometix AG, AdaptVac,
+      Signablok Inc, Fusix Biotech, Uvax Bio). All returned zero results in ROR, zero in
+      GLEIF, and only noise in Companies House. Small biotechs have no LEI (not required),
+      no ROR record (no significant research output), and no UK registration unless UK-based.
+    cases: [7, 28, 29, 30, 31, 37]
+
+  - boundary: "ROR city-level only — no street addresses"
+    status: partially_covered
+    evidence: >
+      ROR provides city and country but never street addresses. For the KYC flag
+      "No public association between affiliation and shipping address," city-level is
+      insufficient — it can confirm the customer is in the right city but cannot validate
+      a specific street address. Multi-campus institutions (Griffith: Brisbane vs Gold Coast)
+      further dilute the city signal.
+    cases: [1, 2, 4, 6]
+
+  - boundary: "GLEIF legal addresses are often misleading"
+    status: partially_covered
+    evidence: >
+      GLEIF provides street addresses, but for many entities the legal address is a registered
+      agent (Pfizer's legal address is Corporation Trust Center, 1209 Orange St, Wilmington DE
+      — not their actual office). Oxford's GLEIF results point to individual colleges, one of
+      which lists a Liverpool investment manager address. The headquartersAddress field is more
+      useful but still may be outdated (Pfizer HQ shows 235 E 42nd St, not the current 66
+      Hudson Blvd address).
+    cases: [2, 3]
+
+  - boundary: "GLEIF requires exact legal name matching"
+    status: partially_covered
+    evidence: >
+      GLEIF's legalName filter is exact-prefix or substring. Searching "Pfizer Inc" returns
+      "PFIZER INC." (5 results). Searching just "Pfizer" returns 171 results including the
+      parent. But "GSK" returns 56 unrelated entities (GSK Enterprises, GSK Cranes, etc.) — the
+      abbreviation doesn't map to GlaxoSmithKline. Searching "Facebook Inc" finds only
+      "FACEBOOK OVERSEAS, INC." — the parent renamed to Meta Platforms. Name changes break
+      GLEIF lookups unless you know the current legal name.
+    cases: [3, 26, 32]
+
+  - boundary: "Companies House returns massive noise for non-UK entities"
+    status: not_covered
+    evidence: >
+      Every non-UK query returned total_results=10000 with completely irrelevant matches.
+      Scripps returned "UK SCRIPPSLNS OF OCEANS CELL BIOLOGICAL LTD." Companies House is
+      only useful for UK-registered entities. For UK entities (AstraZeneca), it provides
+      excellent street-level addresses.
+    cases: [1, 3, 7, 33]
+
+  - boundary: "Government sub-units (labs within agencies)"
+    status: partially_covered
+    evidence: >
+      Canada's National Microbiology Laboratory returned zero relevant results in ROR — the
+      top hit was a Chinese State Key Laboratory. The parent (PHAC) IS in ROR but in Ottawa,
+      not Winnipeg where NML is. NML is not listed as a child of PHAC. Contrast with MIT
+      Lincoln Lab, which IS a separate ROR record with correct parent relationship and correct
+      city (Lexington). Coverage is inconsistent — some sub-units have records, many don't.
+    cases: [5, 19, 22, 40]
+
+  - boundary: "CDC-style disambiguation (same name, multiple countries)"
+    status: partially_covered
+    evidence: >
+      Querying "Centers for Disease Control and Prevention" returns the Uganda office first,
+      Kenya office second, and the US CDC third. ROR's relevance ranking does not prioritize
+      the "main" entity. For KYC, this means automated matching could select the wrong country
+      office. The US CDC (Atlanta) is only the 3rd result.
+    cases: [19]
+
+  - boundary: "ROR domains field is inconsistently populated"
+    status: partially_covered
+    evidence: >
+      Some institutions have domains (Oxford: ox.ac.uk, IIT Kanpur: iitk.ac.in, Makerere:
+      mak.ac.ug, CSIRO: csiro.au). Others don't (Scripps, Baqiyatallah, TiHo Hannover,
+      University of Nairobi, CDC, USAMRIID, Wuhan Institute of Virology). Cannot rely on
+      ROR domains for email-to-institution matching.
+    cases: [1, 2, 4, 8, 9, 15, 16]
+
+  - boundary: "Non-OECD established universities"
+    status: covered
+    evidence: >
+      Contrary to initial hypothesis, ROR covers non-OECD universities well. University of
+      Nairobi (Kenya), Makerere (Uganda), Al-Farabi (Kazakhstan), Universitas Indonesia all
+      found with correct city. Baqiyatallah (Iran, IRGC-affiliated) found with Persian alias.
+      NUDT (PLA-affiliated, China) found with Chinese name. Sanctioned status does not affect
+      ROR coverage — presence in ROR says nothing about sanctions.
+    cases: [8, 15, 16, 17, 18, 34, 35]
+
+  - boundary: "Large CROs and contract labs"
+    status: covered
+    evidence: >
+      Eurofins, Charles River Laboratories, and WuXi AppTec all appear in both ROR and GLEIF.
+      ROR returns country subsidiaries (Eurofins France, Charles River Netherlands, WuXi US/China).
+      GLEIF returns holding companies (Eurofins Scientific SE in Luxembourg). Both provide some
+      address data but may not match the specific lab site a customer ships from.
+    cases: [23, 24, 25]
+
+results:
+  # ==================== ROUND 1: Seed cases ====================
+
+  - case_id: 1
+    round: 1
+    name: "The Scripps Research Institute"
+    type: academic
+    country: US
+    difficulty: easy
+    endpoints_tested:
+      - endpoint: ror
+        query: "GET https://api.ror.org/v2/organizations?query=The+Scripps+Research+Institute"
+        status: covered
+        response_summary:
+          ror_id: "https://ror.org/02dxx6824"
+          name: "Scripps Research Institute"
+          country: United States
+          city: San Diego
+          types: [funder, nonprofit]
+          domains: []
+        relevant_fields:
+          - field: locations[0].city
+            useful_for: [a-address-institution]
+            assessment: "City-level only (San Diego). Cannot confirm street address."
+          - field: domains
+            useful_for: [c-email-affiliation]
+            assessment: "EMPTY — scripps.edu is NOT in the domains field. Cannot use for email matching."
+          - field: links[0].value
+            useful_for: [a-address-institution]
+            assessment: "Website URL (scripps.edu) available but requires additional scraping to extract address."
+      - endpoint: gleif
+        query: "GET https://api.gleif.org/api/v1/lei-records?filter[entity.legalName]=The+Scripps+Research+Institute"
+        status: not_covered
+        response_summary:
+          total: 0
+        relevant_fields: []
+      - endpoint: companies-house
+        query: "GET https://api.company-information.service.gov.uk/search/companies?q=The+Scripps+Research+Institute"
+        status: not_covered
+        response_summary:
+          total_results: 10000
+          top_match: "UK SCRIPPSLNS OF OCEANS CELL BIOLOGICAL LTD"
+          relevant: false
+        relevant_fields: []
+    notes: >
+      ROR hit but domains field empty — cannot use for email domain matching. City-level
+      only (San Diego vs La Jolla — the seed case address says La Jolla but ROR says San Diego,
+      which is technically correct as La Jolla is a neighborhood of San Diego). GLEIF and
+      Companies House provide nothing.
+
+  - case_id: 2
+    round: 1
+    name: "University of Oxford"
+    type: academic
+    country: GB
+    difficulty: easy
+    endpoints_tested:
+      - endpoint: ror
+        query: "GET https://api.ror.org/v2/organizations?query=University+of+Oxford"
+        status: covered
+        response_summary:
+          ror_id: "https://ror.org/052gg0110"
+          name: "University of Oxford"
+          country: United Kingdom
+          city: Oxford
+          types: [education, funder]
+          domains: [ox.ac.uk]
+        relevant_fields:
+          - field: domains
+            useful_for: [c-email-affiliation]
+            assessment: "ox.ac.uk present — strong email match signal."
+          - field: locations[0].city
+            useful_for: [a-address-institution]
+            assessment: "City-level only (Oxford). Sufficient for city matching."
+      - endpoint: gleif
+        query: "GET https://api.gleif.org/api/v1/lei-records?filter[entity.legalName]=University+of+Oxford"
+        status: partially_covered
+        response_summary:
+          total: 22
+          top_matches:
+            - "Swiss Friends of Oxford University (Zug, Switzerland)"
+            - "Wolfson College in the University of Oxford (Oxford)"
+            - "St Edmund Hall in the University of Oxford (Liverpool — investment manager address)"
+          note: "Returns individual colleges and affiliates, NOT the university itself"
+        relevant_fields:
+          - field: entity.legalAddress
+            useful_for: [a-address-institution]
+            assessment: >
+              MISLEADING — addresses are for investment managers (Liverpool) or international
+              affiliates (Zug), not the university's actual address. St Edmund Hall's GLEIF
+              address is Rathbone Investment Management in Liverpool.
+      - endpoint: companies-house
+        query: "GET https://api.company-information.service.gov.uk/search/companies?q=University+of+Oxford"
+        status: partially_covered
+        response_summary:
+          total_results: 10000
+          top_matches:
+            - "Templeton College in the University of Oxford (RC000751, active, no address)"
+            - "Linacre College in the University of Oxford (RC000722, active, no address)"
+            - "Mansfield College in the University of Oxford (RC000752, active, no address)"
+          note: "Individual colleges as royal-charter entities, addresses mostly empty"
+        relevant_fields:
+          - field: address
+            useful_for: [a-address-institution]
+            assessment: "Empty for royal-charter college registrations. Not useful."
+    notes: >
+      ROR is the only useful source here. GLEIF and Companies House both fragment the
+      university into individual colleges, and the addresses returned are often for financial
+      intermediaries rather than actual campus addresses.
+
+  - case_id: 3
+    round: 1
+    name: "Pfizer Inc"
+    type: pharma
+    country: US
+    difficulty: easy
+    endpoints_tested:
+      - endpoint: ror
+        query: "GET https://api.ror.org/v2/organizations?query=Pfizer+Inc"
+        status: partially_covered
+        response_summary:
+          top_matches:
+            - "Pfizer (Sweden) — Sollentuna"
+            - "Pfizer (United Kingdom) — Tadworth"
+            - "Pfizer (Japan) — Tokyo"
+          note: "Returns country subsidiaries, NOT the US parent. No 'Pfizer Inc' record."
+        relevant_fields:
+          - field: locations[0].city
+            useful_for: [a-address-institution]
+            assessment: "Returns wrong country subsidiaries. Swedish office ranked first for a US company."
+      - endpoint: gleif
+        query: "GET https://api.gleif.org/api/v1/lei-records?filter[entity.legalName]=Pfizer+Inc"
+        status: partially_covered
+        response_summary:
+          total: 5
+          top_match:
+            lei: "765LHXWGK1KXCLTFYQ30"
+            name: "PFIZER INC."
+            legal_address: "C/O The Corporation Trust Company, 1209 Orange St, Wilmington, DE 19801"
+            hq_address: "235 East 42nd Street, New York, NY 10017"
+          note: "Legal address is a Delaware registered agent, NOT actual office. HQ address is outdated (pre-2024 move)."
+        relevant_fields:
+          - field: entity.legalAddress
+            useful_for: [a-address-institution]
+            assessment: >
+              MISLEADING — legal address is Corporation Trust Center in Wilmington DE
+              (registered agent). Would incorrectly flag any Pfizer office as unassociated.
+          - field: entity.headquartersAddress
+            useful_for: [a-address-institution]
+            assessment: >
+              Better but OUTDATED — 235 E 42nd St was Pfizer's HQ before 2024 move to
+              66 Hudson Blvd East. Address-matching against current Pfizer offices would fail.
+      - endpoint: companies-house
+        query: "GET https://api.company-information.service.gov.uk/search/companies?q=Pfizer+Inc"
+        status: partially_covered
+        response_summary:
+          total_results: 10000
+          top_match: "PFIZER LIMITED (Sandwich, Kent CT13 9NJ) — active"
+          note: "UK subsidiary only. Address is the Sandwich manufacturing site."
+        relevant_fields:
+          - field: address
+            useful_for: [a-address-institution]
+            assessment: "Correct UK subsidiary address but only for UK operations."
+    notes: >
+      Pfizer demonstrates multiple address data problems: ROR returns wrong subsidiaries first,
+      GLEIF's legal address is a trust agent, GLEIF's HQ address is outdated, and Companies
+      House only shows the UK subsidiary. For a customer shipping to Pfizer's current NY HQ,
+      NONE of these registries would confirm the address.
+
+  - case_id: 4
+    round: 1
+    name: "Indian Institute of Technology Kanpur"
+    type: academic
+    country: IN
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: ror
+        query: "GET https://api.ror.org/v2/organizations?query=Indian+Institute+of+Technology+Kanpur"
+        status: covered
+        response_summary:
+          ror_id: "https://ror.org/05pjsgx75"
+          name: "Indian Institute of Technology Kanpur"
+          country: India
+          city: Kanpur
+          types: [education, funder]
+          domains: [iitk.ac.in]
+        relevant_fields:
+          - field: domains
+            useful_for: [c-email-affiliation]
+            assessment: "iitk.ac.in present — strong email match."
+          - field: locations[0].city
+            useful_for: [a-address-institution]
+            assessment: "City match (Kanpur). Correct IIT campus disambiguated."
+      - endpoint: gleif
+        query: "GET https://api.gleif.org/api/v1/lei-records?filter[entity.legalName]=Indian+Institute+of+Technology+Kanpur"
+        status: covered
+        response_summary:
+          total: 1
+          lei: "984500DF393AA060B162"
+          name: "INDIAN INSTITUTE OF TECHNOLOGY KANPUR"
+          address: "Research and Development Office, Accounts-2, IIT, Kanpur Nagar, Kanpur, UP 208016, IN"
+          status: ACTIVE
+        relevant_fields:
+          - field: entity.legalAddress
+            useful_for: [a-address-institution]
+            assessment: "Street-level address with postal code. One of the rare academic institutions with an LEI."
+      - endpoint: companies-house
+        query: n/a
+        status: not_covered
+        response_summary:
+          note: "Non-UK entity — Companies House irrelevant"
+        relevant_fields: []
+    notes: >
+      Surprise: IIT Kanpur has an LEI, providing street-level address data. This is unusual
+      for an academic institution — likely due to international research funding requirements.
+      Both ROR and GLEIF cover it well. The IIT system disambiguation works correctly.
+
+  - case_id: 5
+    round: 1
+    name: "National Microbiology Laboratory, Public Health Agency of Canada"
+    type: government_lab
+    country: CA
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: ror
+        query: "GET https://api.ror.org/v2/organizations?query=National+Microbiology+Laboratory"
+        status: not_covered
+        response_summary:
+          total: 5287
+          top_matches:
+            - "State Key Laboratory of Agricultural Microbiology (Wuhan, China)"
+            - "Molecular Microbiology (Porto, Portugal)"
+            - "Microbiology Society (London, UK)"
+          note: >
+            No result for Canada's NML. Top results are completely unrelated. The parent
+            org (PHAC) IS in ROR (https://ror.org/023xf2a37) but lists Ottawa, not
+            Winnipeg. NML is NOT listed as a child of PHAC — only "National Collaborating
+            Centre for Methods and Tools" is.
+        relevant_fields: []
+      - endpoint: gleif
+        query: "GET https://api.gleif.org/api/v1/lei-records?filter[entity.legalName]=National+Microbiology+Laboratory"
+        status: not_covered
+        response_summary:
+          total: 0
+        relevant_fields: []
+      - endpoint: companies-house
+        query: n/a
+        status: not_covered
+        response_summary:
+          note: "Non-UK entity — Companies House irrelevant"
+        relevant_fields: []
+    notes: >
+      Complete miss. The NML is a real BSL-4 lab in Winnipeg that handles dangerous pathogens,
+      but it appears in no registry. The parent org (PHAC) is in ROR but mapped to Ottawa (HQ),
+      not Winnipeg (lab). This is a significant gap for biosecurity screening — government
+      sub-units that handle controlled agents are among the most important to verify.
+
+  - case_id: 6
+    round: 1
+    name: "Griffith University"
+    type: academic
+    country: AU
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: ror
+        query: "GET https://api.ror.org/v2/organizations?query=Griffith+University"
+        status: covered
+        response_summary:
+          ror_id: "https://ror.org/02sc3r913"
+          name: "Griffith University"
+          country: Australia
+          city: Brisbane
+          types: [education, funder]
+          domains: [griffith.edu.au]
+        relevant_fields:
+          - field: locations[0].city
+            useful_for: [a-address-institution]
+            assessment: >
+              Lists Brisbane (main campus). The seed case address is Gold Coast campus
+              (Southport QLD). A customer at the Gold Coast campus would show a city
+              mismatch despite being at a legitimate Griffith location.
+          - field: domains
+            useful_for: [c-email-affiliation]
+            assessment: "griffith.edu.au present — email matching works."
+      - endpoint: gleif
+        query: "GET https://api.gleif.org/api/v1/lei-records?filter[entity.legalName]=Griffith+University"
+        status: not_covered
+        response_summary:
+          total: 0
+        relevant_fields: []
+      - endpoint: companies-house
+        query: n/a
+        status: not_covered
+        response_summary:
+          note: "Non-UK entity"
+        relevant_fields: []
+    notes: >
+      Multi-campus problem confirmed. ROR lists Brisbane; customer is at Gold Coast.
+      City-level matching would produce a false mismatch for satellite campus customers.
+
+  - case_id: 7
+    round: 1
+    name: "Lay Sciences Inc"
+    type: biotech_startup
+    country: US
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: ror
+        query: "GET https://api.ror.org/v2/organizations?query=Lay+Sciences+Inc"
+        status: not_covered
+        response_summary:
+          total: 3524
+          top_matches: ["Frito-Lay (Switzerland)", "Sygnature Discovery (Canada)", "GL Sciences Inc. (Japan)"]
+          note: "No relevant match — top results are completely unrelated companies"
+        relevant_fields: []
+      - endpoint: gleif
+        query: "GET https://api.gleif.org/api/v1/lei-records?filter[entity.legalName]=Lay+Sciences+Inc"
+        status: not_covered
+        response_summary:
+          total: 0
+        relevant_fields: []
+      - endpoint: companies-house
+        query: "GET https://api.company-information.service.gov.uk/search/companies?q=Lay+Sciences+Inc"
+        status: not_covered
+        response_summary:
+          total_results: 10000
+          top_matches: ["DATA SCIENCES UK, INC.", "DATA SCIENCES UK, INC."]
+          relevant: false
+        relevant_fields: []
+    notes: >
+      Complete miss across all three registries. Prototype gap case: legitimate small biotech
+      that exists in no institutional registry.
+
+  - case_id: 8
+    round: 1
+    name: "Baqiyatallah University of Medical Sciences"
+    type: academic
+    country: IR
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: ror
+        query: "GET https://api.ror.org/v2/organizations?query=Baqiyatallah+University+of+Medical+Sciences"
+        status: covered
+        response_summary:
+          ror_id: "https://ror.org/01ysgtb61"
+          name: "Baqiyatallah University of Medical Sciences"
+          country: Iran
+          city: Tehran
+          types: [education, funder]
+          domains: []
+          aliases: ["BMSU", "دانشگاه علوم پزشکی بقیه‌الله"]
+        relevant_fields:
+          - field: locations[0].city
+            useful_for: [a-address-institution]
+            assessment: "Tehran confirmed. City-level match available."
+          - field: names (aliases)
+            useful_for: [a-address-institution]
+            assessment: "Persian name and abbreviation stored — transliteration matching works."
+      - endpoint: gleif
+        query: n/a
+        status: not_covered
+        response_summary:
+          note: "Iranian institution — no LEI expected (sanctions/no financial market participation)"
+        relevant_fields: []
+      - endpoint: companies-house
+        query: n/a
+        status: not_covered
+        response_summary:
+          note: "Non-UK entity"
+        relevant_fields: []
+    notes: >
+      ROR covers this IRGC-affiliated university with Persian alias. Presence in ROR says
+      nothing about sanctions status — this is a real university with publications.
+      Domains field is empty despite the institution having bmsu.ac.ir.
+
+  - case_id: 9
+    round: 1
+    name: "Tierärztliche Hochschule Hannover"
+    type: academic
+    country: DE
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: ror
+        query: "GET https://api.ror.org/v2/organizations?query=Tierärztliche+Hochschule+Hannover"
+        status: covered
+        response_summary:
+          ror_id: "https://ror.org/015qjqf64"
+          name: "University of Veterinary Medicine Hannover, Foundation"
+          country: Germany
+          city: Hanover
+          types: [education, funder]
+          domains: []
+          aliases: ["Stiftung Tierärztliche Hochschule Hannover", "TiHo"]
+        relevant_fields:
+          - field: names (aliases)
+            useful_for: [a-address-institution]
+            assessment: >
+              Old German name is stored as alias. Query using old name correctly resolves
+              to the current record. Name-change handling works for this case.
+      - endpoint: gleif
+        query: n/a
+        status: not_covered
+        response_summary:
+          note: "Academic institution — no LEI"
+        relevant_fields: []
+      - endpoint: companies-house
+        query: n/a
+        status: not_covered
+        response_summary:
+          note: "Non-UK entity"
+        relevant_fields: []
+    notes: >
+      Non-ASCII name handling and name-change alias matching both work. The old German name
+      "Tierärztliche Hochschule Hannover" correctly resolves to the current English name
+      "University of Veterinary Medicine Hannover, Foundation."
+
+  - case_id: 10
+    round: 1
+    name: "Genspace"
+    type: community_lab
+    country: US
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: ror
+        query: "GET https://api.ror.org/v2/organizations?query=Genspace"
+        status: not_covered
+        response_summary:
+          total: 0
+          note: "Zero results — community lab completely absent from ROR"
+        relevant_fields: []
+      - endpoint: gleif
+        query: "GET https://api.gleif.org/api/v1/lei-records?filter[entity.legalName]=Genspace"
+        status: not_covered
+        response_summary:
+          total: 0
+        relevant_fields: []
+      - endpoint: companies-house
+        query: n/a
+        status: not_covered
+        response_summary:
+          note: "Non-UK entity"
+        relevant_fields: []
+    notes: >
+      The canonical community bio lab. Zero results everywhere. Genspace is a 501(c)(3)
+      nonprofit BSL-1 lab in NYC that handles DNA and biological materials, yet no
+      institutional registry knows it exists.
+
+  # ==================== ROUND 2: Adversarial probing ====================
+
+  # --- Community bio labs (boundary: all miss) ---
+
+  - case_id: 11
+    round: 2
+    name: "BioCurious"
+    type: community_lab
+    country: US
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: ror
+        query: "GET https://api.ror.org/v2/organizations?query=BioCurious"
+        status: not_covered
+        response_summary:
+          total: 0
+        relevant_fields: []
+      - endpoint: gleif
+        query: "GET https://api.gleif.org/api/v1/lei-records?filter[entity.legalName]=BioCurious"
+        status: not_covered
+        response_summary:
+          total: 0
+        relevant_fields: []
+    notes: "Zero results. Community lab in Sunnyvale, CA."
+
+  - case_id: 12
+    round: 2
+    name: "La Paillasse"
+    type: community_lab
+    country: FR
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: ror
+        query: "GET https://api.ror.org/v2/organizations?query=La+Paillasse"
+        status: not_covered
+        response_summary:
+          total: 1638
+          top_match: "La Clinica de La Raza (healthcare, US)"
+          relevant: false
+        relevant_fields: []
+      - endpoint: gleif
+        query: "GET https://api.gleif.org/api/v1/lei-records?filter[entity.legalName]=La+Paillasse"
+        status: not_covered
+        response_summary:
+          total: 0
+        relevant_fields: []
+    notes: "French community bio lab. ROR returns noise, GLEIF zero."
+
+  - case_id: 13
+    round: 2
+    name: "Hackuarium"
+    type: community_lab
+    country: CH
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: ror
+        query: "GET https://api.ror.org/v2/organizations?query=Hackuarium"
+        status: not_covered
+        response_summary:
+          total: 0
+        relevant_fields: []
+    notes: "Swiss community bio lab in Renens. Zero results."
+
+  - case_id: 14
+    round: 2
+    name: "BioClub Tokyo"
+    type: community_lab
+    country: JP
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: ror
+        query: "GET https://api.ror.org/v2/organizations?query=BioClub+Tokyo"
+        status: not_covered
+        response_summary:
+          total: 184
+          top_match: "The University of Tokyo (education)"
+          relevant: false
+        relevant_fields: []
+    notes: "Japanese community bio lab. ROR returns only universities with 'Tokyo' in name."
+
+  # --- Non-OECD universities (boundary: mostly covered by ROR) ---
+
+  - case_id: 15
+    round: 2
+    name: "University of Nairobi"
+    type: academic
+    country: KE
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: ror
+        query: "GET https://api.ror.org/v2/organizations?query=University+of+Nairobi"
+        status: covered
+        response_summary:
+          name: "University of Nairobi"
+          country: Kenya
+          city: Nairobi
+          types: [education]
+          domains: []
+        relevant_fields:
+          - field: locations[0].city
+            useful_for: [a-address-institution]
+            assessment: "City-level match. Domains empty."
+    notes: "Covered but domains field empty."
+
+  - case_id: 16
+    round: 2
+    name: "Makerere University"
+    type: academic
+    country: UG
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: ror
+        query: "GET https://api.ror.org/v2/organizations?query=Makerere+University"
+        status: covered
+        response_summary:
+          name: "Makerere University"
+          country: Uganda
+          city: Kampala
+          types: [education, funder]
+          domains: [mak.ac.ug]
+        relevant_fields:
+          - field: domains
+            useful_for: [c-email-affiliation]
+            assessment: "mak.ac.ug present."
+          - field: locations[0].city
+            useful_for: [a-address-institution]
+            assessment: "City-level match."
+    notes: "Well-covered Ugandan university with domain data."
+
+  - case_id: 17
+    round: 2
+    name: "Al-Farabi Kazakh National University"
+    type: academic
+    country: KZ
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: ror
+        query: "GET https://api.ror.org/v2/organizations?query=Al-Farabi+Kazakh+National+University"
+        status: covered
+        response_summary:
+          name: "Al-Farabi Kazakh National University"
+          country: Kazakhstan
+          city: Almaty
+          types: [education, funder]
+          domains: [farabi.university]
+        relevant_fields:
+          - field: domains
+            useful_for: [c-email-affiliation]
+            assessment: "farabi.university domain present."
+    notes: "Central Asian university fully covered in ROR."
+
+  - case_id: 18
+    round: 2
+    name: "Universitas Indonesia"
+    type: academic
+    country: ID
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: ror
+        query: "GET https://api.ror.org/v2/organizations?query=Universitas+Indonesia"
+        status: covered
+        response_summary:
+          name: "University of Indonesia"
+          country: Indonesia
+          city: Depok
+          types: [education, funder]
+          domains: []
+          note: "ROR uses English name 'University of Indonesia' while query used local name 'Universitas Indonesia'"
+        relevant_fields:
+          - field: locations[0].city
+            useful_for: [a-address-institution]
+            assessment: "City is Depok (campus location), not Jakarta (commonly assumed)."
+    notes: "Covered. Interesting: ROR correctly lists Depok (where the main campus is), not Jakarta."
+
+  # --- Government labs (boundary: large agencies covered, sub-units spotty) ---
+
+  - case_id: 19
+    round: 2
+    name: "Centers for Disease Control and Prevention"
+    type: government_lab
+    country: US
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: ror
+        query: "GET https://api.ror.org/v2/organizations?query=Centers+for+Disease+Control+and+Prevention"
+        status: partially_covered
+        response_summary:
+          total: 19162
+          results_ranked:
+            1: "CDC Uganda (Kampala)"
+            2: "CDC Kenya (Nairobi)"
+            3: "CDC United States (Atlanta)"
+            4: "Tianjin CDC (China)"
+            5: "Korea DCPA"
+          note: >
+            The US CDC is ranked THIRD. Uganda and Kenya offices rank higher.
+            Disambiguation fails for automated matching — would need country filter.
+          ror_id_us: "https://ror.org/042twtr12"
+          city: Atlanta
+          types: [funder, government]
+        relevant_fields:
+          - field: locations[0].city
+            useful_for: [a-address-institution]
+            assessment: "Correct (Atlanta) IF you select the right result. Automated matching would pick Uganda."
+    notes: >
+      CRITICAL disambiguation failure for automated KYC. The US CDC is not the top result.
+      A naive "take first result" approach would map CDC to Kampala, Uganda.
+
+  - case_id: 20
+    round: 2
+    name: "Wuhan Institute of Virology"
+    type: government_lab
+    country: CN
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: ror
+        query: "GET https://api.ror.org/v2/organizations?query=Wuhan+Institute+of+Virology"
+        status: covered
+        response_summary:
+          name: "Wuhan Institute of Virology"
+          country: China
+          city: Wuhan
+          types: [facility]
+          domains: []
+          aliases: ["WIV", "Wuhan Institute of Microbiology", "中国科学院武汉病毒研究所"]
+        relevant_fields:
+          - field: locations[0].city
+            useful_for: [a-address-institution]
+            assessment: "City-level match (Wuhan). Chinese characters stored as alias."
+    notes: "Well-covered with Chinese name alias. Former name (Wuhan Institute of Microbiology) also stored."
+
+  - case_id: 21
+    round: 2
+    name: "CSIRO"
+    type: government_lab
+    country: AU
+    difficulty: easy
+    endpoints_tested:
+      - endpoint: ror
+        query: "GET https://api.ror.org/v2/organizations?query=CSIRO"
+        status: covered
+        response_summary:
+          name: "Commonwealth Scientific and Industrial Research Organisation"
+          country: Australia
+          city: Canberra
+          types: [funder, government]
+          domains: [csiro.au]
+        relevant_fields:
+          - field: domains
+            useful_for: [c-email-affiliation]
+            assessment: "csiro.au present."
+          - field: locations[0].city
+            useful_for: [a-address-institution]
+            assessment: "City is Canberra (HQ). CSIRO has labs across Australia — same multi-site problem as Griffith."
+    notes: "Abbreviation 'CSIRO' correctly resolves to full name. But multi-site issue applies."
+
+  - case_id: 22
+    round: 2
+    name: "USAMRIID"
+    type: government_lab
+    country: US
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: ror
+        query: "GET https://api.ror.org/v2/organizations?query=USAMRIID"
+        status: covered
+        response_summary:
+          total: 1
+          name: "United States Army Medical Research Institute of Infectious Diseases"
+          country: United States
+          city: Frederick
+          types: [facility, funder]
+          domains: []
+        relevant_fields:
+          - field: locations[0].city
+            useful_for: [a-address-institution]
+            assessment: "Frederick, MD — correct for Fort Detrick location. Only 1 result — no disambiguation needed."
+    notes: "Well-covered. Only 1 ROR result for the abbreviation — strong signal."
+
+  # --- CROs and contract labs (boundary: large ones covered in both ROR and GLEIF) ---
+
+  - case_id: 23
+    round: 2
+    name: "Eurofins Scientific"
+    type: cro
+    country: LU
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: ror
+        query: "GET https://api.ror.org/v2/organizations?query=Eurofins+Scientific"
+        status: partially_covered
+        response_summary:
+          total: 794
+          top_matches: ["Eurofins (France)", "Eurofins (Luxembourg)"]
+          note: "Returns country subsidiaries, not the parent holding company"
+        relevant_fields:
+          - field: locations[0].city
+            useful_for: [a-address-institution]
+            assessment: "City varies by subsidiary. Customer could be at any of dozens of sites."
+      - endpoint: gleif
+        query: "GET https://api.gleif.org/api/v1/lei-records?filter[entity.legalName]=Eurofins+Scientific"
+        status: partially_covered
+        response_summary:
+          total: 1
+          name: "EUROFINS SCIENTIFIC SE"
+          address: "23 Val Fleuri, Luxembourg, 1526"
+          status: ACTIVE
+          note: "Only the parent holding company. No individual lab sites."
+        relevant_fields:
+          - field: entity.legalAddress
+            useful_for: [a-address-institution]
+            assessment: "Luxembourg HQ address only. Customer could ship to any of hundreds of lab sites worldwide."
+    notes: >
+      Both registries confirm Eurofins exists but cannot pinpoint specific lab locations.
+      A customer shipping to a Eurofins lab in Hamburg would not match the Luxembourg HQ address.
+
+  - case_id: 24
+    round: 2
+    name: "Charles River Laboratories"
+    type: cro
+    country: US
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: ror
+        query: "GET https://api.ror.org/v2/organizations?query=Charles+River+Laboratories"
+        status: partially_covered
+        response_summary:
+          total: 455
+          top_match: "Charles River Laboratories (Netherlands) — Leiden"
+          note: "Dutch subsidiary ranked first, not US parent"
+        relevant_fields: []
+      - endpoint: gleif
+        query: "GET https://api.gleif.org/api/v1/lei-records?filter[entity.legalName]=Charles+River+Laboratories"
+        status: partially_covered
+        response_summary:
+          total: 13
+          top_matches: ["Charles River Laboratories Luxembourg", "Charles River Laboratories France"]
+          note: "13 subsidiaries across countries. No single authoritative address."
+        relevant_fields: []
+    notes: "Multi-national CRO. Both ROR and GLEIF fragment across subsidiaries."
+
+  - case_id: 25
+    round: 2
+    name: "WuXi AppTec"
+    type: cro
+    country: CN
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: ror
+        query: "GET https://api.ror.org/v2/organizations?query=WuXi+AppTec"
+        status: partially_covered
+        response_summary:
+          total: 27
+          top_matches: ["WuXi AppTec (China)", "WuXi AppTec (United States)"]
+          note: "Country subsidiaries. Correct company but multiple locations."
+        relevant_fields: []
+      - endpoint: gleif
+        query: "GET https://api.gleif.org/api/v1/lei-records?filter[entity.legalName]=WuXi+AppTec"
+        status: partially_covered
+        response_summary:
+          total: 1
+          name: "WuXi AppTec (Hong Kong) Holding Limited"
+          city: Hong Kong
+          country: HK
+          note: "Only the HK holding company, not the mainland labs"
+        relevant_fields: []
+    notes: "Only the Hong Kong holding entity in GLEIF. Mainland lab addresses not available."
+
+  # --- Name change / GLEIF exact matching (boundary: names must be current and exact) ---
+
+  - case_id: 26
+    round: 2
+    name: "Facebook Inc (now Meta Platforms)"
+    type: tech_company
+    country: US
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: gleif
+        query: "GET https://api.gleif.org/api/v1/lei-records?filter[entity.legalName]=Facebook+Inc"
+        status: not_covered
+        response_summary:
+          total: 1
+          match: "FACEBOOK OVERSEAS, INC. (active)"
+          note: "Parent renamed to Meta Platforms Inc. Old name 'Facebook Inc' only matches an overseas subsidiary."
+        relevant_fields: []
+      - endpoint: gleif
+        query: "GET https://api.gleif.org/api/v1/lei-records?filter[entity.legalName]=Meta+Platforms"
+        status: covered
+        response_summary:
+          total: 2
+          matches: ["META PLATFORMS, INC.", "META PLATFORMS IRELAND LIMITED"]
+        relevant_fields: []
+    notes: >
+      GLEIF does NOT retain old legal names. A customer using "Facebook" would not find
+      the parent company — only an overseas subsidiary. Must know current legal name.
+
+  # --- Abbreviated names on GLEIF ---
+
+  - case_id: 32
+    round: 2
+    name: "GSK (GlaxoSmithKline)"
+    type: pharma
+    country: GB
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: gleif
+        query: "GET https://api.gleif.org/api/v1/lei-records?filter[entity.legalName]=GSK"
+        status: not_covered
+        response_summary:
+          total: 56
+          top_matches: ["GSK ENTERPRISES", "GSK CRANES", "GSK-Beheer"]
+          note: "Abbreviation 'GSK' matches unrelated companies. None are GlaxoSmithKline."
+        relevant_fields: []
+      - endpoint: gleif
+        query: "GET https://api.gleif.org/api/v1/lei-records?filter[entity.legalName]=GlaxoSmithKline"
+        status: covered
+        response_summary:
+          total: 41
+          top_matches: ["GLAXOSMITHKLINE BIOLOGICALS (France)", "GLAXOSMITHKLINE LIMITED (Hong Kong)", "GLAXOSMITHKLINE BIOLOGICALS (Belgium)"]
+          note: "Full name works but returns subsidiaries across countries."
+        relevant_fields: []
+    notes: >
+      GLEIF abbreviation handling is a complete failure. "GSK" returns 56 entities, none of
+      which are GlaxoSmithKline. Must use full legal name. Also note the company has since
+      renamed — the consumer healthcare arm split into Haleon.
+
+  # --- Small biotech startups (boundary: all miss) ---
+
+  - case_id: 28
+    round: 2
+    name: "Virometix AG"
+    type: biotech_startup
+    country: CH
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: ror
+        query: "GET https://api.ror.org/v2/organizations?query=Virometix+AG"
+        status: not_covered
+        response_summary:
+          total: 92
+          top_match: "Analysis Group (United States)"
+          relevant: false
+        relevant_fields: []
+      - endpoint: gleif
+        query: "GET https://api.gleif.org/api/v1/lei-records?filter[entity.legalName]=Virometix+AG"
+        status: not_covered
+        response_summary:
+          total: 0
+        relevant_fields: []
+    notes: "Swiss biotech startup. Invisible to all registries."
+
+  - case_id: 29
+    round: 2
+    name: "AdaptVac"
+    type: biotech_startup
+    country: DK
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: ror
+        query: "GET https://api.ror.org/v2/organizations?query=AdaptVac"
+        status: not_covered
+        response_summary:
+          total: 0
+        relevant_fields: []
+      - endpoint: gleif
+        query: "GET https://api.gleif.org/api/v1/lei-records?filter[entity.legalName]=AdaptVac"
+        status: not_covered
+        response_summary:
+          total: 0
+        relevant_fields: []
+    notes: "Danish biotech. Zero results everywhere."
+
+  - case_id: 30
+    round: 2
+    name: "Signablok Inc"
+    type: biotech_startup
+    country: US
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: ror
+        query: "GET https://api.ror.org/v2/organizations?query=Signablok+Inc"
+        status: not_covered
+        response_summary:
+          total: 731
+          relevant: false
+        relevant_fields: []
+      - endpoint: gleif
+        query: "GET https://api.gleif.org/api/v1/lei-records?filter[entity.legalName]=Signablok+Inc"
+        status: not_covered
+        response_summary:
+          total: 0
+        relevant_fields: []
+    notes: "US biotech. Zero relevant results."
+
+  - case_id: 31
+    round: 2
+    name: "Fusix Biotech"
+    type: biotech_startup
+    country: NL
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: ror
+        query: "GET https://api.ror.org/v2/organizations?query=Fusix+Biotech"
+        status: not_covered
+        response_summary:
+          total: 107
+          relevant: false
+        relevant_fields: []
+      - endpoint: gleif
+        query: "GET https://api.gleif.org/api/v1/lei-records?filter[entity.legalName]=Fusix+Biotech"
+        status: not_covered
+        response_summary:
+          total: 0
+        relevant_fields: []
+      - endpoint: companies-house
+        query: "GET https://api.company-information.service.gov.uk/search/companies?q=Fusix+Biotech"
+        status: not_covered
+        response_summary:
+          total_results: 2045
+          top_match: "FUSIX LIMITED (active)"
+          note: "Different entity — 'FUSIX LIMITED' is not 'Fusix Biotech'"
+        relevant_fields: []
+    notes: "Dutch biotech. Companies House returns an unrelated UK entity named FUSIX LIMITED."
+
+  - case_id: 37
+    round: 2
+    name: "Uvax Bio"
+    type: biotech_startup
+    country: ES
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: ror
+        query: "GET https://api.ror.org/v2/organizations?query=Uvax+Bio"
+        status: not_covered
+        response_summary:
+          total: 194
+          relevant: false
+        relevant_fields: []
+      - endpoint: gleif
+        query: "GET https://api.gleif.org/api/v1/lei-records?filter[entity.legalName]=Uvax+Bio"
+        status: not_covered
+        response_summary:
+          total: 0
+        relevant_fields: []
+    notes: "Spanish biotech. Zero relevant results."
+
+  # --- UK-specific Companies House tests ---
+
+  - case_id: 33
+    round: 2
+    name: "AstraZeneca"
+    type: pharma
+    country: GB
+    difficulty: easy
+    endpoints_tested:
+      - endpoint: companies-house
+        query: "GET https://api.company-information.service.gov.uk/search/companies?q=AstraZeneca"
+        status: covered
+        response_summary:
+          total_results: 23
+          top_match:
+            title: "ASTRAZENECA PLC"
+            number: "02723534"
+            status: active
+            address: "1 Francis Crick Avenue, Cambridge Biomedical Campus, Cambridge, CB2 0AA"
+          other_matches:
+            - "ASTRAZENECA UK LIMITED (same address)"
+            - "ASTRAZENECA CHINA UK LIMITED (same address)"
+            - "ASTRAZENECA DEATH IN SERVICE TRUSTEE LIMITED (same address)"
+        relevant_fields:
+          - field: address
+            useful_for: [a-address-institution]
+            assessment: >
+              Full street address (1 Francis Crick Avenue, Cambridge Biomedical Campus).
+              This is the strongest address signal in any of the three registries. All
+              AstraZeneca entities share the same registered address.
+    notes: >
+      Companies House is excellent for UK-headquartered companies. Full street address,
+      company status, and multiple related entities all visible. The best result in the
+      entire test suite for address-to-institution verification.
+
+  - case_id: 36
+    round: 2
+    name: "University of Cambridge"
+    type: academic
+    country: GB
+    difficulty: easy
+    endpoints_tested:
+      - endpoint: companies-house
+        query: "GET https://api.company-information.service.gov.uk/search/companies?q=University+of+Cambridge"
+        status: partially_covered
+        response_summary:
+          total_results: 10000
+          top_matches:
+            - "University of Cambridge Investment Management Limited (Trinity Lane, Cambridge CB2 1TN)"
+            - "Trumpington St Dental Practice Ltd (irrelevant)"
+            - "Fitzwilliam College in the University of Cambridge (royal-charter, no address)"
+            - "St Edmund's College in the University of Cambridge (royal-charter, no address)"
+          note: "The university itself is not a 'company'. Only subsidiaries and college incorporations appear."
+        relevant_fields:
+          - field: address
+            useful_for: [a-address-institution]
+            assessment: >
+              The investment management subsidiary has an address (Trinity Lane).
+              But the university's main offices, departments, and labs do not appear.
+              Royal-charter college entries have empty addresses.
+    notes: >
+      Companies House fails for UK universities. They are chartered corporations, not
+      registered companies. Individual colleges appear as royal-charter entities with empty
+      addresses. Only commercial subsidiaries have addresses.
+
+  # --- Sanctioned entities ---
+
+  - case_id: 34
+    round: 2
+    name: "National University of Defense Technology"
+    type: academic
+    country: CN
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: ror
+        query: "GET https://api.ror.org/v2/organizations?query=National+University+of+Defense+Technology"
+        status: covered
+        response_summary:
+          name: "National University of Defense Technology"
+          country: China
+          city: Changsha
+          types: [education, funder]
+          aliases: ["NUDT", "Guófáng Kēxuéjìshù Dàxué", "中国人民解放军国防科学技术大学"]
+        relevant_fields:
+          - field: locations[0].city
+            useful_for: [a-address-institution]
+            assessment: "Changsha confirmed. PLA-affiliated entity fully in ROR."
+    notes: >
+      PLA-affiliated university covered with pinyin and Chinese character aliases.
+      ROR does not indicate sanctions or military affiliation — that requires a
+      separate screening step.
+
+  - case_id: 35
+    round: 2
+    name: "Institute of Chemical Biology and Fundamental Medicine, Novosibirsk"
+    type: academic
+    country: RU
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: ror
+        query: "GET https://api.ror.org/v2/organizations?query=Institute+of+Chemical+Biology+and+Fundamental+Medicine+Novosibirsk"
+        status: covered
+        response_summary:
+          name: "Institute of Chemical Biology and Fundamental Medicine"
+          country: Russia
+          city: Novosibirsk
+          types: [facility]
+        relevant_fields:
+          - field: locations[0].city
+            useful_for: [a-address-institution]
+            assessment: "Novosibirsk confirmed. Russian Academy of Sciences sub-institute."
+    notes: "RAS sub-institute covered in ROR with correct city."
+
+  # --- Additional edge cases ---
+
+  - case_id: 38
+    round: 2
+    name: "Open Science Network"
+    type: community_lab
+    country: US
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: ror
+        query: "GET https://api.ror.org/v2/organizations?query=Open+Science+Network"
+        status: not_covered
+        response_summary:
+          total: 3755
+          top_matches: ["Open Air Laboratories Network", "Open Science NL"]
+          relevant: false
+        relevant_fields: []
+    notes: "Community lab in Oakland, CA. ROR returns only vaguely related entities."
+
+  - case_id: 27
+    round: 2
+    name: "Syngenta (post-ChemChina acquisition)"
+    type: agrochemical
+    country: CH
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: gleif
+        query: "GET https://api.gleif.org/api/v1/lei-records?filter[entity.legalName]=Syngenta"
+        status: partially_covered
+        response_summary:
+          total: 81
+          top_matches:
+            - "SYNGENTA S.A. (Las Condes, Chile — ACTIVE)"
+            - "SYNGENTA ACTIONNARIAT (Courbevoie, France — INACTIVE)"
+            - "Pensionskasse Syngenta (Basel, Switzerland — ACTIVE)"
+          note: >
+            81 entities across countries. Some inactive (post-merger). The Swiss HQ
+            is buried among subsidiaries. Hard to identify the "main" entity automatically.
+        relevant_fields: []
+    notes: >
+      Post-acquisition entity fragmentation. 81 GLEIF records, some active, some inactive.
+      Automated matching cannot reliably pick the correct entity.
+
+  - case_id: 40
+    round: 2
+    name: "MIT Lincoln Laboratory"
+    type: government_lab
+    country: US
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: ror
+        query: "GET https://api.ror.org/v2/organizations?query=MIT+Lincoln+Laboratory"
+        status: covered
+        response_summary:
+          name: "MIT Lincoln Laboratory"
+          country: United States
+          city: Lexington
+          types: [facility]
+          parent: "Massachusetts Institute of Technology"
+        relevant_fields:
+          - field: locations[0].city
+            useful_for: [a-address-institution]
+            assessment: >
+              Lexington, MA — correct. NOT Cambridge (MIT main campus). The parent
+              relationship is properly recorded. This is a positive example of
+              government sub-unit coverage, contrasting with NML's absence.
+          - field: relationships[0]
+            useful_for: [a-address-institution]
+            assessment: "Parent-child relationship to MIT available for hierarchy validation."
+    notes: >
+      Positive example of sub-unit coverage. MIT Lincoln Lab has its own ROR record in
+      Lexington (correct), with MIT as parent. Contrast with NML (case 5) which has no
+      separate record.
+
+  - case_id: 41
+    round: 2
+    name: "Army Medical University (PLA Third Military Medical University)"
+    type: academic
+    country: CN
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: ror
+        query: "GET https://api.ror.org/v2/organizations?query=Army+Medical+University+China"
+        status: covered
+        response_summary:
+          name: "Army Medical University"
+          country: China
+          city: Chongqing
+          types: [education, funder]
+          aliases: ["Third Military Medical University", "中国人民解放军第三军医大学"]
+        relevant_fields:
+          - field: names
+            useful_for: [a-address-institution]
+            assessment: "Former name (Third Military Medical University) stored as alias. Name change handled."
+    notes: "PLA-affiliated medical university. Name change from 'Third Military Medical University' to 'Army Medical University' handled via alias."
