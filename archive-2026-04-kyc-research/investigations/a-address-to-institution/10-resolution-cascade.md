@@ -12,7 +12,7 @@
 |---|------|-------------|--------|
 | 01 | ROR API | Yes | Working, free, no auth |
 | 02 | GLEIF API | Yes | Working, free, no auth |
-| 03 | UK Companies House | No (401) | API key not yet valid — needs REST key, not streaming key |
+| 03 | UK Companies House | Yes | Working. Note: must use "Live application" key, not "Test application" |
 | 04 | OSM Overpass | Yes | Working, free, rate-limited (~4 queries before 429) |
 | 05 | GeoNames | Yes | Working, free, username-based auth |
 | 06 | BIN Lookup (binlist.net) | Yes | Working but **missing fintech BINs** — use Stripe metadata instead |
@@ -816,17 +816,13 @@ API costs are negligible. Human review time is the dominant cost, which is why m
 
 6. **OSM Overpass rate limiting.** Public API rate-limits after ~4 queries. For production: pre-fetch and cache polygons for known institutions, or self-host an Overpass instance (~50GB disk).
 
-7. **Companies House auth issue.** Current API key returns 401. Need valid REST API key (not streaming key) to run live tests.
-
-8. **Smarty subscription.** Free Core plan needs activation in the Smarty dashboard before live tests can run.
+7. **Smarty subscription.** Free Core plan needs activation in the Smarty dashboard before live tests can run.
 
 ---
 
 ## Next Steps
 
-1. **Resolve Companies House API key** — verify REST key in developer portal
-2. **Activate Smarty free plan** — log into dashboard, enable Core plan
-3. **Re-run live tests** for both services with real responses
-4. **Move to priority (e)** — PO boxes / freight forwarders (shares Smarty dependency)
+1. **Activate Smarty free plan** — log into dashboard, enable Core plan, re-run 7 test addresses
+2. **Move to priority (e)** — PO boxes / freight forwarders (shares Smarty dependency)
 5. **Draft flag specs** in the format from `notes/measure-A-deep-dive-planning.md`
 6. **Author case stories** (~30 stories spanning legitimate, negligent, and adversarial)

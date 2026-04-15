@@ -8,7 +8,7 @@ API base: `https://api.company-information.service.gov.uk/`
 Auth: HTTP Basic Auth (API key as username, empty password).
 Cost: Free. Rate limit: 600 requests per 5 minutes.
 
-**Status:** API key not yet obtained. All response examples below are marked as expected responses based on public Companies House records and API documentation. See [00-api-key-setup.md](./00-api-key-setup.md) for setup instructions.
+**Status:** Live-tested on 2026-04-14. API key obtained (REST key, live environment). Note: test-environment keys do NOT work against the production API — must create a "Live application" in the developer portal, not a "Test application."
 
 ---
 
@@ -268,6 +268,86 @@ curl -s -u "{API_KEY}:" \
 | `country` | Country | `"United Kingdom"`, `"England"`, `"Wales"`, `"Scotland"` |
 | `care_of` | C/O name (optional) | Present when registered at an agent's address |
 | `po_box` | PO box (optional) | Uncommon; presence may indicate non-operational address |
+
+---
+
+## 4d. Live Test Results (2026-04-14)
+
+All responses below are from the production API with a live REST key.
+
+### Oxford Nanopore Technologies PLC (05386273)
+
+`GET /company/05386273` — **confirmed live:**
+
+```json
+{
+  "company_name": "OXFORD NANOPORE TECHNOLOGIES PLC",
+  "company_number": "05386273",
+  "company_status": "active",
+  "type": "plc",
+  "date_of_creation": "2005-03-09",
+  "jurisdiction": "england-wales",
+  "sic_codes": ["72190"],
+  "registered_office_address": {
+    "address_line_1": "Gosling Building Edmund Halley Road",
+    "address_line_2": "Oxford Science Park",
+    "country": "United Kingdom",
+    "locality": "Oxford",
+    "postal_code": "OX4 4DQ",
+    "region": "Oxfordshire"
+  },
+  "registered_office_is_in_dispute": false,
+  "undeliverable_registered_office_address": false,
+  "previous_company_names": [
+    {"name": "OXFORD NANOPORE TECHNOLOGIES LIMITED", "ceased_on": "2021-09-24", "effective_from": "2008-05-19"},
+    {"name": "OXFORD NANOLABS LIMITED", "ceased_on": "2008-05-19", "effective_from": "2005-03-09"}
+  ]
+}
+```
+
+**Confirmed:** SIC code 72190 (other R&D on natural sciences), street-level address at Oxford Science Park. Matches expected response exactly. Note `has_charges: false` — no outstanding charges/liens.
+
+### Genome Research Limited / Wellcome Sanger Institute (02742969)
+
+`GET /company/02742969` — **confirmed live:**
+
+```json
+{
+  "company_name": "GENOME RESEARCH LIMITED",
+  "company_number": "02742969",
+  "company_status": "active",
+  "type": "private-limited-guarant-nsc",
+  "date_of_creation": "1992-08-20",
+  "jurisdiction": "england-wales",
+  "sic_codes": ["72110"],
+  "registered_office_address": {
+    "address_line_1": "Wellcome Sanger Institute Wellcome Genome Campus",
+    "address_line_2": "Hinxton",
+    "country": "England",
+    "locality": "Saffron Walden",
+    "postal_code": "CB10 1SA"
+  },
+  "registered_office_is_in_dispute": false,
+  "undeliverable_registered_office_address": false
+}
+```
+
+**Key finding confirmed:** The registered address is in **Hinxton** (postal code CB10 1SA), not Cambridge. ROR places this institution in Cambridge (~15km away). Companies House gives the correct street-level location. This is the strongest validation of the resolution cascade — Companies House resolves the ROR city-level inaccuracy for UK entities.
+
+Also note: `address_line_1` includes "Wellcome Sanger Institute" as part of the address, even though the company name is "Genome Research Limited." This is useful — the trading name appears in the address even though it's not the registered company name.
+
+SIC code 72110 (biotech R&D) — primary life-sciences code. Entity type `private-limited-guarant-nsc` (private limited by guarantee, no share capital) — typical for research/charitable entities.
+
+### Trading Name Search Pitfall — Confirmed
+
+`GET /search/companies?q=Wellcome%20Sanger%20Institute` — **returns 2,849 results, NONE of which are Genome Research Limited.** Top results include "Briggs & Sanger Limited", "Dave Sanger Tennis Coaching Ltd", etc. The search appears to tokenize on individual words and match "Sanger" broadly.
+
+**Implication for KYC pipeline:** Searching by trading/brand name is unreliable. The pipeline must:
+1. Try the customer's stated institution name first
+2. If no relevant result, cross-reference with ROR to find the legal entity name
+3. Search again by legal entity name
+
+Searching for "Genome Research Limited" returns the correct result immediately.
 
 ---
 
