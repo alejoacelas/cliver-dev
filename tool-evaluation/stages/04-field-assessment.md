@@ -59,16 +59,23 @@ Look at the stage 3 test results. Group the test cases by how long it would take
 The groups should emerge from the data — don't force them into predefined categories. But expect something like:
 
 **Time-based tiers:**
-- **Auto (0 min):** Deterministic rule resolves it. No human sees it.
-- **Quick review (1-3 min):** Human glances at the flag + context, makes a call. No customer contact.
-- **Investigation (5-15 min):** Human needs to dig — cross-reference sources, search the web. No customer contact.
+- **Auto (0 min):** Deterministic rule resolves it. No human or LLM sees it.
+- **LLM review (0.5-2 min):** An LLM agent with web search + API access runs a prescribed procedure and makes a pass/escalate decision. No human sees the case unless the LLM escalates. Use this tier when the resolution path is fully procedural — a sequence of API calls and web lookups with a binary pass/fail rule at the end. Cost: ~$0.01-0.03/case in inference.
+- **LLM review + human audit:** The LLM runs the structured portion, but a human reviews the LLM's output for a subset of cases (e.g., compliance-sensitive decisions, soft thresholds). Use this when the procedure is automatable but the final call has liability or judgment implications.
+- **Human review (1-15 min):** A human reviewer handles the case. No customer contact. Use this when the resolution path requires subjective judgment that can't be reduced to a procedure, or when the evidence is genuinely ambiguous.
 - **Customer follow-up (15-60 min):** Human must contact the customer and wait for a response.
 
-But within each tier, there will be sub-groups. For example, "quick review" might include:
-- Large US pharma company where the billing address is a known HQ → 1 min (look it up, confirm, pass)
-- Small non-US biotech at a coworking address → 3 min (check if the company is a tenant, check incorporation date)
+But within each tier, there will be sub-groups. For example, "LLM review" might include:
+- Multi-campus university with city mismatch → 0.5 min (LLM web-searches "[institution] [city] campus", confirms satellite)
+- Mid-size biotech not in ROR → 0.5 min (LLM web-searches company name, confirms website + LinkedIn exist)
+
+And "human review" might include:
+- Small biotech with minimal web presence → 10 min (evidence is ambiguous, human judges credibility)
+- Prepaid card investigation → 7 min (human checks whether corporate virtual card vs. gift card)
 
 These sub-groups are the profile groups.
+
+**How to decide between LLM review and human review:** Write out the resolution path step by step. If every step is either (a) an API call with a deterministic interpretation, or (b) a web search where the pass/fail rule can be stated in one sentence, the group is `llm_review`. If any step requires weighing ambiguous evidence, applying a subjective threshold ("is this company real enough?"), or contacting the customer, it's `human_review` or `customer_follow_up`.
 
 ### What each profile group needs
 
@@ -88,13 +95,14 @@ For each profile group, document:
 
 - group: "Non-OECD academic, in ROR but city mismatch"
   description: "University in Africa/Asia/South America that is in ROR but the shipping address city doesn't match the ROR city (satellite campus, collaborator address, etc.)"
-  time_tier: investigation
-  estimated_time: "5-10 min"
-  resolution_path: "ROR returns the institution but city doesn't match. Reviewer checks: (1) Does the institution have multiple campuses? (2) Is the shipping city near the ROR city? (3) Web search for institution + shipping city."
+  time_tier: llm_review
+  estimated_time: "0.5 min"
+  resolution_path: "ROR returns the institution but city doesn't match. LLM agent: (1) web search '[institution] [shipping city] campus', (2) check geographic proximity. If campus confirmed or cities within 50km → pass. If no evidence → escalate to human."
+  escalation_rate: "~10% (rare — most mismatches are real satellite campuses)"
   fraction_of_test_cases: "4/38 (11%)"
   examples_from_tests:
-    - "Chinese Academy of Sciences, Wuhan campus (case 14): ROR returns Beijing. Reviewer would need to check if CAS has a Wuhan campus."
-    - "University of Cape Town, Stellenbosch satellite (case 19): ROR returns Cape Town. Shipping was Stellenbosch (30km away)."
+    - "Chinese Academy of Sciences, Wuhan campus (case 14): ROR returns Beijing. Web search 'CAS Wuhan' confirms Wuhan Institute of Virology. LLM resolves in seconds."
+    - "University of Cape Town, Stellenbosch satellite (case 19): ROR returns Cape Town. Stellenbosch is 50km away. Geocode check passes."
   what_they_share: "Institution exists in registries but address doesn't match due to multi-campus or collaborator shipping"
 
 - group: "Community bio lab / makerspace"
@@ -160,7 +168,7 @@ flag_verdict:
 profile_groups:
   - group: "Established US/EU academic institution"
     description: "..."
-    time_tier: auto          # auto | quick_review | investigation | customer_follow_up
+    time_tier: auto          # auto | llm_review | llm_review_human_audit | human_review | customer_follow_up
     estimated_time: "0 min"
     resolution_path: "..."
     fraction_of_test_cases: "18/38 (47%)"
@@ -173,9 +181,10 @@ profile_groups:
 
   - group: "Non-OECD academic, in ROR but city mismatch"
     description: "..."
-    time_tier: investigation
-    estimated_time: "5-10 min"
-    resolution_path: "..."
+    time_tier: llm_review
+    estimated_time: "0.5 min"
+    resolution_path: "LLM web-searches '[institution] [shipping city] campus', checks proximity. Pass if confirmed, escalate if not."
+    escalation_rate: "~10%"  # fraction of cases where LLM escalates to human
     fraction_of_test_cases: "4/38 (11%)"
     examples_from_tests: [...]
     what_they_share: "..."

@@ -4,7 +4,7 @@ This document tells a new Claude Code session how to execute the tool evaluation
 
 ## What this pipeline produces
 
-Empirical assessments of KYC screening endpoints — tested against real and adversarial cases — answering: what does each API actually return in practice, where does coverage break down, how do the response fields map to the CSSWG flags, and what fraction of cases can be automated vs. need human review?
+Empirical assessments of KYC screening endpoints — tested against real and adversarial cases — answering: what does each API actually return in practice, where does coverage break down, how do the response fields map to the CSSWG flags, and what fraction of cases can be fully automated, delegated to LLM agents, or require human review?
 
 The audience is the CSSWG working group and DNA synthesis providers evaluating which tools to adopt.
 
@@ -38,16 +38,19 @@ Adjacent measures pulled in because they share endpoints: M06, M07, M10, M18, M1
 
 ## Endpoint inventory
 
-31 endpoints across 9 groups. See [`stages/01-endpoint-map.md`](stages/01-endpoint-map.md) for the full mapping of endpoints to KYC steps.
+37 endpoints across 9 groups (+ 5 LLM+Exa per-step endpoints + docs-only group). See [`stages/01-endpoint-map.md`](stages/01-endpoint-map.md) for the full mapping of endpoints to KYC steps.
 
-**API endpoints (17 requiring network calls):**
-ROR, GLEIF, RDAP, Consolidated Screening List, OSM Overpass, binlist.net, InCommon/eduGAIN, Smarty, Stripe (test), Plaid (sandbox), Companies House, Exa, GeoNames, Google Places (New API), NIH RePORTER, NSF Awards, UKRI, PubMed, OpenCorporates, ORCID, OpenAlex.
+**API endpoints (23 requiring network calls):**
+ROR, GLEIF, RDAP, OSM Overpass, binlist.net, InCommon/eduGAIN, Smarty, Stripe (test), Plaid (sandbox), Companies House, Exa, GeoNames, Google Places Text Search, Google Places Nearby Search, NIH RePORTER, NSF Awards, UKRI, EU CORDIS, SEC EDGAR, PubMed, ORCID, OpenAlex, Melissa Global Address, Google Scholar Profiles.
 
-**Local logic (7):**
+**Local logic (8):**
 Disposable/free-mail blocklist, MX/SPF/DMARC, lookalike domain detector, PO Box regex, BIS Country Groups, ISO 3166 normalization, billing-shipping consistency, fintech BIN denylist.
 
-**Docs-only (2):**
-Stripe AVS (production), Plaid Identity Match (production).
+**Docs-only (4):**
+Stripe AVS (production), Plaid Identity Match (production), MaxMind minFraud / Binbase, ORCID OAuth.
+
+**Blocked (2):**
+OpenCorporates (requires paid API), Consolidated Screening List (API deprecated — entity-level sanctions screening is out of scope for this pipeline; BIS country-group screening is in scope and functional).
 
 ---
 

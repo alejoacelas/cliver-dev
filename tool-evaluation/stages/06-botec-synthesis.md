@@ -110,56 +110,108 @@ Tag each number as `[market data]`, `[judgment]`, or `[insufficient data — ran
 
 *Note:* By order count, academic share is likely *higher* than by revenue (academic orders tend to be smaller). The sub-splits below the top level are judgment calls — tag them clearly.
 
-### Step 3: Compute per-KYC-step costs
+### Step 3: Compute per-KYC-step costs (split into API-only and full-workflow)
 
-For each KYC step, compute:
+Present costs in two layers so the reader can see what's hard data vs. estimate:
 
-**API cost per order:**
-Sum the cost_per_call for all endpoints in the recommended combination. Most are free; note the paid ones (Smarty, Google Places) and their impact.
+#### Layer 1: API-only automation cost (hard number)
 
-**Human time per order (weighted average):**
+Sum the cost_per_call for all endpoints in the recommended combination. This is deterministic — it's just API pricing times call volume. Present as a single table:
+
 ```
-avg_time = Σ (profile_group_fraction × estimated_time_for_this_step)
+| Step | Endpoints used | Cost/order | Monthly (1K orders) |
 ```
 
-**Human time by tier:**
+#### Layer 2: Full-workflow cost (API + LLM review + human review, with ranges)
+
+The stage 4 assessments classify each profile group into one of five tiers: `auto`, `llm_review`, `llm_review_human_audit`, `human_review`, or `customer_follow_up`. Use these tiers to compute a three-layer cost model:
+
+**Cost per case by tier:**
+- `auto`: $0 incremental (API cost only, already in Layer 1)
+- `llm_review`: ~$0.01-0.03/case (LLM inference + any Exa/web search calls). Wall-clock time ~0.5-2 min but no human cost.
+- `llm_review_human_audit`: ~$0.02-0.03 LLM cost + human audits a fraction of cases. Use the `escalation_rate` from the profile group to estimate the human portion.
+- `human_review`: $40/hr × estimated_time. The human does the full review.
+- `customer_follow_up`: $40/hr × estimated_time. Human contacts the customer.
+
+**Time and cost by tier (weighted):**
 ```
 auto_fraction = Σ fractions of profile groups with time_tier=auto
-quick_review_fraction = Σ fractions with time_tier=quick_review
-investigation_fraction = Σ fractions with time_tier=investigation
+llm_review_fraction = Σ fractions with time_tier=llm_review or llm_review_human_audit
+human_review_fraction = Σ fractions with time_tier=human_review
 follow_up_fraction = Σ fractions with time_tier=customer_follow_up
 ```
 
+For `llm_review_human_audit` groups, split the fraction: `(1 - escalation_rate)` goes to LLM cost, `escalation_rate` goes to human cost.
+
 **Monthly totals at 1,000 orders/month:**
 - API cost = 1,000 × API cost per order
-- Quick review hours = 1,000 × quick_review_fraction × avg_quick_review_time / 60
-- Investigation hours = 1,000 × investigation_fraction × avg_investigation_time / 60
+- LLM review cost = 1,000 × llm_review_fraction × avg_llm_cost_per_case
+- Human review hours = 1,000 × human_review_fraction × avg_human_review_time / 60
+- Human audit hours (from LLM escalations) = 1,000 × Σ(llm_audit_fraction × escalation_rate × audit_time) / 60
 - Follow-up hours = 1,000 × follow_up_fraction × avg_follow_up_time / 60
-- Total human hours = sum of above
-- Blended cost per order = API cost + (human hours × $40/hr) / 1,000
+- Total human hours = human review + human audit + follow-up
+- Blended cost per order = API cost + LLM cost + (human hours × $40/hr) / 1,000
 
 ### Step 4: Cross-step rollup
 
-An order goes through all 5 KYC steps. The same order might be auto for step (a) but investigation for step (c). For each profile group, compute the **total time across all 5 steps:**
+An order goes through all 5 KYC steps. The same order might be auto for step (a) but human_review for step (c). For each profile group, compute the **total cost across all 5 steps**, broken down by who handles each step:
 
 ```yaml
 - profile_group: "Small non-OECD biotech startup"
-  per_step_time:
-    a-address-to-institution: "10-15 min (investigation)"
-    b-payment-to-institution: "5-10 min (investigation)"
-    c-email-to-affiliation: "5-10 min (investigation)"
-    d-residential-address: "1-3 min (quick review)"
-    e-po-box-freight: "0 min (auto — PO box regex + country check)"
-  total_time: "21-38 min"
+  per_step:
+    a-address-to-institution:
+      tier: human_review
+      time: "10-15 min"
+      cost_type: human
+    b-payment-to-institution:
+      tier: llm_review
+      time: "1 min"
+      cost_type: llm  # LLM checks fintech BIN + web-searches company
+    c-email-to-affiliation:
+      tier: human_review
+      time: "5-10 min"
+      cost_type: human  # company has no institutional email, free email, ambiguous
+    d-residential-address:
+      tier: llm_review
+      time: "0.5 min"
+      cost_type: llm  # step (a) already flagged; LLM confirms residential
+    e-po-box-freight:
+      tier: auto
+      time: "0 min"
+      cost_type: api
+  total_human_time: "15-25 min"
+  total_llm_cost: "$0.03"
   total_api_cost: "$0.07"
 ```
 
-Then compute the **blended total across the customer mix:**
+Then compute the **blended total across the customer mix**, separating the three cost streams:
 
 ```
 total_monthly_human_hours = Σ over profile groups:
-  (1,000 × fraction × total_time_minutes / 60)
+  (1,000 × fraction × human_time_minutes / 60)
+
+total_monthly_llm_cost = Σ over profile groups:
+  (1,000 × fraction × llm_cost_per_case)
 ```
+
+#### Cross-step overlap adjustment
+
+When one reviewer handles multiple KYC steps for the same order, context gained in step (a) may speed up steps (c) and (d). Present this as an **explicit assumption with a range**, not a point estimate:
+
+- **0% overlap (parallel queues):** Different reviewers handle each step independently. No context sharing. Use this as the upper bound on human time.
+- **15-25% overlap (sequential single reviewer):** One person does all 5 steps for an order. Estimated based on shared signals (ROR lookup serves both address and email verification). Use this as the lower bound.
+- **Present the final cost as a range:** "$X/order (parallel queues) to $Y/order (single-reviewer sequential)"
+
+#### Workflow simulation (ground-truth check)
+
+After computing the estimates above, validate them with a walkthrough of 15-20 real cases:
+
+1. Select 15-20 orders from `customers.csv` spanning PG-01 through PG-11 (at least 1 per profile group)
+2. For each order, trace through the 5-step decision logic using existing stage 3 results — which endpoints fire, what they return, what the reviewer would need to do
+3. For non-auto-pass cases, estimate the actual review workflow step by step (what would the reviewer look at, in what order, how long each lookup would take)
+4. Compare the simulated times against the profile group time estimates from stage 4
+5. Compute the actual overlap between steps — did step (a) investigation genuinely speed up step (c) for the same order?
+6. Report any cases where the simulated time diverged significantly from the profile group estimate, and adjust the estimates if warranted
 
 ### Step 5: Cost drivers and tail risk analysis
 
@@ -182,6 +234,15 @@ Rather than showing 2x sensitivity on individual groups, present 2-3 provider ar
 
 This lets readers see which archetype is closest to their situation rather than trying to do the math themselves.
 
+**5d. Automation frontier:**
+Summarize what fraction of the total review workload falls into each tier, and what the cost picture looks like with vs. without LLM delegation:
+
+1. **Current state (human-only):** All non-auto cases handled by human reviewers. Total human hours/month and blended cost/order.
+2. **With LLM delegation:** `llm_review` and `llm_review_human_audit` cases handled by LLM agents. Total human hours/month, total LLM cost/month, and blended cost/order.
+3. **Delta:** How much human time and cost are saved, and what remains human-only.
+
+For each profile group that is `llm_review` or `llm_review_human_audit`, briefly note what would need to be validated before deploying this in production — e.g., accuracy benchmarks on a held-out set, compliance review of LLM-in-the-loop for export control, etc. The goal is to show the working group the automation opportunity and what stands between the current state and realizing it.
+
 ## Constraints
 
 - **Ground every estimate in stage 3 test results.** When you say "established US academic → auto," cite the specific test cases that demonstrate this. Reference per-endpoint result files.
@@ -196,10 +257,13 @@ Write to `tool-evaluation/06-cost-coverage-synthesis.md`:
 
 The document should be organized as:
 
-1. **Profile group inventory** — the unified list across all KYC steps
+1. **Profile group inventory** — the unified list across all KYC steps, with each group's tier (auto / llm_review / llm_review_human_audit / human_review / customer_follow_up)
 2. **Fraction estimates** — the tree breakdown with sources tagged (`[market data]` / `[judgment]` / `[insufficient data]`)
-3. **Per-KYC-step cost tables** — API cost, human time by tier, monthly totals
-4. **Cross-step rollup** — per profile group total time, blended monthly cost
-5. **Cost drivers and tail risk** — which profile groups dominate cost, where averages are misleading, what scenarios could drastically increase costs
-6. **Provider archetypes** — cost computed for 2-3 different customer mix scenarios
-7. **Key findings** — which profile groups drive the most cost, which KYC steps are most expensive, where the biggest uncertainties are
+3. **API-only automation cost** — hard numbers: API fees per order and monthly, deterministic
+4. **Full-workflow cost tables** — three cost streams (API + LLM + human) by tier, monthly totals, presented as range reflecting overlap assumption
+5. **Cross-step rollup** — per profile group: which steps are auto/LLM/human, total human time, total LLM cost, blended monthly cost, overlap range
+6. **Workflow simulation results** — 15-20 case walkthroughs validating the estimates
+7. **Cost drivers and tail risk** — which profile groups dominate cost, where averages are misleading, what scenarios could drastically increase costs
+8. **Provider archetypes** — cost computed for 2-3 different customer mix scenarios
+9. **Automation frontier** — side-by-side comparison of human-only vs. LLM-delegated cost, with notes on what needs validation before deployment
+10. **Key findings** — which profile groups drive the most cost, which KYC steps are most expensive, where the biggest uncertainties are
