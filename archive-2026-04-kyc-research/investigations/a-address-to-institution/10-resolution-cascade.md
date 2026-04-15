@@ -16,7 +16,7 @@
 | 04 | OSM Overpass | Yes | Working, free, rate-limited (~4 queries before 429) |
 | 05 | GeoNames | Yes | Working, free, username-based auth |
 | 06 | BIN Lookup (binlist.net) | Yes | Working but **missing fintech BINs** — use Stripe metadata instead |
-| 07 | Smarty (USPS address) | No (402) | Credentials valid but free Core plan needs activation |
+| 07 | Smarty (USPS address) | Yes | Working. CMRA detection less reliable than expected — see 07-smarty-api.md |
 | 08 | Stripe AVS | Yes (test mode) | Working, card metadata + AVS checks |
 | 09 | Plaid Identity Match | Yes (sandbox) | Working, per-field match scores |
 
@@ -816,13 +816,12 @@ API costs are negligible. Human review time is the dominant cost, which is why m
 
 6. **OSM Overpass rate limiting.** Public API rate-limits after ~4 queries. For production: pre-fetch and cache polygons for known institutions, or self-host an Overpass instance (~50GB disk).
 
-7. **Smarty subscription.** Free Core plan needs activation in the Smarty dashboard before live tests can run.
+7. **Smarty CMRA detection unreliable.** Live test of a known UPS Store address returned `dpv_cmra=N`. The USPS CMRA database may have incomplete coverage. Use `dpv_match_code=S` (secondary not confirmed) as a supplementary signal.
 
 ---
 
 ## Next Steps
 
-1. **Activate Smarty free plan** — log into dashboard, enable Core plan, re-run 7 test addresses
-2. **Move to priority (e)** — PO boxes / freight forwarders (shares Smarty dependency)
-5. **Draft flag specs** in the format from `notes/measure-A-deep-dive-planning.md`
-6. **Author case stories** (~30 stories spanning legitimate, negligent, and adversarial)
+1. **Move to priority (e)** — PO boxes / freight forwarders (shares Smarty dependency)
+2. **Draft flag specs** in the format from `notes/measure-A-deep-dive-planning.md`
+3. **Author case stories** (~30 stories spanning legitimate, negligent, and adversarial)

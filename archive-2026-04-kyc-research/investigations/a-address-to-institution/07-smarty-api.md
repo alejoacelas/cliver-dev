@@ -23,22 +23,9 @@ These fields are exactly what we need for the shipping-address layer of KYC scre
 
 ### Subscription Status
 
-When testing on 2026-04-14, the provided credentials returned HTTP 402:
+**Live-tested on 2026-04-14** after activating the free Core plan. All 7 test addresses below have live results.
 
-```json
-{
-  "errors": [
-    {
-      "id": 1588026162,
-      "message": "Active subscription required (1588026162): The optional license value supplied (if any) was valid and understood, but the account does not have the necessary active subscription to allow this operation to continue."
-    }
-  ]
-}
-```
-
-The auth-id/auth-token are recognized (not a 401), but the account's free tier subscription has either expired or was never activated. **Action needed:** Log into the Smarty dashboard and activate the free "Core" plan, or add a payment method.
-
-The remainder of this report documents the expected API behavior based on the [Smarty API documentation](https://www.smarty.com/docs/cloud/us-street-api) and known characteristics of each test address. Once the subscription is active, re-running the curl commands below will populate real responses.
+Initial attempt returned HTTP 402 (subscription not active). After activating the free Core plan in the Smarty dashboard, all queries succeeded.
 
 ---
 
@@ -128,25 +115,27 @@ auth-token=aiRI45PQanucHG17xOzk&\
 street=77+Massachusetts+Ave&city=Cambridge&state=MA&zipcode=02139&candidates=1"
 ```
 
-**Expected response (key fields):**
+**Live response (key fields):**
 
-| Field | Expected Value |
-|-------|---------------|
-| `delivery_line_1` | `77 MASSACHUSETTS AVE` |
-| `last_line` | `CAMBRIDGE MA 02139-4301` (approx) |
+| Field | Value |
+|-------|-------|
+| `delivery_line_1` | `77 Massachusetts Ave` |
+| `last_line` | `Cambridge MA 02139-4301` |
 | `components.zipcode` | `02139` |
-| `components.plus4_code` | `4301` (approx) |
+| `components.plus4_code` | `4301` |
 | `metadata.rdi` | **`Commercial`** |
-| `metadata.latitude` | ~42.3593 |
-| `metadata.longitude` | ~-71.0935 |
+| `metadata.latitude` | 42.35934 |
+| `metadata.longitude` | -71.0937 |
 | `metadata.county_name` | `Middlesex` |
-| `metadata.record_type` | `H` or `S` (Highrise or Street) |
+| `metadata.record_type` | `S` (Street) |
+| `metadata.precision` | `Zip9` |
 | `analysis.dpv_match_code` | **`Y`** (confirmed) |
-| `analysis.dpv_cmra` | **`N`** (not a mail receiving agency) |
+| `analysis.dpv_cmra` | **`N`** |
 | `analysis.dpv_vacant` | `N` |
+| `analysis.dpv_no_stat` | `Y` |
 | `analysis.active` | `Y` |
 
-**KYC conclusion:** Address verified, Commercial, DPV confirmed, not a CMRA. Combined with a ROR lookup matching MIT to Cambridge, MA -- this is a strong signal for auto-pass.
+**KYC conclusion:** Address verified, Commercial, DPV confirmed, not a CMRA. Combined with a ROR lookup matching MIT to Cambridge, MA -- this is a strong signal for auto-pass. Coordinates (42.359, -71.094) land on the MIT campus, consistent with the OSM polygon from `04-osm-overpass.md`.
 
 ---
 
@@ -158,23 +147,15 @@ curl -s "https://us-street.api.smarty.com/street-address?auth-id=...&auth-token=
 street=123+Main+St&city=Somerville&state=MA&zipcode=02144&candidates=1"
 ```
 
-**Expected response (key fields):**
+**Live response:**
 
-| Field | Expected Value |
-|-------|---------------|
-| `delivery_line_1` | `123 MAIN ST` |
-| `last_line` | `SOMERVILLE MA 02144-xxxx` |
-| `components.zipcode` | `02144` |
-| `metadata.rdi` | **`Residential`** |
-| `metadata.latitude` | ~42.3876 |
-| `metadata.longitude` | ~-71.0995 |
-| `metadata.county_name` | `Middlesex` |
-| `analysis.dpv_match_code` | **`Y`** (confirmed) |
-| `analysis.dpv_cmra` | **`N`** |
-| `analysis.dpv_vacant` | `N` |
-| `analysis.active` | `Y` |
+```json
+[]
+```
 
-**KYC conclusion:** Address is valid but classified **Residential**. If the customer claims institutional affiliation, this is a **soft flag** -- the shipping address doesn't match an institution. Not blocking on its own (researchers do receive packages at home), but warrants a secondary check (e.g., is the billing institution in the same metro area?).
+**Empty array — address not found.** This is unexpected. "123 Main St, Somerville, MA 02144" is a plausible residential address, but Smarty returned no candidates. This likely means the specific address (123 Main St) does not exist as a valid USPS delivery point in Somerville, MA 02144. The street exists but the primary number may not be a real deliverable address.
+
+**KYC conclusion:** In production, an empty response means the address cannot be verified at all. For KYC purposes, this would be treated like the invalid address case (Test 7) — a hard block requiring the customer to provide a valid address. This also demonstrates that Smarty is stricter than expected: it validates to the specific delivery point, not just the street.
 
 ---
 
@@ -185,19 +166,15 @@ street=123+Main+St&city=Somerville&state=MA&zipcode=02144&candidates=1"
 curl -s "...&street=PO+Box+390&city=Cambridge&state=MA&zipcode=02139&candidates=1"
 ```
 
-**Expected response (key fields):**
+**Live response:**
 
-| Field | Expected Value |
-|-------|---------------|
-| `delivery_line_1` | `PO BOX 390` |
-| `last_line` | `CAMBRIDGE MA 02139-0390` |
-| `metadata.rdi` | *(not set for PO Boxes -- RDI only applies to street addresses)* |
-| `metadata.record_type` | **`P`** (PO Box) |
-| `analysis.dpv_match_code` | **`Y`** (PO boxes are deliverable) |
-| `analysis.dpv_cmra` | **`N`** (it's a USPS PO Box, not a private CMRA) |
-| `analysis.active` | `Y` |
+```json
+[]
+```
 
-**KYC conclusion:** Address is a USPS PO Box. This fires a **PO Box flag** (detected via `record_type=P`). PO Boxes obscure the actual recipient location. A reviewer should ask why the shipment can't go to an institutional address. Note: PO Boxes are NOT flagged as CMRA -- CMRA is specifically for private mail agencies (UPS Store, etc.). We need to check `record_type` separately.
+**Empty array — PO Box not found.** PO Box 390 does not exist (or is not deliverable) at the Cambridge 02139 post office. This is a fabricated test address. In production, a real PO Box would return `record_type=P`.
+
+**KYC conclusion:** Same as Test 2 — empty response means hard block. For the PO Box detection use case, the pipeline needs to also do regex-based detection (`/^PO\s*Box/i`) before the API call, since an invalid PO Box returns empty rather than a typed `record_type=P` result. A valid PO Box would still be caught by `record_type=P` in the API response.
 
 ---
 
@@ -208,20 +185,35 @@ curl -s "...&street=PO+Box+390&city=Cambridge&state=MA&zipcode=02139&candidates=
 curl -s "...&street=186+Alewife+Brook+Pkwy+%231020&city=Cambridge&state=MA&zipcode=02138&candidates=1"
 ```
 
-**Expected response (key fields):**
+**Live response (key fields):**
 
-| Field | Expected Value |
-|-------|---------------|
-| `delivery_line_1` | `186 ALEWIFE BROOK PKWY # 1020` |
-| `last_line` | `CAMBRIDGE MA 02138-xxxx` |
+| Field | Value |
+|-------|-------|
+| `delivery_line_1` | `186 Alewife Brook Pkwy # 1020` |
+| `last_line` | `Cambridge MA 02138-1121` |
+| `components.plus4_code` | `1121` |
 | `metadata.rdi` | **`Commercial`** |
+| `metadata.record_type` | `H` (Highrise) |
 | `metadata.county_name` | `Middlesex` |
-| `analysis.dpv_match_code` | **`Y`** or **`S`** (suite may or may not be confirmed) |
-| `analysis.dpv_cmra` | **`Y`** -- this is the critical flag |
+| `metadata.building_default_indicator` | `Y` |
+| `metadata.latitude` | 42.39192 |
+| `metadata.longitude` | -71.14108 |
+| `metadata.precision` | `Zip9` |
+| `analysis.dpv_match_code` | **`S`** (secondary not confirmed) |
+| `analysis.dpv_cmra` | **`N`** |
 | `analysis.dpv_vacant` | `N` |
+| `analysis.dpv_no_stat` | `Y` |
 | `analysis.active` | `Y` |
+| `analysis.footnotes` | `N#S#` |
 
-**KYC conclusion:** Address verified but **dpv_cmra=Y** -- this is a Commercial Mail Receiving Agency (UPS Store). This is a **hard flag**. A CMRA address provides no assurance about who actually receives the package. The reviewer should ask the customer to provide their actual institutional or business address. Note that CMRA addresses often use "Suite" or "#" notation to look like normal commercial addresses -- this is why the CMRA flag is so valuable.
+**SURPRISE: `dpv_cmra=N` — CMRA flag did NOT fire.** This was the most important expected signal, and it failed. Possible explanations:
+
+1. **Suite #1020 may not be in the USPS CMRA database for this location.** The CMRA database is maintained by USPS and relies on CMRAs self-reporting. Not all locations or suite numbers may be flagged.
+2. **`dpv_match_code=S`** means the street address (186 Alewife Brook Pkwy) is confirmed, but the secondary designator (#1020) was NOT confirmed as a valid delivery point. This is itself a signal — the building exists but the suite number isn't a real suite.
+3. **`building_default_indicator=Y`** means Smarty matched this to the building's default delivery point, not a specific suite. Combined with `dpv_match_code=S`, this suggests the building exists but the "suite" number is not a real commercial suite.
+4. **Footnote `N#`** indicates the address was matched to the USPS highrise default record. **Footnote `S#`** indicates the secondary information (suite #1020) was not recognized.
+
+**KYC conclusion:** The CMRA flag is **less reliable than documented**. However, the `dpv_match_code=S` + `building_default_indicator=Y` combination is still a useful signal: it means "this building exists, but the specific suite you gave us doesn't check out." For the KYC pipeline, we should flag `dpv_match_code=S` (secondary not confirmed) as a **soft flag** in addition to checking `dpv_cmra`. The CMRA flag alone cannot be relied upon to catch all mail-forwarding services.
 
 ---
 
@@ -232,22 +224,25 @@ curl -s "...&street=186+Alewife+Brook+Pkwy+%231020&city=Cambridge&state=MA&zipco
 curl -s "...&street=8180+McCormick+Blvd&city=Skokie&state=IL&zipcode=60076&candidates=1"
 ```
 
-**Expected response (key fields):**
+**Live response (key fields):**
 
-| Field | Expected Value |
-|-------|---------------|
-| `delivery_line_1` | `8180 MCCORMICK BLVD` |
-| `last_line` | `SKOKIE IL 60076-xxxx` |
+| Field | Value |
+|-------|-------|
+| `delivery_line_1` | `8180 McCormick Blvd` |
+| `last_line` | `Skokie IL 60076-2920` |
 | `metadata.rdi` | **`Commercial`** |
-| `metadata.latitude` | ~42.0672 |
-| `metadata.longitude` | ~-87.7106 |
+| `metadata.record_type` | `S` (Street) |
+| `metadata.latitude` | 42.02867 |
+| `metadata.longitude` | -87.71117 |
 | `metadata.county_name` | `Cook` |
-| `analysis.dpv_match_code` | **`Y`** |
+| `metadata.precision` | `Zip9` |
+| `analysis.dpv_match_code` | **`Y`** (confirmed) |
 | `analysis.dpv_cmra` | **`N`** |
 | `analysis.dpv_vacant` | `N` |
+| `analysis.dpv_no_stat` | `N` |
 | `analysis.active` | `Y` |
 
-**KYC conclusion:** This is a known DNA synthesis provider's headquarters. Commercial, DPV confirmed, not CMRA. Auto-pass if the customer is IDT or an entity at this address. Also useful as a reference point: we could maintain a list of known synthesis provider addresses to cross-reference orders (e.g., if a customer is shipping to a competitor's address, that's unusual but not necessarily suspicious).
+**KYC conclusion:** Confirmed live — Commercial, DPV confirmed, not CMRA. This is IDT's (Integrated DNA Technologies) headquarters. Auto-pass if the customer is IDT or an entity at this address. Coordinates (42.029, -87.711) confirm Skokie, IL location. Note `dpv_no_stat=N` — this is a normal, active delivery point (unlike MIT where `dpv_no_stat=Y`).
 
 ---
 
@@ -258,20 +253,29 @@ curl -s "...&street=8180+McCormick+Blvd&city=Skokie&state=IL&zipcode=60076&candi
 curl -s "...&street=625+Massachusetts+Ave&city=Cambridge&state=MA&zipcode=02139&candidates=1"
 ```
 
-**Expected response (key fields):**
+**Live response (key fields):**
 
-| Field | Expected Value |
-|-------|---------------|
-| `delivery_line_1` | `625 MASSACHUSETTS AVE` |
-| `last_line` | `CAMBRIDGE MA 02139-xxxx` |
+| Field | Value |
+|-------|-------|
+| `delivery_line_1` | `625 Massachusetts Ave` |
+| `last_line` | `Cambridge MA 02139-3357` |
 | `metadata.rdi` | **`Commercial`** |
+| `metadata.record_type` | `H` (Highrise) |
 | `metadata.county_name` | `Middlesex` |
-| `analysis.dpv_match_code` | **`Y`** |
-| `analysis.dpv_cmra` | **`N`** (WeWork is NOT classified as CMRA) |
+| `metadata.building_default_indicator` | `Y` |
+| `metadata.latitude` | 42.36533 |
+| `metadata.longitude` | -71.1034 |
+| `metadata.precision` | `Zip9` |
+| `analysis.dpv_match_code` | **`D`** (default address for building) |
+| `analysis.dpv_cmra` | **`N`** |
 | `analysis.dpv_vacant` | `N` |
+| `analysis.dpv_no_stat` | `Y` |
 | `analysis.active` | `Y` |
+| `analysis.footnotes` | `H#` |
 
-**KYC conclusion:** This reveals a **gap in the Smarty data**. WeWork and coworking spaces look like normal commercial addresses: Commercial RDI, not CMRA, DPV confirmed. Smarty has no way to distinguish "real" commercial tenants from coworking/virtual office occupants. A coworking space is a weaker signal of institutional presence than a university or corporate campus. To catch these, we would need a supplementary database of known coworking/virtual office addresses (Regus, WeWork, Industrious, etc.) or check whether the suite number corresponds to a virtual mailbox service.
+**KYC conclusion — gap confirmed live.** WeWork at 625 Mass Ave looks like a normal commercial address: Commercial RDI, not CMRA. However, `dpv_match_code=D` (building default) is interesting — it means Smarty matched to the building's default delivery point, not a specific suite. This is a weaker match than `Y`. Combined with `building_default_indicator=Y` and footnote `H#` (highrise default), this pattern could be a supplementary signal: many coworking/virtual office addresses will show as building defaults rather than confirmed suite-level delivery points.
+
+Smarty cannot distinguish WeWork from a legitimate corporate HQ. To catch coworking spaces, the pipeline needs a supplementary database of known coworking/virtual office addresses (WeWork, Regus, Industrious, etc.).
 
 ---
 
@@ -282,30 +286,31 @@ curl -s "...&street=625+Massachusetts+Ave&city=Cambridge&state=MA&zipcode=02139&
 curl -s "...&street=99999+Fake+Street&city=Nowhere&state=MA&zipcode=00000&candidates=1"
 ```
 
-**Expected response:**
+**Live response:**
 
 ```json
 []
 ```
 
-An empty array -- no candidates returned. The address cannot be matched to any USPS delivery point.
+Confirmed live — empty array, no candidates. The address cannot be matched to any USPS delivery point.
 
 **KYC conclusion:** Address is completely undeliverable. **Hard block** -- cannot verify the address at all. The order cannot proceed until the customer provides a valid address.
 
 ---
 
-## Summary: KYC Decision Matrix
+## Summary: KYC Decision Matrix (Updated with Live Results)
 
-| Signal | Source Field(s) | Action |
-|--------|----------------|--------|
-| Address not found | Empty response `[]` | **Hard block.** Require valid address. |
-| PO Box | `metadata.record_type = "P"` | **Flag for review.** Ask for institutional address. |
-| CMRA (UPS Store, etc.) | `analysis.dpv_cmra = "Y"` | **Hard flag.** Likely mail forwarding. Require actual institution address. |
-| Residential address | `metadata.rdi = "Residential"` | **Soft flag** if customer claims institutional affiliation. Not blocking alone. |
-| Commercial, DPV confirmed | `metadata.rdi = "Commercial"` + `dpv_match_code = "Y"` + `dpv_cmra = "N"` | **Positive signal.** Consistent with institutional shipping. Combine with ROR/institution match. |
-| Vacant | `analysis.dpv_vacant = "Y"` | **Flag for review.** Address exists but is unoccupied. |
-| Inactive delivery point | `analysis.active = "N"` | **Flag for review.** USPS no longer delivers here. |
-| Secondary missing | `analysis.dpv_match_code = "S"` | **Soft flag.** Street exists but suite/apt not confirmed. May be typo or nonexistent unit. |
+| Signal | Source Field(s) | Action | Confirmed live? |
+|--------|----------------|--------|----------------|
+| Address not found | Empty response `[]` | **Hard block.** Require valid address. | Yes (tests 2, 3, 7) |
+| PO Box | `metadata.record_type = "P"` | **Flag for review.** Ask for institutional address. | Not tested (test PO Box was invalid). Also detect via regex pre-check. |
+| CMRA (UPS Store, etc.) | `analysis.dpv_cmra = "Y"` | **Hard flag.** Likely mail forwarding. Require actual institution address. | **NOT confirmed** — UPS Store test returned `dpv_cmra=N`. CMRA database coverage may be incomplete. |
+| Secondary not confirmed | `analysis.dpv_match_code = "S"` + `building_default_indicator = "Y"` | **Soft flag.** Building exists but suite not confirmed. Pattern seen at UPS Store (test 4). Stronger signal than CMRA alone. | Yes (test 4) |
+| Building default only | `analysis.dpv_match_code = "D"` | **Info.** Matched to building default, not specific unit. Seen at WeWork (test 6). | Yes (test 6) |
+| Residential address | `metadata.rdi = "Residential"` | **Soft flag** if customer claims institutional affiliation. Not blocking alone. | Not tested (test address was invalid) |
+| Commercial, DPV confirmed | `metadata.rdi = "Commercial"` + `dpv_match_code = "Y"` + `dpv_cmra = "N"` | **Positive signal.** Consistent with institutional shipping. | Yes (tests 1, 5) |
+| Vacant | `analysis.dpv_vacant = "Y"` | **Flag for review.** Address exists but is unoccupied. | Not encountered |
+| Inactive delivery point | `analysis.active = "N"` | **Flag for review.** USPS no longer delivers here. | Not encountered |
 
 ## Worked Examples
 
