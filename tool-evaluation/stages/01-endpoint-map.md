@@ -29,7 +29,10 @@ This file is the hardcoded starting point for the pipeline. It defines which end
 | **Google Places (New API)** | Nearby Search: find institutions within radius of address. `primaryType` classification. | m04-google-places-business, m05-google-places-campus |
 | **Smarty US Street API** | Address normalization for comparison. Also feeds steps (d) and (e). | m05-ror-gleif-canonical |
 | **NIH RePORTER** | Institution has federal research funding — strong legitimacy signal. ~2,500 US biomedical institutions. | m18-nih-reporter |
-| **NSF Awards / UKRI / CORDIS** | International funding history. ~15-18K institutions across US/UK/EU. | m18-nsf-awards |
+| **NSF Awards** | US NSF-funded research across all sciences. ~15K institutions. | m18-nsf-awards |
+| **UKRI Gateway to Research** | UK research council funding (EPSRC, MRC, BBSRC, etc.). ~5K UK institutions. | m18-nsf-awards |
+| **EU CORDIS** | EU-funded research projects. ~4,641 organizations across 162 countries. Extends funder stack to European institutions. | m18-nsf-awards |
+| **SEC EDGAR** | US public company filings: registered address, officer names, SIC codes, filing status. Authoritative for US public companies. | m09-corp-registry-stack |
 | **PubMed affiliation search** | Institution appears in publication affiliations — confirms life-sciences activity. | m09-pubmed-affiliation |
 | **LLM+Exa web search** | Standalone: "Does institution X have a presence at address Y?" | llm-exa-search-standalone |
 
@@ -42,6 +45,8 @@ This file is the hardcoded starting point for the pipeline. It defines which end
 | **Plaid sandbox** | Identity Match schema. Synthetic data — schema validation only. | m12-psp-avs |
 | **Plaid prod (docs-only)** | Production Identity Match: per-field match scores. US bank accounts only. $0.20-$1.00/call. | m12-psp-avs |
 | **binlist.net** | Free BIN lookup — card brand, type (debit/credit), bank name. Missing many fintech BINs. | m10-binlist-stack |
+| **MaxMind minFraud / Binbase (docs-only)** | Commercial BIN databases with better coverage than binlist.net. Documentation review for gap assessment. | m10-binlist-stack |
+| **SEC EDGAR** | US public company filings — authoritative billing entity verification for public companies. | m09-corp-registry-stack |
 | **Billing-shipping-institution consistency** | Triple-address comparison: billing vs. shipping vs. canonical institution address. Local logic + Smarty. | m12-billing-shipping-consistency |
 | **Fintech-neobank BIN denylist** | Static list: Mercury, Brex, Relay, Wise BIN ranges. Flags neobank-funded entities. | m12-fintech-denylist |
 | **LLM+Exa web search** | Standalone: "Is billing entity X associated with institution Y?" | llm-exa-search-standalone |
@@ -57,7 +62,9 @@ This file is the hardcoded starting point for the pipeline. It defines which end
 | **Lookalike/homoglyph domain detector** | Local logic against ROR domain corpus: catches typosquat/impersonation domains. | m18-lookalike-domain |
 | **InCommon/eduGAIN federation** | Academic federation IdP list — confirms institution is in the federated identity system. | m07-incommon-edugain |
 | **ORCID** | Employment/education records. 2% institution-verified (near-conclusive), 98% self-asserted. | m19-orcid-employments |
+| **ORCID OAuth (docs-only)** | Proof-of-control: customer authenticates via OAuth to prove they own the ORCID account. Identity binding mechanism. | m19-orcid-employments |
 | **OpenAlex** | Author affiliation history with ROR IDs, h-index, topic tags. 114M authors. Largest setup effort. | m19-openalex-author |
+| **Google Scholar Profiles** | Curated researcher profiles: institution, photo, publication list, citation metrics. Better disambiguation for common names than algorithmic approaches. | m19-openalex-author |
 | **LLM+Exa web search** | Standalone: "Does email domain X belong to institution Y?" | llm-exa-search-standalone |
 
 ### (d) Residential address
@@ -134,5 +141,11 @@ Endpoints are grouped for testing. Each group gets one agent in stages 2, 3, and
 | `funding-legitimacy` | Funding / legitimacy | NIH RePORTER, NSF, UKRI, PubMed | a |
 | `individual-affiliation` | Individual affiliation | ORCID, OpenAlex | c |
 | `export-control` | Export control | Screening List, BIS country groups, ISO normalization, PO Box regex | e |
-| `llm-exa` | LLM+Exa search | Exa (standalone — runs once per KYC step, producing per-step results within a single output file) | a, b, c, d, e |
+| `llm-exa-a` | LLM+Exa: address→institution | Exa (pre-designed prompt targeting structured API gaps for step a) | a |
+| `llm-exa-b` | LLM+Exa: payment→institution | Exa (pre-designed prompt targeting structured API gaps for step b) | b |
+| `llm-exa-c` | LLM+Exa: email→affiliation | Exa (pre-designed prompt targeting structured API gaps for step c) | c |
+| `llm-exa-d` | LLM+Exa: residential address | Exa (pre-designed prompt targeting structured API gaps for step d) | d |
+| `llm-exa-e` | LLM+Exa: PO box/freight | Exa (pre-designed prompt targeting structured API gaps for step e) | e |
 | `docs-only` | Documentation review | Stripe AVS prod, Plaid prod | b |
+
+LLM+Exa prompts are designed before the pipeline runs and stored in `tool-evaluation/llm-exa-prompts/`. Each prompt targets the specific coverage gaps identified in prior pipeline iterations. See `03-adversarial-testing.md` for the prompt format and testing protocol.

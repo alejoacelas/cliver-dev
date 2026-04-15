@@ -73,15 +73,33 @@ For each endpoint group, list **where the stage 3 agent should look** to find mo
 - BIN lists for prepaid/virtual cards
 - Known fintech BIN ranges (Mercury, Brex, Relay)
 
-## Pre-committed reasoning
+## Per-endpoint rationale
 
-For each endpoint group, write 1-2 paragraphs of reasoning about what's likely to be hard. This is the agent's hypothesis going into stage 3. Examples:
+For each **individual endpoint** in the group, write a short rationale covering:
 
-**Institution registry group (ROR, GLEIF, Companies House, OpenCorporates):**
-> ROR should cover most major universities worldwide but will likely miss: community bio labs (not in any registry), very new biotech startups (not yet in OpenCorporates), government labs in non-OECD countries, and entities that changed names recently. GLEIF is biased toward financial entities — most academic institutions won't have LEIs. Companies House is UK-only; OpenCorporates extends this but coverage varies wildly by country (strong in US/UK/EU, weak in Africa/Central Asia). The biggest gap is probably the intersection of "non-academic" + "non-OECD" + "recently founded."
+1. **Known non-coverage** (1-2 sentences): What this endpoint clearly does not cover. Be specific. These are things we can state with confidence from the endpoint's documentation and scope — no need to burn test budget verifying them. They still matter for later stages (field assessment, cost synthesis) because they define the endpoint's role in the overall stack.
 
-**Address classification group (Smarty, Google Places, GeoNames, OSM):**
-> Smarty is US-only, so any international address will fall through to Google Places. Google Places Nearby Search works well for finding institutions near an address, but the key question is: does it find the RIGHT institution, and does it work outside the US/EU? Also, searching by address alone won't surface the institution — need geocode → nearby search. Coworking spaces should be detectable (Google Places returns `primaryType: coworking_space`), but the harder case is a legitimate startup operating out of a coworking space — flag or pass? GeoNames adds campus-center coordinates but its type taxonomy is coarse.
+2. **Boundary hypotheses** (1-3 sentences): Where coverage is genuinely uncertain — the cases the stage 3 agent should focus its testing budget on. These are the empirical questions that need answers.
+
+The distinction matters: if you know Companies House is UK-only, don't spend test cases proving it misses a Kenyan university. But if you're unsure whether OpenCorporates covers recently incorporated Kenyan companies, that's a boundary worth probing.
+
+**Example — Institution registry group:**
+
+> **ROR:**
+> *Known non-coverage:* Community bio labs, makerspaces, and very small biotech startups (< 10 employees) are not in ROR's scope — it covers formal research organizations. Commercial entities without a research mission are generally absent.
+> *Boundary hypotheses:* How well does ROR cover recently founded non-OECD universities? What about government lab sub-units (e.g., does ROR have NML or only PHAC)? Do name changes or mergers cause stale records?
+>
+> **GLEIF:**
+> *Known non-coverage:* Academic institutions rarely have LEIs. GLEIF is biased toward financial and commercial entities. Non-profit research institutes are generally absent.
+> *Boundary hypotheses:* Do large CROs (WuXi, Eurofins) have LEIs? How many mid-size biotech companies are covered? Are registered addresses useful or do they just reflect corporate registration agents (the Pfizer/Delaware problem)?
+>
+> **Companies House:**
+> *Known non-coverage:* UK-only. All non-UK entities will return nothing.
+> *Boundary hypotheses:* How well does it cover small biotech startups incorporated in the last 2 years? Does the dissolved status flag work reliably? Are registered addresses useful for KYC or do they reflect agent offices?
+>
+> **OpenCorporates:**
+> *Known non-coverage:* Academic institutions are generally not in corporate registries.
+> *Boundary hypotheses:* Coverage varies by jurisdiction — how well does it cover non-OECD countries (Kenya, Uganda, Kazakhstan)? Does it pick up community labs that are incorporated as nonprofits or LLCs?
 
 ## Output
 
@@ -99,6 +117,32 @@ seed_cases:
   - id: 2
     # ...
 
+per_endpoint_rationale:
+  ror:
+    known_non_coverage: |
+      Community bio labs, makerspaces, and very small biotech startups are not in ROR's scope.
+      Commercial entities without a research mission are generally absent.
+    boundary_hypotheses: |
+      How well does ROR cover recently founded non-OECD universities? What about government
+      lab sub-units (e.g., NML vs PHAC)? Do name changes or mergers cause stale records?
+  gleif:
+    known_non_coverage: |
+      Academic institutions rarely have LEIs. Non-profit research institutes are generally absent.
+    boundary_hypotheses: |
+      Do large CROs have LEIs? Are registered addresses useful or do they reflect corporate
+      registration agents (the Pfizer/Delaware problem)?
+  companies-house:
+    known_non_coverage: |
+      UK-only. All non-UK entities will return nothing.
+    boundary_hypotheses: |
+      Small biotech startups incorporated in the last 2 years? Dissolved status reliability?
+  opencorporates:
+    known_non_coverage: |
+      Academic institutions are generally not in corporate registries.
+    boundary_hypotheses: |
+      Coverage by jurisdiction — how well in non-OECD countries? Does it pick up community
+      labs incorporated as nonprofits or LLCs?
+
 information_sources:
   - source: "iGEM team list"
     url: "https://igem.org/teams"
@@ -108,16 +152,9 @@ information_sources:
     what_to_look_for: "Filter by country=KE or country=UG to find African institutions; check if small biotech companies are present"
   - source: "customers.csv"
     what_to_look_for: "Filter for Type='Controlled Agent Industry' or institutions with non-.edu email domains"
-
-pre_committed_reasoning: |
-  ROR should cover most major universities worldwide but will likely miss: community bio labs,
-  very new biotech startups, government labs in non-OECD countries. GLEIF is biased toward
-  financial entities. Companies House is UK-only; OpenCorporates extends globally but coverage
-  varies. Biggest gap: non-academic + non-OECD + recently founded.
 ```
 
 ## Important: what this stage does NOT do
 
 - Does **not** make any API calls. That's stage 3.
 - Does **not** try to be comprehensive. 5-10 seed cases is enough — stage 3 will iterate.
-- Does **not** use Exa search. Agents use their own web search (Claude's built-in tools) for finding information sources. Exa is reserved for the LLM+Exa standalone endpoint testing in stage 3.

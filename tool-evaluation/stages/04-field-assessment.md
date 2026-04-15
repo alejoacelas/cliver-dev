@@ -6,11 +6,11 @@
 
 ## Per-agent inputs
 
-- All `results/{group-name}.yaml` files for endpoint groups relevant to this KYC step (from `01-endpoint-map.md`).
+- All `results/{endpoint-slug}.yaml` files for endpoints relevant to this KYC step (from `01-endpoint-map.md`), plus the `results/{group-name}-comparison.md` cross-comparison files.
 - The KYC step definition (flag triggers, follow-up actions from the CSSWG table in `run.md`).
 - Measure definitions from `archive-2026-04-kyc-research/pipeline/measures.md`.
 - The original `07-synthesis.md` files for relevant ideas (for context on intended use of each field).
-- Adversarial review finals: `tool-evaluation/adversarial-reviews/{group-name}-final.md` (one per endpoint group — contains any unresolved high-severity findings from the stage 3↔5 loop).
+- Adversarial review finals: `tool-evaluation/adversarial-reviews/{group-name}-final.md` (one per endpoint group — contains any unresolved high- or medium-severity findings from the stage 3↔5 loop).
 
 ## Agent assignments
 

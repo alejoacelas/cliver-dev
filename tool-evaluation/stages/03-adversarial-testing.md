@@ -74,7 +74,7 @@ If you hit a rate limit (429 response), back off exponentially (2s → 4s → 8s
 
 ## Web search for case discovery
 
-Use your own web search capabilities (not Exa — that's reserved for the LLM+Exa standalone endpoint testing) to find adversarial cases. Good search strategies:
+Use your own web search capabilities to find adversarial cases. Good search strategies:
 
 - `"community bio lab" [country]` — find community labs in specific regions
 - `site:igem.org [country] team` — find iGEM teams at unusual institutions
@@ -82,49 +82,55 @@ Use your own web search capabilities (not Exa — that's reserved for the LLM+Ex
 - `"coworking lab" OR "shared lab space" [city]` — find coworking lab addresses
 - Search the info sources listed in the stage 2 seed cases file
 
-## The LLM+Exa standalone endpoint
+## The LLM+Exa endpoints
 
-The LLM+Exa group has a different protocol. Instead of calling a structured API, you're testing whether an LLM with web search can answer the KYC flag question. Use the `llm-exa-search.py` script:
+LLM+Exa is split into 5 separate endpoints, one per KYC step. Each endpoint has a **pre-designed prompt** (hardcoded before the pipeline runs) and is tested identically to any structured API endpoint — same seed cases, same iterative probing, same per-endpoint result file.
+
+The prompts are designed by us ahead of time based on the known coverage gaps from prior pipeline iterations and the structured API results. They target the specific cases where structured APIs are weak, so that LLM+Exa serves as complementary coverage. The prompt files live in `tool-evaluation/llm-exa-prompts/`:
+
+- `llm-exa-prompts/a-address-institution.txt`
+- `llm-exa-prompts/b-payment-institution.txt`
+- `llm-exa-prompts/c-email-affiliation.txt`
+- `llm-exa-prompts/d-residential.txt`
+- `llm-exa-prompts/e-pobox-freight.txt`
+
+Each prompt defines:
+1. A **system instruction** with the KYC flag question, known pitfalls, and output format requirements.
+2. A **template** with placeholders for the case-specific fields (institution name, address, email domain, etc.).
+3. A **structured output schema** the LLM must follow (verdict, confidence, evidence, sources).
+
+Use the `llm-exa-search.py` script to run each case:
 
 ```bash
-# Single query (human-readable output)
-uv run tool-evaluation/llm-exa-search.py "Does institution X have a presence at address Y?"
-
 # Pipeline integration (structured JSON with tool call details and Exa cost)
-uv run tool-evaluation/llm-exa-search.py --json "Does institution X have a presence at address Y?"
-
-# Read prompt from file
 uv run tool-evaluation/llm-exa-search.py --prompt-file query.txt --json
 
 # Verbose mode (shows each iteration and search query on stderr)
-uv run tool-evaluation/llm-exa-search.py -v --json "prompt here"
+uv run tool-evaluation/llm-exa-search.py -v --json --prompt-file query.txt
 ```
 
 The script runs Gemini 3.1 Pro via OpenRouter with Exa neural search as a tool. The model decides when and what to search. It loops until it has enough information to answer, then returns its verdict.
 
-For each of the 5 KYC steps, write a targeted prompt and run it against 20-30 test cases (drawn from the seed cases and your own adversarial cases):
-
-- **(a):** "Does institution [X] have a presence at address [Y]? Search for the institution's official address, campus locations, and any connection to this address."
-- **(b):** "Is the billing entity [X] associated with institution [Y]? Search for the institution's payment office, official billing addresses."
-- **(c):** "Does the email domain [X] belong to institution [Y]? Search for the institution's official domains and email systems."
-- **(d):** "Is the address [X] residential or business/institutional? Search for the address to determine its classification."
-- **(e):** "Is the address [X] a PO box, mail forwarding service, or freight forwarder?"
-
-Record: the JSON output from `--json` mode (includes the answer, Exa search queries, number of results per search, per-call duration, and total Exa cost).
+For each LLM+Exa endpoint, run 20-30 test cases. Record the JSON output from `--json` mode (includes the answer, Exa search queries, number of results per search, per-call duration, and total Exa cost). Write results to `results/llm-exa-{step}.yaml` (e.g., `results/llm-exa-a.yaml`).
 
 ## Output
 
-Two files per endpoint group:
+**One result file per endpoint** (not per group). The stage 3 agent runs per group (sharing cases across endpoints and comparing their responses), but writes a separate result file for each endpoint. This makes each endpoint independently assessable in later stages.
 
-### Structured results: `tool-evaluation/results/{group-name}.yaml`
+### Structured results: `tool-evaluation/results/{endpoint-slug}.yaml`
 
 ```yaml
+endpoint: ror
 group: institution-registry
-endpoints: [ror, gleif, companies-house, opencorporates]
-kyc_steps: [a]
+kyc_steps: [a, c]
 tested_at: "2026-04-14"
 total_cases: 38
 rounds: 3
+
+# From the per-endpoint rationale in stage 2 — carried forward for context
+known_non_coverage: |
+  Community bio labs, makerspaces, and very small biotech startups are not in ROR's scope.
+  Commercial entities without a research mission are generally absent.
 
 summary:
   covered: 22
@@ -134,11 +140,11 @@ summary:
 coverage_boundaries:
   - boundary: "Community bio labs / makerspaces"
     status: not_covered
-    evidence: "Tested 5 community labs (Genspace, BioCurious, La Paillasse, Open Science Network, Bosslab). None in ROR, none in GLEIF, none in Companies House. OpenCorporates had 2/5."
+    evidence: "Tested 5 community labs (Genspace, BioCurious, La Paillasse, Open Science Network, Bosslab). None in ROR."
     cases: [12, 15, 18, 22, 25]
   - boundary: "Non-OECD academic institutions"
     status: partially_covered
-    evidence: "ROR covered 4/6 African universities but missed 2 recently founded ones. GLEIF had 0/6."
+    evidence: "ROR covered 4/6 African universities but missed 2 recently founded ones."
     cases: [8, 9, 14, 19, 27, 31]
 
 results:
@@ -148,35 +154,23 @@ results:
     type: academic
     country: US
     difficulty: easy
-    endpoints_tested:
-      - endpoint: ror
-        query: "GET https://api.ror.org/v2/organizations?query=Massachusetts+Institute+of+Technology"
-        status: covered
-        response_summary:
-          ror_id: "https://ror.org/042nb2s44"
-          name: "Massachusetts Institute of Technology"
-          country: "United States"
-          city: "Cambridge"
-          types: ["education", "facs"]
-          domains: ["mit.edu"]
-        relevant_fields:
-          - field: domains
-            useful_for: [c-email-affiliation]
-            assessment: "Direct match — mit.edu in domains list"
-          - field: addresses[0].city
-            useful_for: [a-address-institution]
-            assessment: "City-level only — cannot confirm street address"
-      - endpoint: gleif
-        query: "GET https://api.gleif.org/api/v1/lei-records?filter[entity.legalName]=Massachusetts+Institute+of+Technology"
-        status: covered
-        response_summary:
-          lei: "..."
-          legal_address: "77 Massachusetts Avenue, Cambridge, MA 02139"
-        relevant_fields:
-          - field: entity.legalAddress
-            useful_for: [a-address-institution]
-            assessment: "Street-level match — full address available"
-    notes: "Baseline easy case. Both ROR and GLEIF cover it well."
+    query: "GET https://api.ror.org/v2/organizations?query=Massachusetts+Institute+of+Technology"
+    status: covered
+    response_summary:
+      ror_id: "https://ror.org/042nb2s44"
+      name: "Massachusetts Institute of Technology"
+      country: "United States"
+      city: "Cambridge"
+      types: ["education", "facs"]
+      domains: ["mit.edu"]
+    relevant_fields:
+      - field: domains
+        useful_for: [c-email-affiliation]
+        assessment: "Direct match — mit.edu in domains list"
+      - field: addresses[0].city
+        useful_for: [a-address-institution]
+        assessment: "City-level only — cannot confirm street address"
+    notes: "Baseline easy case. ROR covers it well."
 
   - case_id: 12
     round: 2
@@ -187,42 +181,53 @@ results:
     # ... adversarial case with detailed results
 ```
 
-### Human-readable summary: `tool-evaluation/results/{group-name}.md`
+Note: cases are shared across endpoints in the same group (the same MIT case appears in `ror.yaml`, `gleif.yaml`, etc.), but each file records only the query and response for that specific endpoint.
+
+### Human-readable summary: `tool-evaluation/results/{endpoint-slug}.md`
 
 ```markdown
-# Institution Registry — Test Results
+# ROR API v2 — Test Results
 
 **Tested:** 2026-04-14 | **Cases:** 38 (3 rounds) | **Covered:** 22 (58%) | **Partial:** 8 (21%) | **Not covered:** 8 (21%)
 
+**Known non-coverage:** Community bio labs, makerspaces, small biotech startups, commercial entities without research mission.
+
 ## Coverage boundaries found
 
-### 1. Community bio labs / makerspaces — NOT COVERED
-Tested 5 community labs. None appeared in ROR or GLEIF. OpenCorporates had 2/5.
-Evidence: [case 12, 15, 18, 22, 25]
-
-### 2. Non-OECD academic institutions — PARTIALLY COVERED
+### 1. Non-OECD academic institutions — PARTIALLY COVERED
 ROR covered 4/6 African universities but missed 2 recently founded ones.
 Evidence: [case 8, 9, 14, 19, 27, 31]
 
-## Iteration log
-
-### Round 1 (seed cases 1-8)
-Ran 8 seed cases. 6 covered, 1 partial, 1 not covered. Confirmed ROR is strong for established universities, weak for non-academic entities. Decided to probe: community labs, non-OECD, recently founded.
-
-### Round 2 (cases 9-25)
-Targeted community labs and non-OECD institutions. Found the community lab boundary — none in any registry. African universities hit-or-miss in ROR. Decided to probe: name changes, multi-campus, coworking tenants.
-
-### Round 3 (cases 26-38)
-...
-
 ## Key fields and their usefulness
-| Endpoint | Field | Useful for flag | Coverage quality |
-|---|---|---|---|
-| ROR | domains[] | (c) email match | Strong for academic, weak for companies |
-| ROR | addresses[].city | (a) address match | City-level only — insufficient for street-level |
-| GLEIF | entity.legalAddress | (a) address match | Street-level but only for entities with LEI |
-| ...
+| Field | Useful for flag | Coverage quality |
+|---|---|---|
+| domains[] | (c) email match | Strong for academic, weak for companies |
+| addresses[].city | (a) address match | City-level only — insufficient for street-level |
+
+## Iteration log
+### Round 1 (seed cases 1-8)
+...
 
 ## What I'd test with more budget
 - [Cases I ran out of budget to test]
+```
+
+### Per-group cross-comparison: `tool-evaluation/results/{group-name}-comparison.md`
+
+In addition to the per-endpoint files, write one short comparison file per group summarizing how the endpoints performed relative to each other on the shared cases. This is the cross-referencing value of running endpoints together.
+
+```markdown
+# Institution Registry — Cross-Endpoint Comparison
+
+| Case | ROR | GLEIF | Companies House | OpenCorporates |
+|---|---|---|---|---|
+| MIT | covered (city-level) | covered (street-level) | n/a (US entity) | covered |
+| Genspace | not covered | not covered | not covered | covered (as LLC) |
+| University of Nairobi | covered | not covered | n/a | partially covered |
+...
+
+## Key takeaways
+- ROR and OpenCorporates are complementary: ROR covers academic, OpenCorporates covers commercial.
+- GLEIF adds street-level addresses but only for entities with LEIs (~15% of test cases).
+- Companies House is useful only for UK entities but provides dissolved status, which no other endpoint has.
 ```

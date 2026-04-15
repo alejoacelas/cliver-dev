@@ -7,16 +7,16 @@
 ## How the loop works
 
 ```
-Stage 3 results → Stage 5 review → [high-severity findings?]
+Stage 3 results → Stage 5 review → [high- or medium-severity findings?]
                                       ├── yes → Stage 3 re-run (expanded) → Stage 5 review → ...
                                       └── no → done (pass to stage 4/6/7)
 ```
 
-Maximum 3 iterations of the stage 5 → stage 3 loop per endpoint group. After 3 iterations, any remaining high-severity findings are documented and forwarded to the final synthesis (stage 7) as unresolved issues.
+Maximum 3 iterations of the stage 5 → stage 3 loop per endpoint group. After 3 iterations, any remaining high- or medium-severity findings are documented and forwarded to the final synthesis (stage 7) as unresolved issues.
 
 ## Per-agent inputs
 
-- Stage 3 results for this endpoint group: `tool-evaluation/results/{group-name}.yaml` + `.md`
+- Stage 3 results for this endpoint group: `tool-evaluation/results/{endpoint-slug}.yaml` + `.md` for each endpoint in the group, plus `tool-evaluation/results/{group-name}-comparison.md`
 - The endpoint map: `tool-evaluation/stages/01-endpoint-map.md` (which KYC steps this group serves)
 - The pre-committed reasoning from stage 2: `tool-evaluation/seed-cases/{group-name}.yaml`
 - The archive's coverage research for relevant ideas: `archive-2026-04-kyc-research/pipeline/outputs/ideas/{idea-slug}/06-coverage.md`
@@ -60,11 +60,11 @@ Classify each finding as:
 - **Medium severity:** A sub-category or edge case is undertested. The overall assessment might shift slightly. Examples: "Only 2 multi-campus universities tested — need more to confirm the satellite campus boundary."
 - **Low severity:** A minor gap that doesn't change the overall picture. Examples: "Could test one more country in Central Asia."
 
-**High-severity findings trigger a stage 3 re-run.** Medium and low do not.
+**High- or medium-severity findings trigger a stage 3 re-run.** The re-run should also attempt to address low-severity findings if budget allows, but low-severity findings alone do not trigger a re-run.
 
 ## Stage 3 re-run protocol
 
-When high-severity findings exist:
+When high- or medium-severity findings exist:
 
 1. Write the findings to `tool-evaluation/adversarial-reviews/{group-name}-v{N}.md` (where N is the iteration number).
 2. For each high-severity finding, specify:
@@ -72,7 +72,7 @@ When high-severity findings exist:
    - Which endpoint(s) to call.
    - What the expected outcome is and what would change the assessment.
 3. The stage 3 agent re-runs with these additional cases appended to the existing results file. It adds new cases to the `results` list and updates the `coverage_boundaries` and `summary` sections.
-4. Stage 5 reviews the updated results. If high-severity findings remain, loop again. Maximum 3 total iterations.
+4. Stage 5 reviews the updated results. If high- or medium-severity findings remain, loop again. Maximum 3 total iterations. The re-run should also attempt to address low-severity findings if test budget allows.
 
 ## Output
 
@@ -115,7 +115,7 @@ After the loop completes (either no high-severity findings or 3 iterations exhau
 ```markdown
 # Adversarial review: institution-registry (FINAL)
 
-**Iterations:** 2 (stopped after iteration 2 — no remaining high-severity findings)
+**Iterations:** 2 (stopped after iteration 2 — no remaining high- or medium-severity findings)
 
 ## Resolved findings
 - [v1 HIGH] Non-US community labs: tested 5. La Paillasse appeared in OpenCorporates (FR).
@@ -134,6 +134,6 @@ After the loop completes (either no high-severity findings or 3 iterations exhau
 
 ## Important: what gets forwarded to later stages
 
-- **Stage 4 (field assessment):** reads the updated stage 3 results (which now include the expanded test cases from the loop).
-- **Stage 6 (BOTEC):** reads the updated stage 3 results for per-case cost estimation.
-- **Stage 7 (final synthesis):** reads the `{group-name}-final.md` files. Any unresolved high-severity findings from 3-iteration exhaustion get their own section in the final synthesis.
+- **Stage 4 (field assessment):** reads the updated per-endpoint stage 3 results (which now include the expanded test cases from the loop).
+- **Stage 6 (BOTEC):** reads the updated per-endpoint stage 3 results for per-case cost estimation.
+- **Stage 7 (final synthesis):** reads the `{group-name}-final.md` files. Any unresolved high- or medium-severity findings from 3-iteration exhaustion get their own section in the final synthesis.
