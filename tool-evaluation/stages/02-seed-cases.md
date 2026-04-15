@@ -15,7 +15,8 @@
 - The endpoint group's entries from `01-endpoint-map.md` (which endpoints, which KYC steps, which fields matter).
 - The endpoint manifest from `00-endpoint-manifest.yaml` (status, rate limits, cost constraints).
 - The customer dataset: `tool-evaluation/customers.csv` (535 records with real names, institutions, emails, countries).
-- The relevant `07-synthesis.md` and `06-coverage.md` files from the archive (known coverage gaps from desk research).
+- Idea syntheses from the archive: `archive-2026-04-kyc-research/pipeline/outputs/ideas/{idea-slug}/07-synthesis.md` (known coverage gaps from desk research).
+- Coverage research from the archive: `archive-2026-04-kyc-research/pipeline/outputs/ideas/{idea-slug}/06-coverage.md` (BOTEC coverage dimensions).
 
 ## Seed case selection
 

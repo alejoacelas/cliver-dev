@@ -2,16 +2,16 @@
 
 **Scope:** One agent. Sequential.  
 **Goal:** Produce the final deliverable — a single document that a CSSWG working group member or provider can read to understand what's feasible, what it costs, and what the gaps are.  
-**Depends on:** Stage 6 (need the BOTEC synthesis). Also reads all prior stage outputs for detail.
+**Depends on:** Stage 6 (BOTEC synthesis). Also reads all prior stage outputs for detail.
 
 ## Inputs
 
-- All revised assessments: `tool-evaluation/assessments/{kyc-step}.yaml` + `.md` (5 files each).
-- All adversarial reviews: `tool-evaluation/adversarial-reviews/{kyc-step}.md` (5 files).
-- BOTEC synthesis: `tool-evaluation/06-cost-coverage-synthesis.md`.
+- Field assessments: `tool-evaluation/assessments/{kyc-step}.yaml` + `.md` (5 files each). Contains profile groups, time tiers, and flag verdicts.
+- Adversarial review finals: `tool-evaluation/adversarial-reviews/{group-name}-final.md` (one per endpoint group). Contains unresolved findings.
+- BOTEC synthesis: `tool-evaluation/06-cost-coverage-synthesis.md`. Contains profile group inventory, fraction estimates, and cost tables.
 - Endpoint manifest: `tool-evaluation/00-endpoint-manifest.yaml`.
-- Endpoint relevance: `tool-evaluation/01-endpoint-relevance.md`.
-- LLM+Exa results: `tool-evaluation/results/exa.yaml` + `.md` (if it exists as its own endpoint).
+- Endpoint map: `tool-evaluation/stages/01-endpoint-map.md` (static endpoint-to-KYC-step mapping).
+- LLM+Exa results: `tool-evaluation/results/llm-exa.yaml` + `.md`.
 - Credential check: `tool-evaluation/00-credential-check.md`.
 
 ## Output structure
@@ -34,21 +34,21 @@ One section per step. Each section contains:
 
 **Recommended endpoint combination** — from the flag verdict in the assessment. Which APIs, in what order, with what decision logic?
 
-**Coverage map** — table showing coverage by customer type and region. Pull from the assessment's `geographic_coverage` and `customer_types_that_fail`.
+**Coverage map** — table showing coverage by profile group and region. Pull from the assessment's profile groups and their `distinguishing_factors`.
 
-**Automation tiers** — the Tier 1/2/3 breakdown with examples of what falls into each tier. Include the adversarial review's challenges to these classifications.
+**Resolution time by profile group** — from the stage 4 assessments. For each profile group relevant to this KYC step: description, time tier (auto / quick review / investigation / customer follow-up), estimated time, and the resolution path. Include concrete examples from the test results.
 
-**Cost** — from the BOTEC synthesis. API cost per order, human time per 1,000 orders, blended cost by provider archetype.
+**Cost** — from the BOTEC synthesis. API cost per order, human time per 1,000 orders, blended cost. Show the per-profile-group breakdown, not just the aggregate.
 
-**Open issues** — unresolved findings from the adversarial review. Things that need more data, more testing, or working group input.
+**Open issues** — unresolved findings from the adversarial review finals (`{group-name}-final.md`). Things that need more data, more testing, or working group input.
 
 ### 3. Cross-cutting findings
 
-**Shared endpoints** — which APIs serve multiple KYC steps and how to avoid redundant calls. Reference the grouping from stage 1.
+**Shared endpoints** — which APIs serve multiple KYC steps and how to avoid redundant calls. Reference the grouping from `01-endpoint-map.md`.
 
-**Shared gaps** — customer types that fail across multiple KYC steps. "Community bio labs fail address-to-institution AND email-to-affiliation AND residential check." What's the combined impact?
+**Shared gaps** — profile groups that fail across multiple KYC steps. "Community bio labs fail address-to-institution AND email-to-affiliation AND residential check." What's the combined impact?
 
-**The "hard customers" list** — customer types that no available tool handles well across any KYC step. For each: who they are, why they're hard, and what the fallback is (manual review? voucher? skip?).
+**The "hard customers" list** — profile groups that no available tool handles well across any KYC step. For each: who they are, why they're hard, and what the fallback is (manual review? voucher? skip?).
 
 ### 4. LLM+search as alternative
 
@@ -84,5 +84,5 @@ Things that came up during testing that affect the standard itself:
 - Write for the CSSWG working group audience: policymakers, providers, and biosecurity researchers.
 - Be concrete — use real examples from the test results, not hypotheticals.
 - When citing coverage numbers, note the evidence basis ("based on 35 test cases" vs. "extrapolated from documentation").
-- Don't overstate automation capabilities. If something is classified as "rule_based" but the adversarial review found edge cases, say so.
+- Don't overstate automation capabilities. If the adversarial review found edge cases that undermine a profile group's time tier classification, say so.
 - The document should be self-contained — a reader shouldn't need to read the per-stage outputs to understand the conclusions. But do link to the detailed files for readers who want to dig deeper.

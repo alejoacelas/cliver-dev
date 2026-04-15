@@ -2,7 +2,7 @@
 
 **Scope:** One sub-agent per KYC step (5 agents in parallel).  
 **Goal:** Synthesize per-endpoint test results into per-field assessments for each KYC flag, then identify customer profile groups and estimate the human time cost for each.  
-**Depends on:** Stage 3 (adversarial testing results, including any expansions from the stage 5 loop).
+**Depends on:** Stages 3 and 5 — stage 4 starts only after the stage 3↔5 loop completes for all endpoint groups. Reads the final (expanded) stage 3 results and the adversarial review finals from stage 5.
 
 ## Per-agent inputs
 
@@ -10,7 +10,7 @@
 - The KYC step definition (flag triggers, follow-up actions from the CSSWG table in `run.md`).
 - Measure definitions from `archive-2026-04-kyc-research/pipeline/measures.md`.
 - The original `07-synthesis.md` files for relevant ideas (for context on intended use of each field).
-- Any adversarial review finals: `adversarial-reviews/{group-name}-final.md` (for unresolved findings).
+- Adversarial review finals: `tool-evaluation/adversarial-reviews/{group-name}-final.md` (one per endpoint group — contains any unresolved high-severity findings from the stage 3↔5 loop).
 
 ## Agent assignments
 
@@ -50,7 +50,7 @@ After evaluating all fields across all endpoints:
 
 ## Part 2: Customer profile groups and resolution time
 
-This is the core output for cost estimation. **Do not classify fields by automation tier.** Instead, identify **customer profile groups** — clusters of customers who will have a similar experience when this KYC flag is evaluated.
+This is the core output for cost estimation. Do not classify individual fields (e.g., "this field is auto-resolvable") — that's too abstract to be useful. Instead, identify **customer profile groups**: clusters of customers who will have a similar resolution path and time cost when this KYC flag is evaluated. The time tier is a property of the profile group (which depends on multiple fields and endpoints together), not of any single field.
 
 ### How to identify profile groups
 

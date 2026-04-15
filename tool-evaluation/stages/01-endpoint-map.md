@@ -119,20 +119,20 @@ Each API is tested once. Results are cross-referenced to all relevant KYC steps 
 | 30 | PubMed (NCBI E-utilities) | a | none | live |
 | 31 | OpenCorporates | a | none (free tier) | live |
 
-**Total: 31 endpoints** (17 API endpoints requiring network calls, 7 local logic, 4 docs-only, 3 funding APIs that could be grouped)
+**Total: 31 endpoints** (20 requiring network calls, 8 local logic, 2 docs-only, 1 standalone LLM+search)
 
-### Grouping for stage 2/3 agents
+### Grouping for stage 2/3/5 agents
 
-Some endpoints should be tested together because they serve the same KYC step with complementary signals:
+Endpoints are grouped for testing. Each group gets one agent in stages 2, 3, and 5. The **slug** is the canonical identifier used in filenames (`seed-cases/{slug}.yaml`, `results/{slug}.yaml`, `adversarial-reviews/{slug}-final.md`).
 
-| Group | Endpoints | KYC step | Agent scope |
+| Slug | Group name | Endpoints | KYC steps |
 |---|---|---|---|
-| Institution registry | ROR, GLEIF, Companies House, OpenCorporates | a | 1 agent |
-| Address classification | Smarty, Google Places (New), GeoNames, OSM Overpass | a, d, e | 1 agent |
-| Email/domain verification | RDAP, disposable blocklist, MX/SPF/DMARC, lookalike detector, InCommon | c | 1 agent |
-| Payment/BIN | Stripe test, binlist, fintech BIN denylist, billing-shipping consistency | b | 1 agent |
-| Funding/legitimacy | NIH RePORTER, NSF, UKRI, PubMed | a | 1 agent |
-| Individual affiliation | ORCID, OpenAlex | c | 1 agent |
-| Export control | Screening List, BIS country groups, ISO normalization, PO Box regex | e | 1 agent |
-| LLM+Exa search | Exa (standalone, one run per KYC step) | a, b, c, d, e | 1 agent |
-| Docs-only | Stripe AVS prod, Plaid prod | b | 1 agent |
+| `institution-registry` | Institution registry | ROR, GLEIF, Companies House, OpenCorporates | a |
+| `address-classification` | Address classification | Smarty, Google Places (New), GeoNames, OSM Overpass | a, d, e |
+| `email-domain` | Email / domain verification | RDAP, disposable blocklist, MX/SPF/DMARC, lookalike detector, InCommon | c |
+| `payment-bin` | Payment / BIN | Stripe test, binlist, fintech BIN denylist, billing-shipping consistency | b |
+| `funding-legitimacy` | Funding / legitimacy | NIH RePORTER, NSF, UKRI, PubMed | a |
+| `individual-affiliation` | Individual affiliation | ORCID, OpenAlex | c |
+| `export-control` | Export control | Screening List, BIS country groups, ISO normalization, PO Box regex | e |
+| `llm-exa` | LLM+Exa search | Exa (standalone — runs once per KYC step, producing per-step results within a single output file) | a, b, c, d, e |
+| `docs-only` | Documentation review | Stripe AVS prod, Plaid prod | b |

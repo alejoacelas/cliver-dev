@@ -17,7 +17,7 @@ A bad result looks like: "I tested 30 well-known institutions and they all worke
 - Seed cases and info sources: `tool-evaluation/seed-cases/{group-name}.yaml`
 - Endpoint manifest: `tool-evaluation/00-endpoint-manifest.yaml` — **read the `rate_limit` and `max_test_budget` fields** for each endpoint in your group. These are your hard constraints.
 - Pre-committed reasoning from stage 2 — treat this as a starting hypothesis, not a conclusion.
-- The relevant `07-synthesis.md` files from the archive (known coverage gaps from desk research).
+- Idea syntheses from the archive: `archive-2026-04-kyc-research/pipeline/outputs/ideas/{idea-slug}/07-synthesis.md` (known coverage gaps from desk research).
 - The customer dataset: `tool-evaluation/customers.csv`
 
 ## Iterative testing protocol

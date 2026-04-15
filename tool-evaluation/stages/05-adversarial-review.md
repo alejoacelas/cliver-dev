@@ -2,7 +2,7 @@
 
 **Scope:** One sub-agent per endpoint group (matching the stage 3 groups). Up to 9 in parallel. Loops up to 3 iterations.  
 **Goal:** Review stage 3 results, identify coverage gaps and missed edge cases, then send the stage 3 agent back to test more cases. Repeat until gaps are addressed or 3 iterations are exhausted.  
-**Depends on:** Stage 3 (adversarial testing results) and stage 4 (field assessments — but stage 5 can run in parallel with stage 4 since it operates on stage 3 outputs directly).
+**Depends on:** Stage 3 (adversarial testing results). Stage 5 does not need stage 4 outputs — it reads stage 3 results directly. The pipeline runs: stage 3 → stage 5 → (loop if needed) → stage 4 (after loop completes).
 
 ## How the loop works
 
