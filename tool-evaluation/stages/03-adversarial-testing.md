@@ -84,7 +84,23 @@ Use your own web search capabilities (not Exa — that's reserved for the LLM+Ex
 
 ## The LLM+Exa standalone endpoint
 
-The LLM+Exa group has a different protocol. Instead of calling a structured API, you're testing whether an LLM with web search can answer the KYC flag question:
+The LLM+Exa group has a different protocol. Instead of calling a structured API, you're testing whether an LLM with web search can answer the KYC flag question. Use the `llm-exa-search.py` script:
+
+```bash
+# Single query (human-readable output)
+uv run tool-evaluation/llm-exa-search.py "Does institution X have a presence at address Y?"
+
+# Pipeline integration (structured JSON with tool call details and Exa cost)
+uv run tool-evaluation/llm-exa-search.py --json "Does institution X have a presence at address Y?"
+
+# Read prompt from file
+uv run tool-evaluation/llm-exa-search.py --prompt-file query.txt --json
+
+# Verbose mode (shows each iteration and search query on stderr)
+uv run tool-evaluation/llm-exa-search.py -v --json "prompt here"
+```
+
+The script runs Gemini 3.1 Pro via OpenRouter with Exa neural search as a tool. The model decides when and what to search. It loops until it has enough information to answer, then returns its verdict.
 
 For each of the 5 KYC steps, write a targeted prompt and run it against 20-30 test cases (drawn from the seed cases and your own adversarial cases):
 
@@ -94,7 +110,7 @@ For each of the 5 KYC steps, write a targeted prompt and run it against 20-30 te
 - **(d):** "Is the address [X] residential or business/institutional? Search for the address to determine its classification."
 - **(e):** "Is the address [X] a PO box, mail forwarding service, or freight forwarder?"
 
-Record: what Exa found, whether the LLM reached a correct/confident verdict, how long it took, and the Exa API cost.
+Record: the JSON output from `--json` mode (includes the answer, Exa search queries, number of results per search, per-call duration, and total Exa cost).
 
 ## Output
 

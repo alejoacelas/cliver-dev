@@ -33,7 +33,8 @@ Adjacent measures pulled in because they share endpoints: M06, M07, M10, M18, M1
 | API investigations | `archive-2026-04-kyc-research/investigations/a-address-to-institution/` | Deep-dive API docs (ROR, GLEIF, Companies House, OSM, Smarty, Stripe, Plaid, BIN, GeoNames) |
 | Measure definitions | `archive-2026-04-kyc-research/pipeline/measures.md` | Canonical measure list with stable numbering |
 | Customer dataset | `tool-evaluation/customers.csv` | 535 deanonymized records (name, institution, email, order) from patent/LinkedIn data |
-| Credentials | `.env` | Keys for Smarty, Stripe, Plaid, Companies House, Exa, Tavily, Screening List, Google Maps, GeoNames |
+| Credentials | `.env` | Keys for Smarty, Stripe, Plaid, Companies House, Exa, OpenRouter, Screening List, Google Maps, GeoNames |
+| LLM+Exa search script | `tool-evaluation/llm-exa-search.py` | Agentic loop: Gemini 3.1 Pro (OpenRouter) + Exa neural search. Used by stage 3 `llm-exa` group. |
 
 ## Endpoint inventory
 
@@ -118,6 +119,6 @@ After the pipeline completes:
 - **Resumability:** Each stage writes outputs before the next starts. If interrupted, re-run from the last incomplete stage. YAML outputs are source of truth; markdown is derived.
 - **Rate limits and budgets:** Stage 0 determines rate limits and sets `max_test_budget` per endpoint. Stage 3 agents read these from the manifest — they are not hardcoded in stage 3.
 - **No credential setup automation:** Stage 0 documents what's missing but does NOT create accounts. That's a manual step.
-- **LLM+Exa tool:** Runs as a standalone "endpoint" alongside structured APIs. Uses Exa's neural search mode by default. Each search prompt is measure-specific. Agents doing case discovery in stages 2-3 use their own web search, not Exa.
+- **LLM+Exa tool:** Runs via `tool-evaluation/llm-exa-search.py` — an agentic loop that sends prompts to Gemini 3.1 Pro (via OpenRouter) with Exa neural search as a tool. The model calls Exa as many times as needed, then produces a final answer. Run with `uv run tool-evaluation/llm-exa-search.py "prompt"` (or `--prompt-file`, `--json` for structured output). Each search prompt is measure-specific. Agents doing case discovery in stages 2-3 use their own web search, not this script.
 - **Cross-referencing:** Each API is tested once (in stage 3, grouped by endpoint group). Results are cross-referenced to multiple KYC steps in stage 4.
 - **Adversarial mindset:** Stage 3 is the core of the pipeline. The goal is to find where endpoints fail, not confirm they work. A test run that only finds successes has failed at its job.

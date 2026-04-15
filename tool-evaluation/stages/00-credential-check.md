@@ -37,6 +37,8 @@
 - Plaid sandbox — create a sandbox link token via API
 - Companies House — `curl -u "$COMPANIES_HOUSE_API_KEY:" "https://api.company-information.service.gov.uk/search/companies?q=ginkgo"`
 - Exa — `curl https://api.exa.ai/search -H "x-api-key: $EXA_API_KEY" -H "Content-Type: application/json" -d '{"query":"MIT biosafety","numResults":1}'`
+- OpenRouter (for LLM+Exa script) — `curl -s https://openrouter.ai/api/v1/models -H "Authorization: Bearer $OPENROUTER_API_KEY" | python3 -c "import json,sys; d=json.load(sys.stdin); print('OK' if 'data' in d else d)"`
+- LLM+Exa end-to-end — `uv run tool-evaluation/llm-exa-search.py --json "Is MIT located in Cambridge, MA?"`
 - GeoNames — `curl "http://api.geonames.org/searchJSON?q=MIT&maxRows=1&username=$GEONAMES_USERNAME"`
 - Google Places (New API) — `curl -H "X-Goog-Api-Key: $GOOGLE_MAPS_API_KEY" -H "X-Goog-FieldMask: places.displayName,places.formattedAddress,places.types,places.primaryType" -H "Content-Type: application/json" -d '{"textQuery":"Massachusetts Institute of Technology"}' "https://places.googleapis.com/v1/places:searchText"`
 
