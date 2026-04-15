@@ -1,0 +1,232 @@
+{
+  "answer": "```yaml\nforwarding_service_detected: null\nforwarding_service_name: null\nforwarding_service_type: null\nforwarding_evidence_strength: null\nbusinesses_at_address: []\nbuilding_name: null\nbuilding_appears_logistics_hub: false\nsuite_number_pattern_suspicious: false\nnon_latin_pobox_detected: false\nnon_latin_pobox_term: null\nnon_latin_pobox_script: null\nconfidence: medium\nfree_text_summary: |\n  Searches for 1396 W Herndon Ave, Suite 200 in Fresno, CA yielded no evidence of a freight forwarder, CMRA, mail drop, or re-shipping service. The address is part of a commercial office complex (frequently grouped under a single parcel identifier with 1382-1398 W Herndon Ave) that hosts standard professional tenants, such as CPAs and business services, in adjacent suites. The suite number \"200\" is a standard commercial allocation, and no specific business was identified for this exact suite.\nsources:\n  - url: \"https://www.loopnet.com/property/1382-w-herndon-ave-fresno-ca-93711/06019-40545016/\"\n    domain: \"loopnet.com\"\n    source_type: \"real_estate_listing\"\n    snippet: \"1396 W Herndon Ave, Fresno, CA 93711 - APN/Parcel ID: 405-450-16\"\n  - url: \"https://www.mapquest.com/us/california/fresno/93711-7126/1396-w-herndon-ave-36.83752,-119.81542\"\n    domain: \"mapquest.com\"\n    source_type: \"mapping_service\"\n    snippet: \"1396 W Herndon Ave, Fresno, California\"\n  - url: \"https://www.mapquest.com/us/california/trinet-east-llc-421463419\"\n    domain: \"mapquest.com\"\n    source_type: \"business_directory\"\n    snippet: \"TriNet East, LLC, 1398 W Herndon Ave, Ste 101, Fresno, CA 93711\"\nsearches_performed:\n  - query: \"\\\"1396 W Herndon Ave\\\" AND \\\"Suite 200\\\" Fresno\"\n    num_results: 10\n  - query: \"\\\"1396 W Herndon Ave\\\" Fresno\"\n    num_results: 10\n  - query: \"\\\"1396 W Herndon Ave\\\" \\\"Suite 200\\\" OR \\\"Ste 200\\\" Fresno CA\"\n    num_results: 9\n  - query: \"\\\"1396 W Herndon\\\" \\\"Suite 200\\\" OR \\\"Ste 200\\\" OR \\\"unit 200\\\" OR \\\"200\\\" CA\"\n    num_results: 9\n```",
+  "model": "google/gemini-3.1-pro-preview",
+  "iterations": 6,
+  "total_exa_cost_usd": 0.035,
+  "tool_calls": [
+    {
+      "tool": "search_web",
+      "query": "\"1396 W Herndon Ave\" AND \"Suite 200\" Fresno",
+      "num_results": 9,
+      "duration_s": 0.87,
+      "results": [
+        {
+          "title": "1398 West Herndon Bldg",
+          "url": "https://commercialsearch.com/commercial-property/us/ca/fresno/1398-west-herndon-bldg"
+        },
+        {
+          "title": "1398 West Herndon Bldg",
+          "url": "https://www.commercialcafe.com/commercial-property/us/ca/fresno/1398-west-herndon-bldg/"
+        },
+        {
+          "title": "Fresno E Healthcare Systems, 1383 E Herndon Ave, Ste 106, Fresno, CA 93720, US - MapQuest",
+          "url": "https://www.mapquest.com/us/california/fresno-e-healthcare-systems-11682104"
+        },
+        {
+          "title": "California Eye Institute",
+          "url": "https://www.officespace.com/ca/fresno/1370261-1360-e-herndon-ave"
+        },
+        {
+          "title": "Labcorp location on 1383 E Herndon Ave. Ste 105B Fresno, CA 93720 hours and schedule appointment",
+          "url": "https://lab-locations.com/california/fresno/24648.html"
+        },
+        {
+          "title": "1376 W Herndon Ave # 101, Fresno, CA 93711 Property Report | ATTOM",
+          "url": "https://propertynavigator.attomdata.com/property-reports/1376-w-herndon-ave-101-fresno-ca-93711/156115581/"
+        },
+        {
+          "title": "TriNet East, LLC",
+          "url": "https://www.mapquest.com/us/california/trinet-east-llc-421463419"
+        },
+        {
+          "title": "1360 E Herndon Ave #301 | Eye Medical Center of Fresno",
+          "url": "https://emcfresno.com/locations/northeast-fresno/"
+        },
+        {
+          "title": "Bone Density Medical Group Of Fresno, Inc. in Fresno, California - Clinic / Center NPI, Address and Contact",
+          "url": "https://npino.com/primary-clinic/1396800165-bone-density-medical-group-of-fresno%2C-inc./"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"1396 W Herndon Ave\" Fresno",
+      "num_results": 10,
+      "duration_s": 0.62,
+      "results": [
+        {
+          "title": "1396 W Herndon Ave",
+          "url": "https://www.mapquest.com/us/california/fresno/93711-7126/1396-w-herndon-ave-36.83752,-119.81542"
+        },
+        {
+          "title": "1396 W Herndon Ave",
+          "url": "https://www.mapquest.com/us/california/fresno/93711-0431/1396-w-herndon-ave"
+        },
+        {
+          "title": "1398 West Herndon Bldg",
+          "url": "https://www.commercialcafe.com/commercial-property/us/ca/fresno/1398-west-herndon-bldg/"
+        },
+        {
+          "title": "1398 West Herndon Bldg",
+          "url": "https://commercialsearch.com/commercial-property/us/ca/fresno/1398-west-herndon-bldg"
+        },
+        {
+          "title": "1396 W Herndon Ave,  \n\t\t\t\t\t Fresno, CA 93711",
+          "url": "https://www.loopnet.com/property/1382-w-herndon-ave-fresno-ca-93711/06019-40545016/"
+        },
+        {
+          "title": "1376 W Herndon Ave # 101, Fresno, CA 93711 Property Report | ATTOM",
+          "url": "https://propertynavigator.attomdata.com/property-reports/1376-w-herndon-ave-101-fresno-ca-93711/156115581/"
+        },
+        {
+          "title": "1376 w Herndon Ave #101 , Fresno, CA   93711",
+          "url": "https://www.movoto.com/fresno-ca/1376-w-herndon-ave-apt-101-fresno-ca-93711/pid_2cmbb2io7abb/"
+        },
+        {
+          "title": "1396 W Herndon Ave #101 ,  Fresno, CA 93711",
+          "url": "https://www.redfin.com/CA/Fresno/1396-W-Herndon-Ave-93711/unit-101/home/96004925"
+        },
+        {
+          "title": "Herndon, 93711, Fresno, California Property Records & Home Valuations",
+          "url": "https://www.xome.com/realestate/CA/Fresno/93711/Herndon"
+        },
+        {
+          "title": "1334 W Herndon Ave \n\n                             Fresno, CA 93711 \n                     \n                     \n                             \n                                Office Property For Rent\n                             \n                         \n                                         \u00b7\n                                     4,460 SF",
+          "url": "https://www.loopnet.co.uk/Listing/1334-W-Herndon-Ave-Fresno-CA/31794118/"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"1396 W Herndon Ave\" \"Suite 200\" OR \"Ste 200\" Fresno CA",
+      "num_results": 9,
+      "duration_s": 0.88,
+      "results": [
+        {
+          "title": "1398 West Herndon Bldg",
+          "url": "https://www.commercialcafe.com/commercial-property/us/ca/fresno/1398-west-herndon-bldg/"
+        },
+        {
+          "title": "1398 West Herndon Bldg",
+          "url": "https://commercialsearch.com/commercial-property/us/ca/fresno/1398-west-herndon-bldg"
+        },
+        {
+          "title": "California Eye Institute",
+          "url": "https://www.officespace.com/ca/fresno/1370261-1360-e-herndon-ave"
+        },
+        {
+          "title": "1376 W Herndon Ave # 101, Fresno, CA 93711 Property Report | ATTOM",
+          "url": "https://propertynavigator.attomdata.com/property-reports/1376-w-herndon-ave-101-fresno-ca-93711/156115581/"
+        },
+        {
+          "title": "1396 W Herndon Ave,  \n\t\t\t\t\t Fresno, CA 93711",
+          "url": "https://www.loopnet.com/property/1382-w-herndon-ave-fresno-ca-93711/06019-40545016/"
+        },
+        {
+          "title": "1396 W Herndon Ave",
+          "url": "https://www.mapquest.com/us/california/fresno/93711-7126/1396-w-herndon-ave-36.83752,-119.81542"
+        },
+        {
+          "title": "TriNet East, LLC",
+          "url": "https://www.mapquest.com/us/california/trinet-east-llc-421463419"
+        },
+        {
+          "title": "1396 W Herndon Ave",
+          "url": "https://www.mapquest.com/us/california/fresno/93711-0431/1396-w-herndon-ave"
+        },
+        {
+          "title": "Fresno E Healthcare Systems, 1383 E Herndon Ave, Ste 106, Fresno, CA 93720, US - MapQuest",
+          "url": "https://www.mapquest.com/us/california/fresno-e-healthcare-systems-11682104"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"1396 W. Herndon Ave., Suite 200\" OR \"1396 W Herndon Avenue, Suite 200\"",
+      "num_results": 9,
+      "duration_s": 0.67,
+      "results": [
+        {
+          "title": "Dr Herndon Orlando Chiropractor - Orlando, Dr Phillips, Sand Lake, International Drive",
+          "url": "http://www.orlandochiropracticclinic.com/"
+        },
+        {
+          "title": "Services Available at Herndon Chiropractic Clinic - Orlando and Dr Phillips area",
+          "url": "https://www.orlandochiropracticclinic.com/services.html"
+        },
+        {
+          "title": "Dr Herndon Orlando Chiropractor - Orlando, Dr Phillips, Sand Lake, International Drive",
+          "url": "https://drherndon.com/"
+        },
+        {
+          "title": "About Orlando Chiropractor Dr Herndon Central Florida",
+          "url": "https://www.orlandochiropracticclinic.com/about-us.html"
+        },
+        {
+          "title": "Contact Dr Herndon Today Serving Orlando for 33 years",
+          "url": "https://www.orlandochiropracticclinic.com/contact-us.html"
+        },
+        {
+          "title": "James C Herndon Jr Dc P A in Orlando, Florida - NPI, Address and Contact",
+          "url": "https://npino.com/chiropractor/1376968412-%3Cunavail%3E/"
+        },
+        {
+          "title": "Central Florida Pathology",
+          "url": "https://www.mapquest.com/us/florida/central-florida-pathology-411898823"
+        },
+        {
+          "title": "1398 West Herndon Bldg",
+          "url": "https://www.commercialcafe.com/commercial-property/us/ca/fresno/1398-west-herndon-bldg/"
+        },
+        {
+          "title": "Figueroa & Co, Inc. \u00b7 821 Herndon Ave, 141236, Orlando, FL 32814",
+          "url": "https://opengovus.com/florida-corporation/P23000073110"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"1396 W Herndon\" \"Suite 200\" OR \"Ste 200\" OR \"unit 200\" OR \"200\" CA",
+      "num_results": 9,
+      "duration_s": 0.82,
+      "results": [
+        {
+          "title": "1398 West Herndon Bldg",
+          "url": "https://www.commercialcafe.com/commercial-property/us/ca/fresno/1398-west-herndon-bldg/"
+        },
+        {
+          "title": "1398 West Herndon Bldg",
+          "url": "https://commercialsearch.com/commercial-property/us/ca/fresno/1398-west-herndon-bldg"
+        },
+        {
+          "title": "TriNet East, LLC",
+          "url": "https://www.mapquest.com/us/california/trinet-east-llc-421463419"
+        },
+        {
+          "title": "1396 W Herndon Ave",
+          "url": "https://www.mapquest.com/us/california/fresno/93711-7126/1396-w-herndon-ave-36.83752,-119.81542"
+        },
+        {
+          "title": "1396 W Herndon Ave",
+          "url": "https://www.mapquest.com/us/california/fresno/93711-0431/1396-w-herndon-ave"
+        },
+        {
+          "title": "1376 W Herndon Ave # 101, Fresno, CA 93711 Property Report | ATTOM",
+          "url": "https://propertynavigator.attomdata.com/property-reports/1376-w-herndon-ave-101-fresno-ca-93711/156115581/"
+        },
+        {
+          "title": "1396 W Herndon Ave,  \n\t\t\t\t\t Fresno, CA 93711",
+          "url": "https://www.loopnet.com/property/1382-w-herndon-ave-fresno-ca-93711/06019-40545016/"
+        },
+        {
+          "title": "Freeman Jr Brent F CPA at 1398 West Herndon Avenue Suite 102, Fresno, CA 93711",
+          "url": "http://fresno.calstatedir.com/freeman-jr-brent-f-cpa.html"
+        },
+        {
+          "title": "Office Space at 13900 Lincoln Park Dr in Herndon",
+          "url": "https://www.officespace.com/va/herndon/329508-13900-lincoln-park-dr"
+        }
+      ]
+    }
+  ]
+}

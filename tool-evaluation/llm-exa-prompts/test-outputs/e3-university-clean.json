@@ -1,0 +1,52 @@
+{
+  "answer": "```yaml\n# Forwarding/reshipping fields\nforwarding_service_detected: false\nforwarding_service_name: null\nforwarding_service_type: null\nforwarding_evidence_strength: null\n\n# Address occupant fields\nbusinesses_at_address: \n  - \"Massachusetts Institute of Technology (MIT)\"\n  - \"MIT Information Center\"\n  - \"MIT Admissions Office\"\n  - \"MIT Department of Architecture\"\n  - \"The 77 Lab\"\nbuilding_name: \"MIT Building 7 (Main Entrance)\"\nbuilding_appears_logistics_hub: false\nsuite_number_pattern_suspicious: false\n\n# Non-Latin PO box detection\nnon_latin_pobox_detected: false\nnon_latin_pobox_term: null\nnon_latin_pobox_script: null\n\n# Confidence and evidence\nconfidence: high\nfree_text_summary: |\n  Search results confirm that 77 Massachusetts Avenue in Cambridge, MA is the main address and primary entrance for the Massachusetts Institute of Technology (MIT). Multiple university departments, labs, and administrative offices (such as the Department of Architecture and Undergraduate Admissions) operate at this location. There is no evidence of this address being used by any mail forwarding, re-shipping, freight forwarding, or virtual office service.\n\nsources:\n  - url: \"https://web.mit.edu/visit/popup-77mass.html\"\n    domain: \"web.mit.edu\"\n    source_type: company_website\n    snippet: \"This is 77 Massachusetts Avenue, MIT\u2019s main entrance. Enter here for Lobby 7, the MIT Information Center, and Admissions Office.\"\n  - url: \"https://www.mit.edu/contact/\"\n    domain: \"mit.edu\"\n    source_type: company_website\n    snippet: \"Massachusetts Institute of Technology 77 Massachusetts Avenue Cambridge, MA 02139, USA\"\n  - url: \"https://architecture.mit.edu/contact-0\"\n    domain: \"architecture.mit.edu\"\n    source_type: company_website\n    snippet: \"MIT Department of Architecture; 77 Massachusetts Avenue, Room 7-337; Cambridge, MA 02139-4307\"\n\nsearches_performed:\n  - query: \"\\\"77 Massachusetts Ave\\\" Cambridge MA 02139\"\n    num_results: 9\n```",
+  "model": "google/gemini-3.1-pro-preview",
+  "iterations": 2,
+  "total_exa_cost_usd": 0.007,
+  "tool_calls": [
+    {
+      "tool": "search_web",
+      "query": "\"77 Massachusetts Ave\" Cambridge MA 02139",
+      "num_results": 9,
+      "duration_s": 0.71,
+      "results": [
+        {
+          "title": "77 Massachusetts Avenue",
+          "url": "https://web.mit.edu/visit/popup-77mass.html"
+        },
+        {
+          "title": "Contact \u2013 The 77 Lab",
+          "url": "https://the77lab.mit.edu/contact/"
+        },
+        {
+          "title": "MIT Building 7",
+          "url": "https://www.businessyab.com/explore/united_states/massachusetts/middlesex_county/cambridge/area_2_mit/massachusetts_avenue/77/mit_building_7.html"
+        },
+        {
+          "title": "Directions | MIT News | Massachusetts Institute of Technology",
+          "url": "https://news.mit.edu/mit-news-office/directions"
+        },
+        {
+          "title": "Contact | MIT - Massachusetts Institute of Technology",
+          "url": "https://www.mit.edu/contact/"
+        },
+        {
+          "title": "Contact | Architecture",
+          "url": "https://architecture.mit.edu/contact-0"
+        },
+        {
+          "title": "77 Massachusetts Avenue Overview :: Green Building Information Gateway",
+          "url": "https://www.gbig.org/buildings/595197"
+        },
+        {
+          "title": "Visit | MIT - Massachusetts Institute of Technology",
+          "url": "https://www.mit.edu/visit/"
+        },
+        {
+          "title": "Contact Us \u2013 The 77 Lab",
+          "url": "https://the77lab.mit.edu/contact-us/"
+        }
+      ]
+    }
+  ]
+}

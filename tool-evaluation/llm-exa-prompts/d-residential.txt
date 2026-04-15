@@ -79,6 +79,10 @@ Report ALL sources but note their type:
 - **Moderate:** Business directories, company websites listing the address
 - **Weak (user-submitted):** Social media check-ins, review sites, community forums. Flag as `source_type: user_submitted`.
 
+## Search budget
+
+You have a maximum of **4 web searches**. After 4 searches, stop searching and produce your final YAML report based on what you found. If you cannot find the specific address in any real estate listing or business directory, set classification fields to `null` and explain what you searched for in `free_text_summary`. Many residential addresses have no web presence — absence of evidence is a valid finding.
+
 ## Hard rules
 
 1. **Address specificity.** Only count listings or evidence for the SPECIFIC address, not nearby addresses. "Office space for lease on the same street" is NOT evidence that this address is commercial. Report nearby evidence in `free_text_summary` but do not use it to set the structured fields.

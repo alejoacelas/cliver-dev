@@ -1,0 +1,92 @@
+{
+  "answer": "```yaml\naddress_appears_residential: false\naddress_appears_commercial: true\naddress_is_mixed_use: false\n\n# What type of evidence supports the classification\nresidential_evidence_type: \"none\"\ncommercial_evidence_type: \"institutional_presence\"\n\n# Building information if found\nbuilding_name: \"Northwest Science Building (Northwest Labs)\"\nbuilding_type: \"campus\"\nknown_tenants: \n  - \"Harvard University\"\n  - \"FAS Division of Science\"\n  - \"Harvard John A. Paulson School of Engineering and Applied Sciences (SEAS)\"\n  - \"Collection of Historical Scientific Instruments\"\n\n# Confidence and evidence\nconfidence: high\nfree_text_summary: |\n  The address 52 Oxford St in Cambridge, MA is recognized as the Northwest Science Building (also known as Northwest Labs) on the Harvard University campus. Multiple university pages confirm it houses academic spaces, including the FAS Division of Science and Harvard SEAS. While some auto-generated real estate placeholder pages exist for this address, there is no evidence of actual residential use, apartments, or real estate listings, confirming its purely academic and institutional status.\n\nsources:\n  - url: \"https://science.fas.harvard.edu/directions-northwest-building-52-oxford-st-cambridge-ma-02138\"\n    domain: \"science.fas.harvard.edu\"\n    source_type: \"institutional_website\"\n    snippet: \"Directions to: Northwest Building, 52 Oxford St. Cambridge, MA | FAS Division of Science... The Northwest Building is just beyond the Harvard Museum of Natural History, on the right hand side of the street.\"\n  - url: \"https://events.seas.harvard.edu/northwest_building\"\n    domain: \"events.seas.harvard.edu\"\n    source_type: \"institutional_website\"\n    snippet: \"Northwest Building - Harvard SEAS... 52 Oxford Street, Cambridge, MA 02138\"\n  - url: \"https://chsi.harvard.edu/nw_labs\"\n    domain: \"chsi.harvard.edu\"\n    source_type: \"institutional_website\"\n    snippet: \"Harvard Northwest Science Building | Collection of Historical Scientific Instruments... 52 Oxford Street, Cambridge\"\n  - url: \"https://www.mapquest.com/us/massachusetts/harvard-university-464726471\"\n    domain: \"mapquest.com\"\n    source_type: \"mapping_service\"\n    snippet: \"Harvard University, 52 Oxford St, Cambridge, MA 02138, US\"\n\nsearches_performed:\n  - query: \"\\\"52 Oxford St\\\" \\\"Cambridge\\\" MA 02138\"\n    num_results: 10\n  - query: \"\\\"52 Oxford St\\\" \\\"Northwest Building\\\" Harvard\"\n    num_results: 9\n```",
+  "model": "google/gemini-3.1-pro-preview",
+  "iterations": 3,
+  "total_exa_cost_usd": 0.014,
+  "tool_calls": [
+    {
+      "tool": "search_web",
+      "query": "\"52 Oxford St\" \"Cambridge\" MA 02138",
+      "num_results": 9,
+      "duration_s": 0.7,
+      "results": [
+        {
+          "title": "52 Oxford Street Cambridge, MA",
+          "url": "https://www.flowrealty.com/property/52-oxford-street-cambridge-ma-02138/29950268/"
+        },
+        {
+          "title": "52 Oxford Street, Cambridge MA - Walk Score",
+          "url": "https://www.walkscore.com/score/52-oxford-st-cambridge-ma-02138"
+        },
+        {
+          "title": "52 Oxford Street Cambridge MA  MLS# 225be865e908c0c3b853053a0d65f69b",
+          "url": "https://www.elevatedboston.com/property/52-oxford-street-cambridge-ma-02138/29950268/"
+        },
+        {
+          "title": "52 Oxford Street Cambridge,  MA  02138 Inquire For List Price",
+          "url": "https://www.campionre.com/property/52-oxford-street-cambridge-ma-02138/29950268/"
+        },
+        {
+          "title": "52 Oxford Street Cambridge,  MA  02138 Inquire For List Price",
+          "url": "https://www.kwevolution.com/property/52-oxford-street-cambridge-ma-02138/29950268/"
+        },
+        {
+          "title": "52 Oxford St",
+          "url": "https://www.mapquest.com/us/massachusetts/cambridge/02138-1903/52-oxford-st-42.37999,-71.11541"
+        },
+        {
+          "title": "Directions to: Northwest Building, 52 Oxford St. Cambridge, MA | FAS Division of Science",
+          "url": "https://science.fas.harvard.edu/directions-northwest-building-52-oxford-st-cambridge-ma-02138"
+        },
+        {
+          "title": "Harvard University",
+          "url": "https://www.mapquest.com/us/massachusetts/harvard-university-464726471"
+        },
+        {
+          "title": "52 Oxford St Overview :: Green Building Information Gateway",
+          "url": "https://www.gbig.org/buildings/604209"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"52 Oxford St\" \"Northwest Building\" Harvard",
+      "num_results": 8,
+      "duration_s": 0.72,
+      "results": [
+        {
+          "title": "Directions to: Northwest Building, 52 Oxford St. Cambridge, MA | FAS Division of Science",
+          "url": "https://science.fas.harvard.edu/directions-northwest-building-52-oxford-st-cambridge-ma-02138"
+        },
+        {
+          "title": "Northwest Building",
+          "url": "https://events.seas.harvard.edu/northwest_building"
+        },
+        {
+          "title": "52 Oxford St Overview :: Green Building Information Gateway",
+          "url": "https://www.gbig.org/buildings/604209"
+        },
+        {
+          "title": "52 Oxford St Overview :: Green Building Information Gateway",
+          "url": "http://gbig-ruby-2.gbig.org/buildings/604209"
+        },
+        {
+          "title": "Driving directions, live traffic &amp; road conditions updates - Waze",
+          "url": "https://www.waze.com/live-map/directions/northwest-building-harvard-oxford-st-52-cambridge?to=place.w.189333928.1893208206.866418"
+        },
+        {
+          "title": "Northwest Science Building",
+          "url": "https://th.foursquare.com/v/northwest-science-building/4b5e1cdcf964a5204d7e29e3"
+        },
+        {
+          "title": "Harvard Northwest Science Building | Collection of Historical Scientific Instruments",
+          "url": "https://chsi.harvard.edu/nw_labs"
+        },
+        {
+          "title": "Harvard University Northwest Labs (Building)",
+          "url": "https://www.waze.com/live-map/directions/harvard-university-northwest-labs-(building)-oxford-st-52-cambridge?to=place.w.189333928.1893208206.3445821"
+        }
+      ]
+    }
+  ]
+}

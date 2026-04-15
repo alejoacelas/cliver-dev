@@ -40,7 +40,7 @@ OPENROUTER_RESPONSES_URL = "https://openrouter.ai/api/v1/responses"
 EXA_SEARCH_URL = "https://api.exa.ai/search"
 
 DEFAULT_MODEL = "google/gemini-3.1-pro-preview"
-MAX_ITERATIONS = 15
+MAX_ITERATIONS = 6
 REQUEST_TIMEOUT = 120.0  # seconds
 
 # Exa search defaults
@@ -303,6 +303,40 @@ def run_search(
 
     # Extract final answer text
     answer = _extract_text(output_items, data)
+
+    # If the loop exhausted iterations (model kept searching instead of
+    # answering) or the model returned an empty answer, force a final answer.
+    if not answer.strip() and tool_calls:
+        if verbose:
+            print("  [final] Empty answer — forcing final synthesis...",
+                  file=sys.stderr)
+
+        nudge = (
+            "You have exhausted your search budget. Based on all the search "
+            "results you have seen so far, produce your final YAML report now. "
+            "Set any fields you could not determine to null. Do NOT search again."
+        )
+        input_items.append({"role": "user", "content": nudge})
+
+        payload = {
+            "model": model,
+            "input": input_items,
+            "tools": [],  # no tools — force text output
+        }
+        if system_prompt:
+            payload["instructions"] = system_prompt
+
+        with httpx.Client(timeout=REQUEST_TIMEOUT) as client:
+            response = client.post(
+                OPENROUTER_RESPONSES_URL,
+                headers=headers,
+                json=payload,
+            )
+        response.raise_for_status()
+        data = response.json()
+        output_items = data.get("output", [])
+        answer = _extract_text(output_items, data)
+        iteration += 1
 
     return SearchResult(
         answer=answer,

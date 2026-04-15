@@ -1,0 +1,200 @@
+{
+  "answer": "```yaml\n# Address-institution fields\ninstitution_found_online: true\ninstitution_website: null\ninstitution_address_on_record: \"New Haven, CT\"\naddress_matches_claimed: false\naddress_match_level: \"none\"\nother_entity_at_address: \"LabCentral (and various biotech startups)\"\ncoworking_or_incubator: true\ncoworking_operator: \"LabCentral\"\ninstitution_has_multiple_campuses: null\ninstitution_moved_recently: null\nmoved_from: null\nmoved_to: null\n\n# Confidence and evidence\nconfidence: high\nfree_text_summary: |\n  Helix Therapeutics Inc. was found online in business directories and past press releases as a biopharmaceutical company based in New Haven, Connecticut. There is no public evidence linking Helix Therapeutics to the claimed shipping address in Cambridge. However, the shipping address (700 Main St, Cambridge, MA) is the flagship location of LabCentral, a well-known biotechnology incubator and shared laboratory space that hosts many biotech startups. It is possible the company operates out of this incubator, but there is no online presence confirming this specific tenant at the moment. \n\nsources:\n  - url: \"https://www.crunchbase.com/organization/helix-therapeutics\"\n    domain: \"crunchbase.com\"\n    source_type: \"business_directory\"\n    snippet: \"Helix Therapeutics developed DNA-based therapeutics for the treatment of HIV/AIDS and common genetic diseases. * New Haven, Connecticut\"\n  - url: \"https://www.prnewswire.com/news-releases/helix-therapeutics-inc-secures-additional-funding-to-advance-cutting-edge-stem-cell-gene-correction-therapy-for-genetic-diseases-110112939.html\"\n    domain: \"prnewswire.com\"\n    source_type: \"press_release\"\n    snippet: \"NEW HAVEN, Conn., Nov. 23, 2010 /PRNewswire/ -- Helix Therapeutics, a biopharmaceutical company pursuing therapies for genetic disorders\"\n  - url: \"https://www.labcentral.org/our-labs/labcentral-700\"\n    domain: \"labcentral.org\"\n    source_type: \"official_institution_page\"\n    snippet: \"LabCentral at 700 Main Street. Test out new ideas with 'quick-to-scale' support at LabCentral. With a focus on Pre-seed through Series A companies, our flagship location offers a vibrant entrepreneurial community, a range of lab resources\"\n  - url: \"https://abgrealty.com/helix-therapeutics-handed-2-5m-funding/\"\n    domain: \"abgrealty.com\"\n    source_type: \"news\"\n    snippet: \"Helix Therapeutics LLC, a New Haven, Conn.-based biopharmaceutical company, has landed $2.5 million in new funding\"\n\nsearches_performed:\n  - query: '\"Helix Therapeutics Inc.\"'\n    num_results: 10\n  - query: '\"700 Main St, Cambridge, MA 02139\"'\n    num_results: 10\n  - query: '\"Helix Therapeutics Inc.\" \"700 Main St\"'\n    num_results: 10\n  - query: '\"700 Main St\" \"Cambridge\" incubator LabCentral OR BioLabs OR WeWork'\n    num_results: 10\n```",
+  "model": "google/gemini-3.1-pro-preview",
+  "iterations": 4,
+  "total_exa_cost_usd": 0.028,
+  "tool_calls": [
+    {
+      "tool": "search_web",
+      "query": "\"Helix Therapeutics Inc.\"",
+      "num_results": 10,
+      "duration_s": 0.98,
+      "results": [
+        {
+          "title": "Helix Therapeutics - Products, Competitors, Financials, Employees, Headquarters Locations",
+          "url": "https://www.cbinsights.com/company/helix-therapeutics"
+        },
+        {
+          "title": "About Us - Helix Biopharma",
+          "url": "https://www.helixbiopharma.com/about-us/"
+        },
+        {
+          "title": "Helix Biomedix, Inc. - Helix BioMedix Inc",
+          "url": "http://www.helixbiomedix.com/"
+        },
+        {
+          "title": "Helix Biopharma: Transforming Cancer Treatment With Innovation",
+          "url": "https://www.helixbiopharma.com/home2/"
+        },
+        {
+          "title": "Helix Biopharma: Transforming Cancer Treatment With Innovation",
+          "url": "https://www.helixbiopharma.com/"
+        },
+        {
+          "title": "Helix BioPharma - 2026 Company Profile, Team, Funding & Competitors - Tracxn",
+          "url": "https://tracxn.com/d/companies/helixbiopharma/__f64IKWbCaHeYIgAedv4TYxHfQRO0JQO7vmG97MlUfHE"
+        },
+        {
+          "title": "Helix BioMedix - 2025 Company Profile, Team, Funding, Competitors & Financials - Tracxn",
+          "url": "https://tracxn.com/d/companies/helix-biomedix/___VyIlNS8TdA0rDkgjeVxWVg8ZpYUz6jCHSOSTHvPU_o"
+        },
+        {
+          "title": "Helix Therapeutics Stock Price, Funding, Valuation, Revenue & Financial Statements",
+          "url": "https://www.cbinsights.com/company/helix-therapeutics/financials"
+        },
+        {
+          "title": "Helix BioMedix - 2026 Company Profile, Funding, Competitors & Financials - Tracxn",
+          "url": "https://tracxn.com/d/companies/helixbiomedix/___VyIlNS8TdA0rDkgjeVxWVg8ZpYUz6jCHSOSTHvPU_o"
+        },
+        {
+          "title": "Helixis - 2026 Company Profile, Team, Funding & Competitors - Tracxn",
+          "url": "https://tracxn.com/d/companies/helixis/__2jhaTsPaxGoBzgy1fG8SzpHiWox38H998ZlzmdPnzbk"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"700 Main St, Cambridge, MA 02139\"",
+      "num_results": 10,
+      "duration_s": 0.82,
+      "results": [
+        {
+          "title": "700 Main St,  \n\t\t\t\t\t Cambridge, MA 02139",
+          "url": "https://www.loopnet.com/property/700-main-st-cambridge-ma-02139/25017-004943697/"
+        },
+        {
+          "title": "700 Main Street",
+          "url": "https://www.commercialcafe.com/coworking-property/us/ma/cambridge/700-main-street-1/"
+        },
+        {
+          "title": "700 Main Street",
+          "url": "https://www.coworkingcafe.com/coworking-property/us/ma/cambridge/700-main-street-1/"
+        },
+        {
+          "title": "700 Main Street Cambridge, MA",
+          "url": "https://www.flowrealty.com/property/700-main-street-cambridge-ma/52240778/"
+        },
+        {
+          "title": "700 Main St \n             \n\n         \n3,661 - 31,454 SF of 4-Star Office Space Available in Cambridge, MA 02139",
+          "url": "https://www.loopnet.com/Listing/700-Main-St-Cambridge-MA/33232261/"
+        },
+        {
+          "title": "100-700 Main Street Cambridge, MA commercial lease comps and tenants.",
+          "url": "https://property.compstak.com/100-700-Main-Street-Cambridge/p/476505"
+        },
+        {
+          "title": "700 Main Street",
+          "url": "https://capitalprojects.mit.edu/projects/700-main-street"
+        },
+        {
+          "title": "700 Main Street Cambridge, MA commercial lease comps and tenants.",
+          "url": "https://property.compstak.com/700-Main-Street-Cambridge/p/78493"
+        },
+        {
+          "title": "Cambridge, MA Coworking Space  at 700 Main Street | CoworkingMag",
+          "url": "https://coworkingmag.com/listings/coworking-property/us/ma/cambridge/labcentral-700/"
+        },
+        {
+          "title": "700 Main Street",
+          "url": "https://www.commercialsearch.com/coworking-property/us/ma/cambridge/700-main-street-1/"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"Helix Therapeutics Inc.\" \"700 Main St\"",
+      "num_results": 10,
+      "duration_s": 0.77,
+      "results": [
+        {
+          "title": "Helix Therapeutics - Products, Competitors, Financials, Employees, Headquarters Locations",
+          "url": "https://www.cbinsights.com/company/helix-therapeutics"
+        },
+        {
+          "title": "Helix Therapeutics Stock Price, Funding, Valuation, Revenue & Financial Statements",
+          "url": "https://www.cbinsights.com/company/helix-therapeutics/financials"
+        },
+        {
+          "title": "Helix Therapeutics",
+          "url": "https://www.crunchbase.com/organization/helix-therapeutics"
+        },
+        {
+          "title": "Helix Therapeutics Inc Secures Additional Funding to Advance Cutting-Edge Stem Cell Gene Correction Therapy for Genetic Diseases",
+          "url": "https://www.prnewswire.com/news-releases/helix-therapeutics-inc-secures-additional-funding-to-advance-cutting-edge-stem-cell-gene-correction-therapy-for-genetic-diseases-110112939.html"
+        },
+        {
+          "title": "Connecticut Innovations Makes Investment in Helix Therapeutics LLC",
+          "url": "https://www.biospace.com/connecticut-innovations-makes-investment-in-helix-therapeutics-llc"
+        },
+        {
+          "title": "Helixis - 2026 Company Profile, Team, Funding & Competitors - Tracxn",
+          "url": "https://tracxn.com/d/companies/helixis/__2jhaTsPaxGoBzgy1fG8SzpHiWox38H998ZlzmdPnzbk"
+        },
+        {
+          "title": "Helix Therapeutics handed $2.5M in new funding \u2013 ABG Commercial Realty",
+          "url": "https://abgrealty.com/helix-therapeutics-handed-2-5m-funding/"
+        },
+        {
+          "title": "Helix BioMedix - 2026 Company Profile, Funding, Competitors & Financials - Tracxn",
+          "url": "https://tracxn.com/d/companies/helixbiomedix/___VyIlNS8TdA0rDkgjeVxWVg8ZpYUz6jCHSOSTHvPU_o"
+        },
+        {
+          "title": "Helix BioMedix - 2025 Company Profile, Team, Funding, Competitors & Financials - Tracxn",
+          "url": "https://tracxn.com/d/companies/helix-biomedix/___VyIlNS8TdA0rDkgjeVxWVg8ZpYUz6jCHSOSTHvPU_o"
+        },
+        {
+          "title": "Helix Therapeutics, Inc. - Drug pipelines, Patents, Clinical trials - Synapse",
+          "url": "https://synapse.patsnap.com/organization/31d09ab40832b17046bc0429f1fe19e1"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"700 Main St\" \"Cambridge\" incubator LabCentral OR BioLabs OR WeWork",
+      "num_results": 10,
+      "duration_s": 0.72,
+      "results": [
+        {
+          "title": "LabCentral 700 | Shared Biotech Lab Space in Cambridge",
+          "url": "https://www.labcentral.org/our-labs/labcentral-700"
+        },
+        {
+          "title": "LabCentral 700 | Shared Biotech Lab Space in Cambridge",
+          "url": "https://www.labcentral.org/labs-and-facilities/labcentral-700"
+        },
+        {
+          "title": "Lab Facilities | Shared Biotech Lab Space in Cambridge",
+          "url": "https://www.labcentral.org/our-labs"
+        },
+        {
+          "title": "Locations - LabCentral | Cambridge, MA",
+          "url": "https://www.labcentral.org/contact/location"
+        },
+        {
+          "title": "Shared Biotech Lab Space for Startups | LabCentral MA",
+          "url": "https://www.labcentral.org/"
+        },
+        {
+          "title": "LabCentral | Technology | Laboratory",
+          "url": "https://cambridgechamberma.chambermaster.com/list/member/labcentral-cambridge-48674.htm"
+        },
+        {
+          "title": "Shared Biotech Lab Space for Startups | LabCentral MA",
+          "url": "https://labcentral.com/"
+        },
+        {
+          "title": "700 Main Street",
+          "url": "https://www.commercialcafe.com/coworking-property/us/ma/cambridge/700-main-street-1/"
+        },
+        {
+          "title": "About LabCentral | Nonprofit Biotech Hub in Cambridge MA",
+          "url": "https://www.labcentral.org/about"
+        },
+        {
+          "title": "Lab Facilities | Shared Biotech Lab Space in Cambridge",
+          "url": "https://www.labcentral.org/labs-and-facilities"
+        }
+      ]
+    }
+  ]
+}

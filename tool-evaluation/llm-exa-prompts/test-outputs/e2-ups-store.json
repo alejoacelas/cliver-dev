@@ -1,0 +1,824 @@
+{
+  "answer": "",
+  "model": "google/gemini-3.1-pro-preview",
+  "iterations": 15,
+  "total_exa_cost_usd": 0.11900000000000005,
+  "tool_calls": [
+    {
+      "tool": "search_web",
+      "query": "\"8950 Cal Center Dr\" \"Sacramento\"",
+      "num_results": 10,
+      "duration_s": 1.1,
+      "results": [
+        {
+          "title": "8950 Cal Center Dr,  \n\t\t\t\t\t Sacramento, CA 95826",
+          "url": "https://www.loopnet.com/property/8950-cal-center-dr-sacramento-ca-95826/06067-07804500110000/"
+        },
+        {
+          "title": "California Center \n                                 Sacramento, CA 95826 \n             \n\n         \n821 - 55,625 SF of Office Space Available",
+          "url": "https://www.loopnet.com/Listing/8950-Cal-Center-Dr-Sacramento-CA/26314885/"
+        },
+        {
+          "title": "8950 Cal Center Dr \n\n                             Sacramento, CA 95826 \n                     \n                     \n                             \n                                California Center \u00b7  Property For Lease",
+          "url": "https://www.loopnet.com/Listing/8950-Cal-Center-Dr-Sacramento-CA/4033395/"
+        },
+        {
+          "title": "Tax Services of Sacramento - Provides Loan Services at 8950 Cal Center Dr, Sacramento, CA 95826 | FinanceSacramentoCA",
+          "url": "https://financesacramentoca.com/branch/tax-services-of-sacramento-sacramento-8950-cal-center-dr-sacramento-ca-95826"
+        },
+        {
+          "title": "8945 Cal Center Dr,  \n\t\t\t\t\t Sacramento, CA 95826",
+          "url": "https://www.loopnet.com/property/8945-cal-center-dr-sacramento-ca-95826/06067-07804500240000/"
+        },
+        {
+          "title": "8950 Cal Center Dr -  Office For Rent",
+          "url": "https://www.showcase.com/8950-cal-center-dr-sacramento-ca-95826/23376155/"
+        },
+        {
+          "title": "8950 Cal Center Dr -  Office For Rent",
+          "url": "https://www.showcase.com/8950-cal-center-dr-sacramento-ca-95826/4033374/"
+        },
+        {
+          "title": "8890 Cal Center",
+          "url": "https://commercialsearch.com/commercial-property/us/ca/sacramento/8890-cal-center-1"
+        },
+        {
+          "title": "8950 Cal Center Dr -  For Rent",
+          "url": "https://www.showcase.com/8950-cal-center-dr-sacramento-ca-95826/26314885/"
+        },
+        {
+          "title": "8950 Cal Center Drive Sacramento, CA commercial lease comps and tenants.",
+          "url": "https://property.compstak.com/8950-Cal-Center-Drive-Sacramento/p/40486"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"8950 Cal Center Dr\" \"Suite 208\" Sacramento",
+      "num_results": 10,
+      "duration_s": 0.97,
+      "results": [
+        {
+          "title": "Tax Services of Sacramento - Provides Loan Services at 8950 Cal Center Dr, Sacramento, CA 95826 | FinanceSacramentoCA",
+          "url": "https://financesacramentoca.com/branch/tax-services-of-sacramento-sacramento-8950-cal-center-dr-sacramento-ca-95826"
+        },
+        {
+          "title": "8950 Cal Center Drive, Suite 160 Sacramento, CA 95826 - 2 registered entities",
+          "url": "https://www.bizprofile.net/principal-address/8950-cal-center-drive-suite-160-sacramento-ca-95826"
+        },
+        {
+          "title": "Children's Law Center-Sacramento at 8950 Cal Center Drive Suite 245, Sacramento, CA 95826",
+          "url": "http://sacramento.calstatedir.com/childrens-law-center-sacramento.html"
+        },
+        {
+          "title": "8950 Cal Center Dr,  \n\t\t\t\t\t Sacramento, CA 95826",
+          "url": "https://www.loopnet.com/property/8950-cal-center-dr-sacramento-ca-95826/06067-07804500110000/"
+        },
+        {
+          "title": "California Center \n                                 Sacramento, CA 95826 \n             \n\n         \n821 - 55,625 SF of Office Space Available",
+          "url": "https://www.loopnet.com/Listing/8950-Cal-Center-Dr-Sacramento-CA/26314885/"
+        },
+        {
+          "title": "8950 Cal Center Dr \n\n                             Sacramento, CA 95826 \n                     \n                     \n                             \n                                California Center \u00b7  Property For Lease",
+          "url": "https://www.loopnet.com/Listing/8950-Cal-Center-Dr-Sacramento-CA/4033395/"
+        },
+        {
+          "title": "Sacramento County Probation Association",
+          "url": "https://www.mapquest.com/us/california/sacramento-county-probation-association-276105678"
+        },
+        {
+          "title": "Center for The Treatment of Addictive Disorders",
+          "url": "https://opengovus.com/california-license/8008FNP-552298"
+        },
+        {
+          "title": "8950 Cal Center Dr Suite 215 Building 1",
+          "url": "https://www.waze.com/live-map/directions/us/ca/sacramento/8950-cal-center-dr-suite-215-building-1?to=place.EkI4OTUwIENhbCBDZW50ZXIgRHIgU3VpdGUgMjE1IEJ1aWxkaW5nIDEsIFNhY3JhbWVudG8sIENBIDk1ODI2LCBVU0EiMBouChYKFAoSCVO3FjVG25qAEZ3reBzRWUqqEhRTdWl0ZSAyMTUgQnVpbGRpbmcgMQ"
+        },
+        {
+          "title": "Exit Certified at 8950 Cal Center Drive Bldg 1, Suite 110, Sacramento, CA 95826",
+          "url": "http://sacramento.calstatedir.com/exit-certified.html"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"8950 Cal Center Dr\" mail forwarding OR shipping OR virtual office OR package forwarding OR cmra",
+      "num_results": 10,
+      "duration_s": 1.65,
+      "results": [
+        {
+          "title": "California CMRA Services | Professional Commercial Mail Receiving Agent in CA",
+          "url": "https://www.californiaregisteredagents.net/cmra/"
+        },
+        {
+          "title": "California CMRA | Professional Mail Services in CA",
+          "url": "https://www.california-registered-agent.net/cmra/"
+        },
+        {
+          "title": "California Commercial Mail Receiving Agency - Registered Agents of California",
+          "url": "https://www.californiaregisteredagent.com/cmra/"
+        },
+        {
+          "title": "California Mail Forwarding",
+          "url": "https://www.californiaagentforserviceofprocess.com/california-mail-forwarding/"
+        },
+        {
+          "title": "California Mail Scanning Service",
+          "url": "https://www.californiaregisteredagents.net/california-virtual-office/mail-forwarding/"
+        },
+        {
+          "title": "California Virtual Office (including Mail Forwarding) | MyCompanyWorks",
+          "url": "https://www.mycompanyworks.com/california-virtual-office"
+        },
+        {
+          "title": "Virtual Digital Mail Forwarding | Santa Rosa, CA | The Central Office",
+          "url": "https://www.centralofficeon4th.com/Services/Mailbox-Rental/Digital-Mail"
+        },
+        {
+          "title": "Mail Center & Business Services in Brentwood, CA",
+          "url": "https://www.postalannex.com/location/brentwood/10009"
+        },
+        {
+          "title": "Packing, Shipping, Mailing | Cerritos, CA | Cerritos Mailbox and More",
+          "url": "https://www.cerritosmailbox.com/"
+        },
+        {
+          "title": "Virtual Digital Mail Forwarding | Riverside, CA | The Shipping Center",
+          "url": "https://www.tscriverside.com/Home-Business/Digital-Mailbox-Rental"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"Suite 208\" \"8950 Cal Center\"",
+      "num_results": 10,
+      "duration_s": 1.38,
+      "results": [
+        {
+          "title": "8950 Cal Center Drive, Suite 160 Sacramento, CA 95826 - 2 registered entities",
+          "url": "https://www.bizprofile.net/principal-address/8950-cal-center-drive-suite-160-sacramento-ca-95826"
+        },
+        {
+          "title": "California Center \n                                 Sacramento, CA 95826 \n             \n\n         \n821 - 55,625 SF of Office Space Available",
+          "url": "https://www.loopnet.com/Listing/8950-Cal-Center-Dr-Sacramento-CA/26314885/"
+        },
+        {
+          "title": "8950 Cal Center Dr Suite 215 Building 1",
+          "url": "https://www.waze.com/live-map/directions/us/ca/sacramento/8950-cal-center-dr-suite-215-building-1?to=place.EkI4OTUwIENhbCBDZW50ZXIgRHIgU3VpdGUgMjE1IEJ1aWxkaW5nIDEsIFNhY3JhbWVudG8sIENBIDk1ODI2LCBVU0EiMBouChYKFAoSCVO3FjVG25qAEZ3reBzRWUqqEhRTdWl0ZSAyMTUgQnVpbGRpbmcgMQ"
+        },
+        {
+          "title": "8950 Cal Center Dr,  \n\t\t\t\t\t Sacramento, CA 95826",
+          "url": "https://www.loopnet.com/property/8950-cal-center-dr-sacramento-ca-95826/06067-07804500110000/"
+        },
+        {
+          "title": "8950 Cal Center Dr \n\n                             Sacramento, CA 95826 \n                     \n                     \n                             \n                                California Center \u00b7  Property For Lease",
+          "url": "https://www.loopnet.com/Listing/8950-Cal-Center-Dr-Sacramento-CA/4033395/"
+        },
+        {
+          "title": "Test Center at 8950 Cal Center Drive Suite 215 Building #1 Sacramento California 95826",
+          "url": "https://www.easynclex.com/map/?addr=8950+Cal+Center+Drive+Suite+215+Building+%231+Sacramento+California+95826&loc=972"
+        },
+        {
+          "title": "Children's Law Center-Sacramento at 8950 Cal Center Drive Suite 245, Sacramento, CA 95826",
+          "url": "http://sacramento.calstatedir.com/childrens-law-center-sacramento.html"
+        },
+        {
+          "title": "Exit Certified at 8950 Cal Center Drive Bldg 1, Suite 110, Sacramento, CA 95826",
+          "url": "http://sacramento.calstatedir.com/exit-certified.html"
+        },
+        {
+          "title": "8950 Cal Center Dr: Sacramento Offices & Suites",
+          "url": "https://beta.duchyofcornwallholidaycottages.co.uk/8950-cal-center-drive-sacramento-ca-95826/"
+        },
+        {
+          "title": "Office Space in 8880 Cal Center, 4th Floor, 95826 | Easy Offices",
+          "url": "https://www.easyoffices.com/us/available-office-space/ca/sacramento/8880-cal-center-6205"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"Suite 208\" \"8950 Cal Center\" Sacramento",
+      "num_results": 10,
+      "duration_s": 0.86,
+      "results": [
+        {
+          "title": "8950 Cal Center Drive, Suite 160 Sacramento, CA 95826 - 2 registered entities",
+          "url": "https://www.bizprofile.net/principal-address/8950-cal-center-drive-suite-160-sacramento-ca-95826"
+        },
+        {
+          "title": "8950 Cal Center Dr Suite 215 Building 1",
+          "url": "https://www.waze.com/live-map/directions/us/ca/sacramento/8950-cal-center-dr-suite-215-building-1?to=place.EkI4OTUwIENhbCBDZW50ZXIgRHIgU3VpdGUgMjE1IEJ1aWxkaW5nIDEsIFNhY3JhbWVudG8sIENBIDk1ODI2LCBVU0EiMBouChYKFAoSCVO3FjVG25qAEZ3reBzRWUqqEhRTdWl0ZSAyMTUgQnVpbGRpbmcgMQ"
+        },
+        {
+          "title": "8950 Cal Center Dr,  \n\t\t\t\t\t Sacramento, CA 95826",
+          "url": "https://www.loopnet.com/property/8950-cal-center-dr-sacramento-ca-95826/06067-07804500110000/"
+        },
+        {
+          "title": "California Center \n                                 Sacramento, CA 95826 \n             \n\n         \n821 - 55,625 SF of Office Space Available",
+          "url": "https://www.loopnet.com/Listing/8950-Cal-Center-Dr-Sacramento-CA/26314885/"
+        },
+        {
+          "title": "Children's Law Center-Sacramento at 8950 Cal Center Drive Suite 245, Sacramento, CA 95826",
+          "url": "http://sacramento.calstatedir.com/childrens-law-center-sacramento.html"
+        },
+        {
+          "title": "Office Space in 8880 Cal Center, 4th Floor, 95826 | Easy Offices",
+          "url": "https://www.easyoffices.com/us/available-office-space/ca/sacramento/8880-cal-center-6205"
+        },
+        {
+          "title": "8950 Cal Center Dr \n\n                             Sacramento, CA 95826 \n                     \n                     \n                             \n                                California Center \u00b7  Property For Lease",
+          "url": "https://www.loopnet.com/Listing/8950-Cal-Center-Dr-Sacramento-CA/4033395/"
+        },
+        {
+          "title": "Tax Services of Sacramento - Provides Loan Services at 8950 Cal Center Dr, Sacramento, CA 95826 | FinanceSacramentoCA",
+          "url": "https://financesacramentoca.com/branch/tax-services-of-sacramento-sacramento-8950-cal-center-dr-sacramento-ca-95826"
+        },
+        {
+          "title": "Test Center at 8950 Cal Center Drive Suite 215 Building #1 Sacramento California 95826",
+          "url": "https://www.easynclex.com/map/?addr=8950+Cal+Center+Drive+Suite+215+Building+%231+Sacramento+California+95826&loc=972"
+        },
+        {
+          "title": "California Center \n                                 8880 Cal Center Dr \n             \n\n         \n1,308 - 48,494 SF of Office Space Available in Sacramento, CA 95826",
+          "url": "https://www.loopnet.com/Listing/8880-Cal-Center-Dr-Sacramento-CA/4700593/"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"8950 Cal Center Dr\" \"Suite 208\"",
+      "num_results": 10,
+      "duration_s": 1.27,
+      "results": [
+        {
+          "title": "8950 Cal Center Drive, Suite 160 Sacramento, CA 95826 - 2 registered entities",
+          "url": "https://www.bizprofile.net/principal-address/8950-cal-center-drive-suite-160-sacramento-ca-95826"
+        },
+        {
+          "title": "Tax Services of Sacramento - Provides Loan Services at 8950 Cal Center Dr, Sacramento, CA 95826 | FinanceSacramentoCA",
+          "url": "https://financesacramentoca.com/branch/tax-services-of-sacramento-sacramento-8950-cal-center-dr-sacramento-ca-95826"
+        },
+        {
+          "title": "Children's Law Center-Sacramento at 8950 Cal Center Drive Suite 245, Sacramento, CA 95826",
+          "url": "http://sacramento.calstatedir.com/childrens-law-center-sacramento.html"
+        },
+        {
+          "title": "Exit Certified at 8950 Cal Center Drive Bldg 1, Suite 110, Sacramento, CA 95826",
+          "url": "http://sacramento.calstatedir.com/exit-certified.html"
+        },
+        {
+          "title": "California Center \n                                 Sacramento, CA 95826 \n             \n\n         \n821 - 55,625 SF of Office Space Available",
+          "url": "https://www.loopnet.com/Listing/8950-Cal-Center-Dr-Sacramento-CA/26314885/"
+        },
+        {
+          "title": "8950 Cal Center Dr,  \n\t\t\t\t\t Sacramento, CA 95826",
+          "url": "https://www.loopnet.com/property/8950-cal-center-dr-sacramento-ca-95826/06067-07804500110000/"
+        },
+        {
+          "title": "InterWest Insurance Services LLC at 8950 Cal Center Drive Bldg 3, Suite 200, Sacramento, CA 95826",
+          "url": "http://sacramento.calstatedir.com/interwest-insurance-services-llc-3.html"
+        },
+        {
+          "title": "Center for The Treatment of Addictive Disorders",
+          "url": "https://opengovus.com/california-license/8008FNP-552298"
+        },
+        {
+          "title": "8950 Cal Center Dr \n\n                             Sacramento, CA 95826 \n                     \n                     \n                             \n                                California Center \u00b7  Property For Lease",
+          "url": "https://www.loopnet.com/Listing/8950-Cal-Center-Dr-Sacramento-CA/4033395/"
+        },
+        {
+          "title": "8950 Cal Center Dr Suite 215 Building 1",
+          "url": "https://www.waze.com/live-map/directions/us/ca/sacramento/8950-cal-center-dr-suite-215-building-1?to=place.EkI4OTUwIENhbCBDZW50ZXIgRHIgU3VpdGUgMjE1IEJ1aWxkaW5nIDEsIFNhY3JhbWVudG8sIENBIDk1ODI2LCBVU0EiMBouChYKFAoSCVO3FjVG25qAEZ3reBzRWUqqEhRTdWl0ZSAyMTUgQnVpbGRpbmcgMQ"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"California Center\" Sacramento 8950 suite 208",
+      "num_results": 10,
+      "duration_s": 0.66,
+      "results": [
+        {
+          "title": "Center for The Treatment of Addictive Disorders",
+          "url": "https://opengovus.com/california-license/8008FNP-552298"
+        },
+        {
+          "title": "Home - California Center",
+          "url": "https://www.californiacenter.us/"
+        },
+        {
+          "title": "State Rehabilitation Department on Center Pkwy in Sacramento, CA - 916-691-1555 | CMac.ws",
+          "url": "https://state-government-offices.cmac.ws/state-rehabilitation-department/12536/"
+        },
+        {
+          "title": "The California Center for Civic Participation | Youth Civic Engagement | 3810 Broadway, Sacramento, CA, USA",
+          "url": "https://www.californiacenter.org/copy-of-home"
+        },
+        {
+          "title": "Tax Services of Sacramento - Provides Loan Services at 8950 Cal Center Dr, Sacramento, CA 95826 | FinanceSacramentoCA",
+          "url": "https://financesacramentoca.com/branch/tax-services-of-sacramento-sacramento-8950-cal-center-dr-sacramento-ca-95826"
+        },
+        {
+          "title": "Retirement Security Centers",
+          "url": "https://www.mapquest.com/us/california/retirement-security-centers-366184880"
+        },
+        {
+          "title": "Children's Law Center-Sacramento at 8950 Cal Center Drive Suite 245, Sacramento, CA 95826",
+          "url": "http://sacramento.calstatedir.com/childrens-law-center-sacramento.html"
+        },
+        {
+          "title": "The California Center for Civic Participation | Youth Civic Engagement | 3810 Broadway, Sacramento, CA, USA",
+          "url": "http://www.californiacenter.org/"
+        },
+        {
+          "title": "The Child Abuse Prevention Center - Home",
+          "url": "https://thecapcenter.org/index1.php"
+        },
+        {
+          "title": "The Child Abuse Prevention Center - Home",
+          "url": "https://www.thecapcenter.org/"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"8950 Cal Center Dr\" Sacramento forwarder OR shipping OR \"virtual office\"",
+      "num_results": 10,
+      "duration_s": 0.69,
+      "results": [
+        {
+          "title": "FedEx, 8950 Cal Center Dr, Sacramento, CA 95826, US - MapQuest",
+          "url": "https://www.mapquest.com/us/california/fedex-776703816"
+        },
+        {
+          "title": "Get a Sacramento Virtual Address at 8880 Cal Center | Davinci Virtual",
+          "url": "https://www.davincivirtual.com/loc/us/california/sacramento-virtual-offices/facility-7462"
+        },
+        {
+          "title": "Sacramento Shipping and Freight Forwarding | AIT Worldwide Logistics",
+          "url": "https://www.aitworldwide.com/locations/sacramento-california/"
+        },
+        {
+          "title": "The UPS Store | Get Mailbox Services Here > 8250 Calvine Rd Ste C",
+          "url": "https://locations.theupsstore.com/ca/sacramento/8250-calvine-rd/mailbox-services/"
+        },
+        {
+          "title": "Sacramento, 8880 Cal Center Dr (FedEx Drop Box) - Fedex",
+          "url": "https://www.cybertip.eu/sk/fedex/sacramento-8880-cal-center-dr-fedex-drop-box-p120210"
+        },
+        {
+          "title": "8950 Cal Center Dr: Sacramento Offices & Suites",
+          "url": "https://beta.duchyofcornwallholidaycottages.co.uk/8950-cal-center-drive-sacramento-ca-95826/"
+        },
+        {
+          "title": "Home - California Center",
+          "url": "https://www.californiacenter.us/"
+        },
+        {
+          "title": "Packing, Shipping, Mailing | Sacramento, CA | Sac Pack and Ship",
+          "url": "https://sacpackandship.com/"
+        },
+        {
+          "title": "Sacramento, 8880 Cal Center Dr (FedEx Drop Box) - Fedex",
+          "url": "https://www.cybertip.eu/cs/fedex/sacramento-8880-cal-center-dr-fedex-drop-box-p120210"
+        },
+        {
+          "title": "The UPS Store Calvine Rd",
+          "url": "https://locations.theupsstore.com/ca/sacramento/8250-calvine-rd/"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"8950 Cal Center Dr\" Sacramento \"suite 208\"",
+      "num_results": 10,
+      "duration_s": 1.16,
+      "results": [
+        {
+          "title": "Tax Services of Sacramento - Provides Loan Services at 8950 Cal Center Dr, Sacramento, CA 95826 | FinanceSacramentoCA",
+          "url": "https://financesacramentoca.com/branch/tax-services-of-sacramento-sacramento-8950-cal-center-dr-sacramento-ca-95826"
+        },
+        {
+          "title": "8950 Cal Center Drive, Suite 160 Sacramento, CA 95826 - 2 registered entities",
+          "url": "https://www.bizprofile.net/principal-address/8950-cal-center-drive-suite-160-sacramento-ca-95826"
+        },
+        {
+          "title": "Children's Law Center-Sacramento at 8950 Cal Center Drive Suite 245, Sacramento, CA 95826",
+          "url": "http://sacramento.calstatedir.com/childrens-law-center-sacramento.html"
+        },
+        {
+          "title": "California Center \n                                 Sacramento, CA 95826 \n             \n\n         \n821 - 55,625 SF of Office Space Available",
+          "url": "https://www.loopnet.com/Listing/8950-Cal-Center-Dr-Sacramento-CA/26314885/"
+        },
+        {
+          "title": "8950 Cal Center Dr,  \n\t\t\t\t\t Sacramento, CA 95826",
+          "url": "https://www.loopnet.com/property/8950-cal-center-dr-sacramento-ca-95826/06067-07804500110000/"
+        },
+        {
+          "title": "Exit Certified at 8950 Cal Center Drive Bldg 1, Suite 110, Sacramento, CA 95826",
+          "url": "http://sacramento.calstatedir.com/exit-certified.html"
+        },
+        {
+          "title": "Center for The Treatment of Addictive Disorders",
+          "url": "https://opengovus.com/california-license/8008FNP-552298"
+        },
+        {
+          "title": "DKS Associates at 8950 Cal Center Drive #340, Sacramento, CA 95826",
+          "url": "http://sacramento.calstatedir.com/dks-associates.html"
+        },
+        {
+          "title": "8950 Cal Center Dr \n\n                             Sacramento, CA 95826 \n                     \n                     \n                             \n                                California Center \u00b7  Property For Lease",
+          "url": "https://www.loopnet.com/Listing/8950-Cal-Center-Dr-Sacramento-CA/4033395/"
+        },
+        {
+          "title": "InterWest Insurance Services LLC at 8950 Cal Center Drive Bldg 3, Suite 200, Sacramento, CA 95826",
+          "url": "http://sacramento.calstatedir.com/interwest-insurance-services-llc-3.html"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"8950 Cal Center Dr\" Sacramento \"suite 208\" business OR office OR tenant",
+      "num_results": 10,
+      "duration_s": 1.02,
+      "results": [
+        {
+          "title": "Tax Services of Sacramento - Provides Loan Services at 8950 Cal Center Dr, Sacramento, CA 95826 | FinanceSacramentoCA",
+          "url": "https://financesacramentoca.com/branch/tax-services-of-sacramento-sacramento-8950-cal-center-dr-sacramento-ca-95826"
+        },
+        {
+          "title": "Children's Law Center-Sacramento at 8950 Cal Center Drive Suite 245, Sacramento, CA 95826",
+          "url": "http://sacramento.calstatedir.com/childrens-law-center-sacramento.html"
+        },
+        {
+          "title": "8950 Cal Center Drive, Suite 160 Sacramento, CA 95826 - 2 registered entities",
+          "url": "https://www.bizprofile.net/principal-address/8950-cal-center-drive-suite-160-sacramento-ca-95826"
+        },
+        {
+          "title": "Exit Certified at 8950 Cal Center Drive Bldg 1, Suite 110, Sacramento, CA 95826",
+          "url": "http://sacramento.calstatedir.com/exit-certified.html"
+        },
+        {
+          "title": "DKS Associates at 8950 Cal Center Drive #340, Sacramento, CA 95826",
+          "url": "http://sacramento.calstatedir.com/dks-associates.html"
+        },
+        {
+          "title": "InterWest Insurance Services LLC at 8950 Cal Center Drive Bldg 3, Suite 200, Sacramento, CA 95826",
+          "url": "http://sacramento.calstatedir.com/interwest-insurance-services-llc-3.html"
+        },
+        {
+          "title": "California Center \n                                 Sacramento, CA 95826 \n             \n\n         \n821 - 55,625 SF of Office Space Available",
+          "url": "https://www.loopnet.com/Listing/8950-Cal-Center-Dr-Sacramento-CA/26314885/"
+        },
+        {
+          "title": "8950 Cal Center Dr,  \n\t\t\t\t\t Sacramento, CA 95826",
+          "url": "https://www.loopnet.com/property/8950-cal-center-dr-sacramento-ca-95826/06067-07804500110000/"
+        },
+        {
+          "title": "Crump Life Insurance - Provides Loan Services at 8950 Cal Center Dr 250, Sacramento, CA 95826 | FinanceSacramentoCA",
+          "url": "https://financesacramentoca.com/branch/crump-life-insurance-sacramento-8950-cal-center-dr-250-sacramento-ca-95826"
+        },
+        {
+          "title": "Access Dental Corporation Headquarters | Trusted Dentist in Sacramento, CA | DentistDig",
+          "url": "https://dentistdig.com/ca/sacramento/9088--access-dental-corporation-headquarters"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"8890 Cal Center Dr\" Sacramento forwarder OR shipping OR \"virtual office\"",
+      "num_results": 10,
+      "duration_s": 0.77,
+      "results": [
+        {
+          "title": "Get a Sacramento Virtual Address at 8880 Cal Center | Davinci Virtual",
+          "url": "https://www.davincivirtual.com/loc/us/california/sacramento-virtual-offices/facility-7462"
+        },
+        {
+          "title": "Serviced offices to rent and lease at 8880 Cal Center, 4th Floor",
+          "url": "https://www.newofficeamerica.com/details/serviced-8880-cal-center-sacramento"
+        },
+        {
+          "title": "FedEx, 8950 Cal Center Dr, Sacramento, CA 95826, US - MapQuest",
+          "url": "https://www.mapquest.com/us/california/fedex-776703816"
+        },
+        {
+          "title": "1 Person Virtual Office at 8880 Cal Center, Sacramento",
+          "url": "https://www.office-hub.com/listings/1-person-virtual-office-8880-cal-center-sacramento-ca-95826-a0t3m00000VBg0CAAT"
+        },
+        {
+          "title": "Sacramento, 8880 Cal Center Dr (FedEx Drop Box) - Fedex",
+          "url": "https://www.cybertip.eu/sk/fedex/sacramento-8880-cal-center-dr-fedex-drop-box-p120210"
+        },
+        {
+          "title": "Office Space, Coworking & Meeting Rooms at 8880 Cal Center Drive (95826) | Regus",
+          "url": "https://www.regus.com/en-us/united-states/california/sacramento/8880-cal-center-drive-6205"
+        },
+        {
+          "title": "Virtual Office | Desks Near Me",
+          "url": "https://desksnear.me/locations/regus-sacramento-cal-center-drive/virtual-office-7634a6"
+        },
+        {
+          "title": "Office Space, Coworking & Meeting Rooms at 8880 Cal Center Drive (95826) | Regus",
+          "url": "https://www.regus.com/en-gb/united-states/california/sacramento/8880-cal-center-drive-6205"
+        },
+        {
+          "title": "8880 Cal Center Drive",
+          "url": "https://www.coworkingcafe.com/coworking-property/us/ca/sacramento/8880-cal-center-drive/"
+        },
+        {
+          "title": "Sacramento, 8880 Cal Center Dr (FedEx Drop Box) - Fedex",
+          "url": "https://www.cybertip.eu/cs/fedex/sacramento-8880-cal-center-dr-fedex-drop-box-p120210"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"8950 Cal Center Dr\" Sacramento \"suite 208\" -loopnet -costar -fictitious",
+      "num_results": 10,
+      "duration_s": 0.73,
+      "results": [
+        {
+          "title": "Tax Services of Sacramento - Provides Loan Services at 8950 Cal Center Dr, Sacramento, CA 95826 | FinanceSacramentoCA",
+          "url": "https://financesacramentoca.com/branch/tax-services-of-sacramento-sacramento-8950-cal-center-dr-sacramento-ca-95826"
+        },
+        {
+          "title": "8950 Cal Center Drive, Suite 160 Sacramento, CA 95826 - 2 registered entities",
+          "url": "https://www.bizprofile.net/principal-address/8950-cal-center-drive-suite-160-sacramento-ca-95826"
+        },
+        {
+          "title": "Children's Law Center-Sacramento at 8950 Cal Center Drive Suite 245, Sacramento, CA 95826",
+          "url": "http://sacramento.calstatedir.com/childrens-law-center-sacramento.html"
+        },
+        {
+          "title": "Center for The Treatment of Addictive Disorders",
+          "url": "https://opengovus.com/california-license/8008FNP-552298"
+        },
+        {
+          "title": "Exit Certified at 8950 Cal Center Drive Bldg 1, Suite 110, Sacramento, CA 95826",
+          "url": "http://sacramento.calstatedir.com/exit-certified.html"
+        },
+        {
+          "title": "DKS Associates at 8950 Cal Center Drive #340, Sacramento, CA 95826",
+          "url": "http://sacramento.calstatedir.com/dks-associates.html"
+        },
+        {
+          "title": "Crump Life Insurance - Provides Loan Services at 8950 Cal Center Dr 250, Sacramento, CA 95826 | FinanceSacramentoCA",
+          "url": "https://financesacramentoca.com/branch/crump-life-insurance-sacramento-8950-cal-center-dr-250-sacramento-ca-95826"
+        },
+        {
+          "title": "InterWest Insurance Services LLC at 8950 Cal Center Drive Bldg 3, Suite 200, Sacramento, CA 95826",
+          "url": "http://sacramento.calstatedir.com/interwest-insurance-services-llc-3.html"
+        },
+        {
+          "title": "8950 Cal Center Dr,  \n\t\t\t\t\t Sacramento, CA 95826",
+          "url": "https://www.loopnet.com/property/8950-cal-center-dr-sacramento-ca-95826/06067-07804500110000/"
+        },
+        {
+          "title": "California Center \n                                 Sacramento, CA 95826 \n             \n\n         \n821 - 55,625 SF of Office Space Available",
+          "url": "https://www.loopnet.com/Listing/8950-Cal-Center-Dr-Sacramento-CA/26314885/"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"8950 Cal Center\" \"Suite 208\" -loopnet",
+      "num_results": 10,
+      "duration_s": 0.68,
+      "results": [
+        {
+          "title": "Tax Services of Sacramento - Provides Loan Services at 8950 Cal Center Dr, Sacramento, CA 95826 | FinanceSacramentoCA",
+          "url": "https://financesacramentoca.com/branch/tax-services-of-sacramento-sacramento-8950-cal-center-dr-sacramento-ca-95826"
+        },
+        {
+          "title": "Children's Law Center-Sacramento at 8950 Cal Center Drive Suite 245, Sacramento, CA 95826",
+          "url": "http://sacramento.calstatedir.com/childrens-law-center-sacramento.html"
+        },
+        {
+          "title": "8950 Cal Center Drive, Suite 160 Sacramento, CA 95826 - 2 registered entities",
+          "url": "https://www.bizprofile.net/principal-address/8950-cal-center-drive-suite-160-sacramento-ca-95826"
+        },
+        {
+          "title": "Exit Certified at 8950 Cal Center Drive Bldg 1, Suite 110, Sacramento, CA 95826",
+          "url": "http://sacramento.calstatedir.com/exit-certified.html"
+        },
+        {
+          "title": "California Center \n                                 Sacramento, CA 95826 \n             \n\n         \n821 - 55,625 SF of Office Space Available",
+          "url": "https://www.loopnet.com/Listing/8950-Cal-Center-Dr-Sacramento-CA/26314885/"
+        },
+        {
+          "title": "InterWest Insurance Services LLC at 8950 Cal Center Drive Bldg 3, Suite 200, Sacramento, CA 95826",
+          "url": "http://sacramento.calstatedir.com/interwest-insurance-services-llc-3.html"
+        },
+        {
+          "title": "8950 Cal Center Dr,  \n\t\t\t\t\t Sacramento, CA 95826",
+          "url": "https://www.loopnet.com/property/8950-cal-center-dr-sacramento-ca-95826/06067-07804500110000/"
+        },
+        {
+          "title": "8950 Cal Center Dr \n\n                             Sacramento, CA 95826 \n                     \n                     \n                             \n                                California Center \u00b7  Property For Lease",
+          "url": "https://www.loopnet.com/Listing/8950-Cal-Center-Dr-Sacramento-CA/4033395/"
+        },
+        {
+          "title": "8950 Cal Center Drive Sacramento, CA commercial lease comps and tenants.",
+          "url": "https://property.compstak.com/8950-Cal-Center-Drive-Sacramento/p/40486"
+        },
+        {
+          "title": "Sacramento County Probation Association",
+          "url": "https://www.mapquest.com/us/california/sacramento-county-probation-association-276105678"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"8950 Cal Center\" \"Suite 208\" -loopnet -costar -fictitious -\"law center\"",
+      "num_results": 10,
+      "duration_s": 0.71,
+      "results": [
+        {
+          "title": "Children's Law Center-Sacramento at 8950 Cal Center Drive Suite 245, Sacramento, CA 95826",
+          "url": "http://sacramento.calstatedir.com/childrens-law-center-sacramento.html"
+        },
+        {
+          "title": "8950 Cal Center Drive, Suite 160 Sacramento, CA 95826 - 2 registered entities",
+          "url": "https://www.bizprofile.net/principal-address/8950-cal-center-drive-suite-160-sacramento-ca-95826"
+        },
+        {
+          "title": "Tax Services of Sacramento - Provides Loan Services at 8950 Cal Center Dr, Sacramento, CA 95826 | FinanceSacramentoCA",
+          "url": "https://financesacramentoca.com/branch/tax-services-of-sacramento-sacramento-8950-cal-center-dr-sacramento-ca-95826"
+        },
+        {
+          "title": "Exit Certified at 8950 Cal Center Drive Bldg 1, Suite 110, Sacramento, CA 95826",
+          "url": "http://sacramento.calstatedir.com/exit-certified.html"
+        },
+        {
+          "title": "InterWest Insurance Services LLC at 8950 Cal Center Drive Bldg 3, Suite 200, Sacramento, CA 95826",
+          "url": "http://sacramento.calstatedir.com/interwest-insurance-services-llc-3.html"
+        },
+        {
+          "title": "Center for The Treatment of Addictive Disorders",
+          "url": "https://opengovus.com/california-license/8008FNP-552298"
+        },
+        {
+          "title": "California Center \n                                 Sacramento, CA 95826 \n             \n\n         \n821 - 55,625 SF of Office Space Available",
+          "url": "https://www.loopnet.com/Listing/8950-Cal-Center-Dr-Sacramento-CA/26314885/"
+        },
+        {
+          "title": "8950 Cal Center Dr,  \n\t\t\t\t\t Sacramento, CA 95826",
+          "url": "https://www.loopnet.com/property/8950-cal-center-dr-sacramento-ca-95826/06067-07804500110000/"
+        },
+        {
+          "title": "DKS Associates at 8950 Cal Center Drive #340, Sacramento, CA 95826",
+          "url": "http://sacramento.calstatedir.com/dks-associates.html"
+        },
+        {
+          "title": "8950 Cal Center Dr \n\n                             Sacramento, CA 95826 \n                     \n                     \n                             \n                                California Center \u00b7  Property For Lease",
+          "url": "https://www.loopnet.com/Listing/8950-Cal-Center-Dr-Sacramento-CA/4033395/"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"Cal Center\" \"Suite 208\" -loopnet -costar -fictitious",
+      "num_results": 10,
+      "duration_s": 0.65,
+      "results": [
+        {
+          "title": "Contact Us - CenterCal",
+          "url": "https://baystreetemeryville.com/contact-us/"
+        },
+        {
+          "title": "Cal Center Office Buildings LLC",
+          "url": "https://www.mapquest.com/us/california/cal-center-office-buildings-llc-552623973"
+        },
+        {
+          "title": "Office Space in 8880 Cal Center, 4th Floor, 95826 | Easy Offices",
+          "url": "https://www.easyoffices.com/us/available-office-space/ca/sacramento/8880-cal-center-6205"
+        },
+        {
+          "title": "California Center - 8880 Cal Center Drive",
+          "url": "https://commercialsearch.com/commercial-property/us/ca/sacramento/california-center-8880-cal-center-drive"
+        },
+        {
+          "title": "California Center \n                                 8880 Cal Center Dr \n             \n\n         \n1,308 - 48,494 SF of Office Space Available in Sacramento, CA 95826",
+          "url": "https://www.loopnet.com/Listing/8880-Cal-Center-Dr-Sacramento-CA/4700593/"
+        },
+        {
+          "title": "Pacific Workplaces - Office Space Sacramento at 8880 Cal Center Drive #400, Sacramento, CA 95826",
+          "url": "http://sacramento.calstatedir.com/pacific-workplaces-office-space-sacramento-3.html"
+        },
+        {
+          "title": "Office Space for Rent Sacramento CA on 8880 Cal Center,  4th Floor",
+          "url": "https://offices.net/ca/sacramento/250023/"
+        },
+        {
+          "title": "CenterCal Properties - Contact Us",
+          "url": "https://www.centercal.com/contact"
+        },
+        {
+          "title": "CenterCal Properties",
+          "url": "http://www.centercal.com/"
+        },
+        {
+          "title": "8880 Cal Center Drive, Sacramento \u2013 Small Office Space for Rent",
+          "url": "https://officesearch.com/office/8880-cal-center-drive-sacramento/"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"California Center\" \"8950 Cal Center\" \"suite 208\" -loopnet -costar -fictitious",
+      "num_results": 10,
+      "duration_s": 1.61,
+      "results": [
+        {
+          "title": "Center for The Treatment of Addictive Disorders",
+          "url": "https://opengovus.com/california-license/8008FNP-552298"
+        },
+        {
+          "title": "Children's Law Center-Sacramento at 8950 Cal Center Drive Suite 245, Sacramento, CA 95826",
+          "url": "http://sacramento.calstatedir.com/childrens-law-center-sacramento.html"
+        },
+        {
+          "title": "Home - California Center",
+          "url": "https://www.californiacenter.us/"
+        },
+        {
+          "title": "Tax Services of Sacramento - Provides Loan Services at 8950 Cal Center Dr, Sacramento, CA 95826 | FinanceSacramentoCA",
+          "url": "https://financesacramentoca.com/branch/tax-services-of-sacramento-sacramento-8950-cal-center-dr-sacramento-ca-95826"
+        },
+        {
+          "title": "Cal Center Office Buildings LLC",
+          "url": "https://www.mapquest.com/us/california/cal-center-office-buildings-llc-552623973"
+        },
+        {
+          "title": "California Center - 8880 Cal Center Drive",
+          "url": "https://commercialsearch.com/commercial-property/us/ca/sacramento/california-center-8880-cal-center-drive"
+        },
+        {
+          "title": "Retirement Security Centers",
+          "url": "https://www.mapquest.com/us/california/retirement-security-centers-366184880"
+        },
+        {
+          "title": "The Center California - Home - thecentercalifornia.com",
+          "url": "https://thecentercalifornia.com/"
+        },
+        {
+          "title": "California Center \n                                 8880 Cal Center Dr \n             \n\n         \n1,308 - 48,494 SF of Office Space Available in Sacramento, CA 95826",
+          "url": "https://www.loopnet.com/Listing/8880-Cal-Center-Dr-Sacramento-CA/4700593/"
+        },
+        {
+          "title": "State Rehabilitation Department on Center Pkwy in Sacramento, CA - 916-691-1555 | CMac.ws",
+          "url": "https://state-government-offices.cmac.ws/state-rehabilitation-department/12536/"
+        }
+      ]
+    },
+    {
+      "tool": "search_web",
+      "query": "\"California Center\" \"8950 Cal Center\" \"suite 208\" Sacramento",
+      "num_results": 10,
+      "duration_s": 0.84,
+      "results": [
+        {
+          "title": "California Center \n                                 8880 Cal Center Dr \n             \n\n         \n1,308 - 48,494 SF of Office Space Available in Sacramento, CA 95826",
+          "url": "https://www.loopnet.com/Listing/8880-Cal-Center-Dr-Sacramento-CA/4700593/"
+        },
+        {
+          "title": "Tax Services of Sacramento - Provides Loan Services at 8950 Cal Center Dr, Sacramento, CA 95826 | FinanceSacramentoCA",
+          "url": "https://financesacramentoca.com/branch/tax-services-of-sacramento-sacramento-8950-cal-center-dr-sacramento-ca-95826"
+        },
+        {
+          "title": "Cal Center Office Buildings LLC",
+          "url": "https://www.mapquest.com/us/california/cal-center-office-buildings-llc-552623973"
+        },
+        {
+          "title": "Center for The Treatment of Addictive Disorders",
+          "url": "https://opengovus.com/california-license/8008FNP-552298"
+        },
+        {
+          "title": "California Center - 8880 Cal Center Drive",
+          "url": "https://commercialsearch.com/commercial-property/us/ca/sacramento/california-center-8880-cal-center-drive"
+        },
+        {
+          "title": "California Center \n                                 Sacramento, CA 95826 \n             \n\n         \n821 - 55,625 SF of Office Space Available",
+          "url": "https://www.loopnet.com/Listing/8950-Cal-Center-Dr-Sacramento-CA/26314885/"
+        },
+        {
+          "title": "Toxic Substances Control Department - 8800 Cal Center Dr, Sacramento, CA 95826 - Hours, Directions, Reviews",
+          "url": "https://businessyab.com/explore/united_states/california/sacramento_county/sacramento/toxic_substances_control_department"
+        },
+        {
+          "title": "Home - California Center",
+          "url": "https://www.californiacenter.us/"
+        },
+        {
+          "title": "Children's Law Center-Sacramento at 8950 Cal Center Drive Suite 245, Sacramento, CA 95826",
+          "url": "http://sacramento.calstatedir.com/childrens-law-center-sacramento.html"
+        },
+        {
+          "title": "Office Space in 8880 Cal Center, 4th Floor, 95826 | Easy Offices",
+          "url": "https://www.easyoffices.com/us/available-office-space/ca/sacramento/8880-cal-center-6205"
+        }
+      ]
+    }
+  ]
+}

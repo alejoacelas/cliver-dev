@@ -82,6 +82,10 @@ Report ALL sources but note their type. Different source types have different tr
 - **Moderate:** News articles, press releases, business directories (MapQuest, Yelp)
 - **Weak (user-submitted):** LinkedIn profiles, ORCID (self-asserted, 0% institution-verified), social media, Meetup groups, community directories. Include these in your report but flag them as `source_type: user_submitted`.
 
+## Search budget
+
+You have a maximum of **4 web searches**. After 4 searches, stop searching and produce your final YAML report based on what you found. If you cannot find evidence for a field, set it to `null` and explain in `free_text_summary`. If you cannot find any web presence for the claimed institution after 2-3 searches, set `institution_found_online: false` and produce your report.
+
 ## Hard rules
 
 1. **Address specificity.** Only count results that explicitly mention the specific street address. An institution being in the same city or neighborhood is NOT the same as being at the address. Report city-level matches as `address_match_level: city`, not as confirmation.

@@ -86,6 +86,10 @@ Report ALL sources but note their type:
 - **Moderate:** Publication databases, news articles, corporate registries
 - **Weak (user-submitted):** ORCID profiles (self-asserted, 0% institution-verified in testing), LinkedIn, ResearchGate, Google Scholar profiles, social media. Include these but flag as `source_type: user_submitted`. ORCID employment records are self-asserted with no institutional verification — treat them as no better than the customer's own claim.
 
+## Search budget
+
+You have a maximum of **4 web searches**. After 4 searches, stop searching and produce your final YAML report based on what you found. If the email domain is a known free email provider (gmail.com, 163.com, etc.), you should need at most 1-2 searches to verify this and look up the institution's real domain. Do not keep searching for evidence that a free email domain is affiliated with an institution.
+
 ## Hard rules
 
 1. **Free email domains CANNOT verify affiliation.** If `email_domain` is a free email provider (gmail.com, outlook.com, yahoo.com, hotmail.com, 163.com, 126.com, qq.com, mail.ru, yandex.ru, naver.com, hanmail.net, protonmail.com, tutanota.com), set `domain_is_free_email: true` and `domain_institution_matches_claimed: null`. Do NOT search for whether the institution "uses Gmail" or "uses Google Workspace" — many institutions use Google/Microsoft infrastructure internally, but their institutional email is @institution.edu, NOT @gmail.com. This is the single highest hallucination risk for this task.

@@ -86,6 +86,10 @@ Report ALL sources but note their type:
 - **Moderate:** Business directories (Crunchbase, Bloomberg), news articles
 - **Weak (user-submitted):** LinkedIn company pages, Glassdoor, social media. Flag as `source_type: user_submitted`.
 
+## Search budget
+
+You have a maximum of **4 web searches**. After 4 searches, stop searching and produce your final YAML report based on what you found. If you cannot find evidence for a field, set it to `null` and explain in `free_text_summary`. If you cannot find any web presence for the billing entity after 2-3 searches, set `billing_entity_found_online: false` and produce your report.
+
 ## Hard rules
 
 1. **Name collision awareness.** If you find a company with the billing entity name but at a different address or in a different industry, that may be a DIFFERENT company. Report the mismatch. Do not assume two entities with the same name are the same organization.

@@ -95,9 +95,13 @@ Report ALL sources but note their type:
 - **Moderate:** News articles, shipping forums, review sites mentioning the address
 - **Weak (user-submitted):** Social media, community forums, unverified directory listings. Flag as `source_type: user_submitted`.
 
+## Search budget
+
+You have a maximum of **4 web searches**. After 4 searches, stop searching and produce your final YAML report based on what you found. Many freight forwarders and CMRAs have no web presence at their warehouse addresses — if you find no evidence of a forwarding service, set `forwarding_service_detected: null` and report what you did find.
+
 ## Hard rules
 
-1. **"No evidence found" is NOT "clean."** If you find no evidence that the address is a forwarding service, set `forwarding_service_detected: null` (not `false`). The address may still be a forwarding service that has no web presence — prior testing showed that Shipito's Fresno warehouse and UPS Store locations were invisible to web search when queried by address alone.
+1. **"No evidence found" is NOT "clean."** If you find no evidence that the address is a forwarding service, set `forwarding_service_detected: null` (not `false`). The address may still be a forwarding service that has no web presence — many freight forwarders and UPS Store locations are invisible to web search when queried by address alone. Only set `forwarding_service_detected: false` when you found **positive evidence** of a non-forwarding occupant at the specific address (e.g., a university department, a named company with its own operations).
 
 2. **Address specificity.** Only flag forwarding services that are AT the specific address. A freight company on the same street or in the same city is NOT evidence. Set `forwarding_evidence_strength: "direct"` only if the forwarding service is confirmed at the exact address. Use `"indirect"` if a forwarding service is in the same building but at a different suite.
 
