@@ -1,0 +1,350 @@
+kyc_step: a-address-to-institution
+measure: M05
+flag: "No public association between affiliation and shipping address"
+follow_up: "Follow-up if any other flag raised"
+
+field_assessments:
+  - endpoint: ror
+    fields:
+      - field: locations[].city
+        description: "City where the institution is located, sourced from ROR's curated registry of ~110K research organizations."
+        useful_for_flag: partial
+        good_examples:
+          - "MIT (case 1): ROR returns city=Cambridge, matches shipping address city. City-level confirmation."
+          - "University of Oxford (case 2): ROR returns city=Oxford. Sufficient for UK city matching."
+          - "University of Nairobi (case 11): ROR returns city=Nairobi. Non-OECD coverage confirmed."
+          - "Baqiyatallah (case 34): ROR returns city=Tehran with Persian alias. Sanctioned institution still in ROR."
+        partial_examples:
+          - "Scripps (case 1): ROR returns city=San Diego but actual campus is in La Jolla (a neighborhood of SD). City match would pass but is imprecise."
+          - "Griffith University (case 6): ROR shows Brisbane but institution has Gold Coast campus too. Multi-campus means city match is unreliable."
+          - "CSIRO (case 23): ROR shows Canberra HQ but labs are nationwide across Australia."
+          - "CDC (case 19): Query returns Uganda CDC first, Kenya second, US third. Automated matching would select wrong country."
+        not_covered_examples:
+          - "Genspace (case 10-14): Zero results in ROR. Community labs invisible."
+          - "Lay Sciences (case 8): Zero results. Small biotech startups invisible."
+          - "All 5 community labs tested (Genspace, BioCurious, La Paillasse, Hackuarium, BioClub Tokyo): hard zero."
+          - "All 6 small biotechs tested (Lay Sciences, Virometix, AdaptVac, Signablok, Fusix, Uvax): hard zero."
+        geographic_coverage: "Strong globally for established institutions. 7/7 non-OECD universities found (Nairobi, Makerere, Al-Farabi, Universitas Indonesia, Baqiyatallah, NUDT, WIV). Hard gap for community labs and small startups regardless of country."
+        cost_per_call: "$0"
+
+      - field: domains[]
+        description: "Known web domains for the institution (e.g., mit.edu, ox.ac.uk). Sourced from ROR curation."
+        useful_for_flag: none
+        good_examples:
+          - "Oxford (case 2): ox.ac.uk present. Strong email-domain signal for step (c)."
+          - "IIT Kanpur (case 4): iitk.ac.in present."
+        not_covered_examples:
+          - "Scripps (case 1): domains field empty despite scripps.edu being the obvious domain."
+          - "Baqiyatallah, TiHo Hannover, University of Nairobi, CDC, USAMRIID, WIV: all missing domains."
+        geographic_coverage: "~50% of tested institutions lack domain data. Inconsistently populated. Not useful for step (a); relevant only as supplementary for step (c)."
+        cost_per_call: "$0"
+
+  - endpoint: gleif
+    fields:
+      - field: entity.legalAddress
+        description: "Registered legal address of the entity, sourced from LEI registration. ~2.9M entities, biased toward financial/commercial."
+        useful_for_flag: partial
+        good_examples:
+          - "AstraZeneca via Companies House (UK): full street address with postal code."
+        partial_examples:
+          - "Pfizer (case 3): legalAddress is Corporation Trust Center, 1209 Orange St, Wilmington DE -- a Delaware registered agent, not their actual office."
+          - "Oxford (case 2): GLEIF entries point to individual colleges, one listing a Liverpool investment manager address."
+        not_covered_examples:
+          - "Scripps (case 1): zero GLEIF results."
+          - "All community labs and small biotechs: zero GLEIF results."
+          - "GLEIF requires exact legal name. 'GSK' returns 56 unrelated entities. 'Facebook Inc' only finds 'Facebook Overseas Inc' (parent renamed to Meta)."
+        geographic_coverage: "Biased toward financial/commercial entities with LEI registrations. Academic institutions rarely have LEIs. Even when present, addresses reflect corporate registration, not physical operations."
+        cost_per_call: "$0"
+
+      - field: entity.headquartersAddress
+        description: "Declared headquarters address. Better than legalAddress for physical location but may be outdated."
+        useful_for_flag: partial
+        good_examples: []
+        partial_examples:
+          - "Pfizer (case 3): headquartersAddress shows 235 E 42nd St -- the pre-2024 HQ, not current 66 Hudson Blvd."
+        not_covered_examples:
+          - "Same coverage limitations as legalAddress."
+        geographic_coverage: "Same as legalAddress. ~15% of tested institutions had any GLEIF data."
+        cost_per_call: "$0"
+
+  - endpoint: companies-house
+    fields:
+      - field: registered_office_address
+        description: "UK company registered office with full street address, postal code, and company status."
+        useful_for_flag: full
+        good_examples:
+          - "AstraZeneca (case 33): Full street address, company status, 23 related entities. Excellent for UK entities."
+        not_covered_examples:
+          - "All non-UK queries returned total_results=10000 with irrelevant matches. Scripps matched 'UK SCRIPPSLNS OF OCEANS CELL BIOLOGICAL LTD'."
+          - "MIT, Pfizer, all non-UK entities: pure noise."
+        geographic_coverage: "UK only. Excellent for UK companies, actively harmful for non-UK entities due to false matches. ~5% of typical synthesis customers."
+        cost_per_call: "$0"
+
+  - endpoint: google-places-new
+    fields:
+      - field: primaryType + types[]
+        description: "Google's type classification of a location (university, research_institute, coworking_space, hospital, etc.). Requires institution name in query to return useful results."
+        useful_for_flag: partial
+        good_examples:
+          - "MIT (case 1): name+address query returns primaryType=university. Confirms institutional presence."
+          - "Pfizer (case 2): name+address returns primaryType=manufacturer. Confirms corporate presence."
+          - "Institut Pasteur (case 5): name+address returns types including research_institute."
+          - "IIT Bombay, Tsinghua, USP, Makerere, NUST (cases 19-24): all correctly classified as university."
+          - "WeWork (case 12): correctly classified as coworking_space."
+          - "MGH (case 33): correctly classified as general_hospital."
+        partial_examples:
+          - "University of Ibadan (case 23): primaryType=consultant but university in types array. Must scan full types array."
+          - "Regus (case 13): primaryType=real_estate_agency but coworking_space in types."
+        not_covered_examples:
+          - "Address-only search for MIT, Pfizer, Institut Pasteur, freight forwarders: ALL return 'premise' with no institutional type."
+          - "LabCentral (case 6): name+address returns point_of_interest only -- no useful type even with name."
+          - "BioLabs (case 11): empty response. Not in Google Places at all."
+          - "JLABS (case 14): returns corporate_office, not coworking_space."
+          - "Virtual office (case 35): returns premise. Completely invisible."
+        geographic_coverage: "Good international coverage for universities and major institutions. Wet-lab coworking spaces are systematically missing from Google's taxonomy. Address-only search is useless globally."
+        cost_per_call: "$0.032 per Nearby Search call"
+
+  - endpoint: smarty
+    fields:
+      - field: rdi (Residential Delivery Indicator)
+        description: "USPS classification of address as Residential or Commercial. US addresses only."
+        useful_for_flag: none
+        good_examples:
+          - "MIT (case 1): RDI=Commercial. Correct for university campus."
+          - "Agilent (case 4): RDI=Commercial. Correct for corporate address."
+        partial_examples:
+          - "LabCentral (case 6): RDI=Commercial. Correct but indistinguishable from any other commercial address."
+        not_covered_examples:
+          - "Non-US addresses: Smarty returns null. No coverage."
+        geographic_coverage: "US only. RDI tells you residential vs commercial but says nothing about which institution occupies the address."
+        cost_per_call: "$0 (free tier, 250/month)"
+
+      - field: dpv_match_code + building_default_indicator
+        description: "Delivery Point Validation: Y=suite-level match, D=building-level (no suite). building_default_indicator=Y indicates multi-tenant building."
+        useful_for_flag: none
+        good_examples: []
+        partial_examples:
+          - "Match_code=D + building_default=Y appears for WeWork, Pfizer, Moderna, freight forwarders -- all multi-tenant buildings. Weak signal for shared spaces but not specific to any type."
+        not_covered_examples:
+          - "Cannot distinguish which institution occupies a building. Tells you the building is multi-tenant, nothing about tenants."
+        geographic_coverage: "US only."
+        cost_per_call: "$0"
+
+  - endpoint: nih-reporter
+    fields:
+      - field: total_grants > 0
+        description: "Whether the institution has received NIH research funding. ~2,500 US biomedical institutions."
+        useful_for_flag: partial
+        good_examples:
+          - "MIT (case 1): 14,753 grants. Strong legitimacy signal."
+          - "Makerere (case 12): 269 grants via Fogarty. Confirms research activity for non-US institution."
+          - "Charles River Labs (case 18): 220 grants. Major CRO confirmed."
+        partial_examples:
+          - "Pfizer (case 3): only 1 NIH grant. Pharma companies rarely receive direct federal grants."
+          - "Chulalongkorn (case 13): only 5 grants. Minimal coverage."
+        not_covered_examples:
+          - "IIT Kanpur, Zhejiang Sci-Tech, Tsinghua, CSIRO, INRAE: 0 grants. Non-US/non-biomedical institutions often absent."
+          - "Community labs (Genspace, BioCurious, Counter Culture Labs): 0 grants."
+          - "Lay Sciences: 0 grants."
+        geographic_coverage: "Strong for US biomedical institutions. Moderate international via Fogarty (African universities well-covered). Absent for non-biomedical, non-US, and small entities."
+        cost_per_call: "$0"
+
+  - endpoint: pubmed
+    fields:
+      - field: article_count
+        description: "Number of PubMed articles with the institution in the affiliation field. Broadest legitimacy signal."
+        useful_for_flag: partial
+        good_examples:
+          - "MIT (case 1): 52,235 articles. Unambiguous."
+          - "Tsinghua (case 21): 58,637 articles despite 0 NIH grants. PubMed is the only signal for many Chinese institutions."
+          - "WuXi AppTec (case 19): 550 articles. CROs covered via publications."
+        partial_examples:
+          - "Lay Sciences (case 8): 12,066 articles -- FALSE POSITIVE. 'Lay' matches common English word in article text."
+        not_covered_examples:
+          - "Genspace (case 9): 5 articles (coincidental word matches)."
+          - "BioCurious (case 15): 3 articles. Counter Culture Labs (case 16): 2 articles."
+        geographic_coverage: "Broadest coverage of any endpoint. Found publications for 22/25 tested institutions. Only community labs have <10 articles. Caveat: keyword search has false positives for common-word institution names."
+        cost_per_call: "$0"
+
+  - endpoint: exa-neural-search
+    fields:
+      - field: search_results (combined web intelligence)
+        description: "Exa neural web search for 'Institution X at Address Y'. Returns web pages linking institutions to addresses."
+        useful_for_flag: partial
+        good_examples:
+          - "MIT (case 1): Top result explicitly shows 'Massachusetts Institute of Technology, 77 Massachusetts Ave'. Unambiguous."
+          - "BioNTech (case 5): German Impressum page states 'BioNTech SE An der Goldgrube 12 55131 Mainz'. Legal source."
+          - "WeWork (adv-2): All 3 results identify 115 Broadway as WeWork coworking. Strong detection of shared spaces."
+          - "LabCentral fiction (case 8): Correctly surfaces 700 Main St as LabCentral, not the fictional claimed entity. Mismatch detection."
+          - "JLABS (adv-22): Correctly identified as J&J incubator at 3210 Merryfield Row."
+        partial_examples:
+          - "Genspace (case 7): Found genspace.org but at different address (moved from 150 Broadway to 132 32nd St). Address mismatch is a valid KYC signal."
+          - "Mammoth Biosciences (adv-9): Found at current Brisbane address, not claimed Letterman Drive. Move detected."
+          - "African Academy of Sciences (case 6): Truncated results, possible address change from Mwalimu Mutual Towers to 8 Miotoni Lane."
+        not_covered_examples:
+          - "Freight forwarder without name in query (adv-3): Shipito address not identified without 'Shipito' in search terms."
+        geographic_coverage: "Strong globally for well-known institutions. Non-OECD universities (Lagos, IIT Bombay, Universiti Malaya) have good English web presence. Uniquely valuable for coworking/incubator detection and mismatch signals."
+        cost_per_call: "$0.007"
+
+  - endpoint: geonames
+    fields:
+      - field: name_search + reverse_geocode
+        description: "GeoNames geographical feature database. Name search for institutional features, reverse geocode for nearby landmarks."
+        useful_for_flag: none
+        good_examples: []
+        partial_examples:
+          - "MIT (case 1): name search found 'Massachusetts Institute of Technology' as SCH (school). Reverse geocode returned 'Rogers Building'."
+        not_covered_examples:
+          - "All other searches (LabCentral, freight forwarders, WIV): zero results."
+          - "GeoNames is a geographical features database, not an address database. Street addresses return nothing."
+        geographic_coverage: "Not useful for address classification. Recommend dropping from pipeline."
+        cost_per_call: "$0"
+
+  - endpoint: osm-overpass
+    fields:
+      - field: relation tags (amenity=university, etc.)
+        description: "OpenStreetMap campus polygons. Can check if address falls within an institution boundary."
+        useful_for_flag: partial
+        good_examples:
+          - "MIT (case 1): campus polygon confirmed (relation 65066, amenity=university, wikidata=Q49108)."
+        not_covered_examples:
+          - "LabCentral (case 6): not in OSM despite being 500m from MIT campus."
+          - "Genspace: not in OSM."
+        geographic_coverage: "Useful for large university campuses only. Cannot detect commercial companies, coworking spaces, or community labs."
+        cost_per_call: "$0"
+
+flag_verdict:
+  best_endpoint_combination: >
+    1. ROR city match (free, fast, covers established institutions globally).
+    2. Google Places name+address (international type classification -- university, research_institute, hospital, coworking_space).
+    3. PubMed article count (broadest legitimacy signal, 22/25 institutions covered).
+    4. LLM+Exa web search (coworking/incubator detection, address mismatch, cross-referencing claims against web data).
+    5. NIH RePORTER / UKRI (supplementary funding signal for US/UK biomedical).
+    Drop: GeoNames (zero useful signal). Use OSM only as supplementary university campus check.
+    Niche: GLEIF (only for entities with LEI), Companies House (UK only).
+  coverage_summary: >
+    Strong for established universities globally (both OECD and non-OECD). ROR + PubMed cover
+    most established research institutions. Google Places with name+address provides type
+    classification for verification. Exa uniquely detects coworking/incubator addresses and
+    stale-address mismatches. Critical gaps: community bio labs (hard zero across all registries
+    and funding databases), small biotech startups (hard zero in registries, false positives in
+    PubMed keyword search), coworking wet-lab spaces (invisible to Google Places type taxonomy).
+    The fundamental limitation is that no API answers "does Institution X have a presence at
+    Address Y?" -- only "does Institution X exist?" (registries) and "is there a named entity at
+    Address Y?" (Google Places with name, Exa).
+
+profile_groups:
+  - group: "Established university in ROR (OECD or major non-OECD)"
+    description: "Large university or research institute in ROR with >100 PubMed articles. Includes OECD universities (MIT, Oxford, Scripps) and major non-OECD (Nairobi, Makerere, Tsinghua, IIT Bombay)."
+    time_tier: auto
+    estimated_time: "0 min"
+    resolution_path: "ROR city match + PubMed article count > threshold + Google Places name+address returns university/research_institute -> auto-pass. No human involvement."
+    fraction_of_test_cases: "22/35 institution-registry cases covered or partially covered; 22/25 funding cases had PubMed articles"
+    examples_from_tests:
+      - "MIT: ROR city=Cambridge match, PubMed 52K articles, Google Places=university -> auto-pass"
+      - "University of Oxford: ROR city=Oxford, domains=ox.ac.uk, PubMed 123K -> auto-pass"
+      - "University of Nairobi: ROR city=Nairobi, NIH 146 grants, PubMed 6.5K -> auto-pass"
+      - "Tsinghua: ROR city=Beijing, PubMed 58K -> auto-pass despite 0 NIH grants"
+    what_they_share: "In ROR, >100 PubMed articles, Google Places returns institutional type when name+address queried."
+    distinguishing_factors:
+      - country: "Global -- both OECD and non-OECD, including sanctioned countries (Iran, China)"
+      - institution_size: "Medium to large (enough publication output to be in ROR)"
+      - entity_age: "Established (typically >10 years)"
+
+  - group: "Multi-campus institution where shipping city differs from ROR city"
+    description: "University with multiple campuses where the shipping address is at a satellite campus not reflected in the primary ROR record."
+    time_tier: quick_review
+    estimated_time: "2-3 min"
+    resolution_path: "ROR returns the institution but city doesn't match shipping address. Reviewer checks: (1) Does the institution have known satellite campuses? (2) Is the shipping city near the ROR city? (3) Quick web search for institution + shipping city."
+    fraction_of_test_cases: "3/35 institution-registry cases (Griffith Brisbane/Gold Coast, CSIRO multi-site, CDC multi-country)"
+    examples_from_tests:
+      - "Griffith University: ROR city=Brisbane but Gold Coast campus exists. Shipping to Gold Coast would trigger city mismatch."
+      - "CSIRO: ROR city=Canberra but labs across all Australian states."
+      - "CDC: ROR returns Uganda first, Kenya second, US third. Reviewer must select correct country office."
+    what_they_share: "Institution exists in ROR but has multiple sites. Address-city mismatch is benign -- just a multi-campus organization."
+    distinguishing_factors:
+      - country: "Any -- multi-campus is common globally"
+      - institution_size: "Large (multi-campus implies significant size)"
+
+  - group: "Large pharma or CRO at a known corporate address"
+    description: "Major pharmaceutical company or contract research organization. In ROR and/or GLEIF with substantial PubMed publications."
+    time_tier: auto
+    estimated_time: "0 min"
+    resolution_path: "ROR/GLEIF lookup confirms entity exists + PubMed confirms research activity + Google Places name+address returns manufacturer/corporate_office -> auto-pass."
+    fraction_of_test_cases: "5/25 funding cases (Pfizer, Charles River, WuXi, Eurofins); 2/35 address cases (Pfizer, Agilent)"
+    examples_from_tests:
+      - "Pfizer: ROR hit, PubMed 22.6K articles, Google Places=manufacturer -> auto-pass"
+      - "Charles River Labs: NIH 220 grants, PubMed 1.3K, UKRI covered -> auto-pass"
+      - "Eurofins: NIH 59 grants, PubMed 1.4K -> auto-pass"
+    what_they_share: "Large companies with published research. In one or more registries. Address is a known corporate HQ or major facility."
+    distinguishing_factors:
+      - institution_size: "Large (publicly traded or >500 employees)"
+      - entity_age: "Established"
+
+  - group: "Small biotech startup at coworking or incubator address"
+    description: "Small biotech (<50 employees) operating from a shared lab space like LabCentral, BioLabs, or JLABS. Not in any registry."
+    time_tier: investigation
+    estimated_time: "5-15 min"
+    resolution_path: "Zero results in ROR/GLEIF/Companies House. Exa or Google Places may identify the address as a coworking/incubator space. Reviewer: (1) Web search for the company name, (2) Check if address is a known incubator, (3) Look for company website, incorporation records, LinkedIn presence."
+    fraction_of_test_cases: "6/35 institution-registry (Lay Sciences, Virometix, AdaptVac, Signablok, Fusix, Uvax); LabCentral and BioLabs tested in address-classification"
+    examples_from_tests:
+      - "LabCentral (700 Main St, Cambridge): Exa correctly identifies as coworking lab space. Google Places returns point_of_interest only. Smarty says Commercial. Entity invisible to all registries."
+      - "BioLabs (1030 Mass Ave, Cambridge): Not in Google Places at all. Empty response."
+      - "JLABS San Diego: Google Places returns corporate_office (J&J subsidiary), not coworking_space."
+    what_they_share: "Not in any institutional registry. Often at addresses that are known incubator spaces. Company may have minimal web presence."
+    distinguishing_factors:
+      - institution_size: "Small (<50 employees)"
+      - entity_age: "Often <5 years"
+      - country: "Primarily US (where most wet-lab incubators exist)"
+
+  - group: "Small biotech startup at own commercial address"
+    description: "Small biotech at a generic commercial address (not an incubator). Not in any registry. Indistinguishable from any other commercial tenant."
+    time_tier: investigation
+    estimated_time: "10-15 min"
+    resolution_path: "Zero results in all registries. Address returns Commercial from Smarty, premise from Google Places. No incubator signal. Reviewer must: (1) Web search company name, (2) Check state incorporation records, (3) Look for LinkedIn, website, investor mentions."
+    fraction_of_test_cases: "Subset of the 6 small biotechs above; Agilent (case 4) shows the pattern of a legitimate company at a generic commercial address"
+    examples_from_tests:
+      - "Lay Sciences: 0 results in all registries, 0 funding signals, PubMed false positive (12K articles from common word 'lay')."
+      - "Agilent (5301 Stevens Creek Blvd): Smarty=Commercial, Google Places=premise. Clean commercial but no institutional signal from address alone."
+    what_they_share: "Not in registries. At a generic commercial address. Only web search or corporate registry lookup can provide verification."
+    distinguishing_factors:
+      - institution_size: "Small"
+      - entity_age: "Any"
+
+  - group: "Community bio lab / makerspace"
+    description: "Small community lab (Genspace, BioCurious, La Paillasse, etc.) not in any institutional registry, with no government funding."
+    time_tier: customer_follow_up
+    estimated_time: "15-30 min"
+    resolution_path: "Zero results in all registries and funding databases. Google Places may return non_profit_organization (Genspace, BioCurious). Exa can find the community lab website. Reviewer must: (1) Verify the entity is a known community lab, (2) Check for biosafety certifications or IBC registration, (3) If unclear, contact customer about institutional affiliation and biosafety setup."
+    fraction_of_test_cases: "5/35 institution-registry (community labs); 4/25 funding cases (Genspace, BioCurious, Counter Culture Labs, La Paillasse)"
+    examples_from_tests:
+      - "Genspace: 0 in all registries, 0 NIH/NSF, 5 PubMed (coincidental). Exa found genspace.org (but at different address -- they moved). Google Places returns non_profit_organization + community_center."
+      - "BioCurious: 0 registries, 0 funding. Google Places returns non_profit_organization at a different address than queried."
+      - "La Paillasse (France): 0 registries, 0 funding, 2 PubMed articles."
+    what_they_share: "Not in ROR/GLEIF/Companies House. Not in NIH/NSF/UKRI. Minimal PubMed presence. Often at residential or generic commercial addresses. Requires manual investigation to confirm legitimacy."
+    distinguishing_factors:
+      - institution_size: "Tiny (<20 members)"
+      - entity_age: "Varies (Genspace founded 2010, others newer)"
+      - country: "US and Europe primarily"
+
+  - group: "Government research lab (sub-unit)"
+    description: "Government lab that may or may not have its own ROR record, depending on whether it publishes independently."
+    time_tier: quick_review
+    estimated_time: "2-5 min"
+    resolution_path: "Check ROR for both the lab name and parent agency. If the sub-unit has its own ROR record (MIT Lincoln Lab, USAMRIID), auto-pass. If not (Canada NML), check the parent agency and verify the sub-unit via web search."
+    fraction_of_test_cases: "4/35 institution-registry (NML, MIT Lincoln Lab, CDC, USAMRIID); 3/25 funding (CDC, CSIRO, INRAE)"
+    examples_from_tests:
+      - "MIT Lincoln Lab: separate ROR record in Lexington with MIT as parent. Auto-pass."
+      - "USAMRIID: has its own ROR record. Auto-pass."
+      - "Canada NML: NOT in ROR. Parent PHAC is in ROR but maps to Ottawa, not Winnipeg. Quick web search needed."
+      - "CSIR-CCMB India: Google Places correctly classifies as research_institute."
+    what_they_share: "Government-affiliated labs. Coverage depends on independent publication output. Parent agency is typically well-covered."
+    distinguishing_factors:
+      - country: "Any government-funded country"
+      - institution_size: "Varies"
+
+unresolved_issues:
+  - "Consolidated Screening List API is BLOCKED (deprecated, returns 301). No automated entity-level screening against OFAC SDN, BIS Entity List, etc. An institution at a non-embargoed country address with a denied-party entity would pass all checks."
+  - "Cross-TLD homoglyph detection for institution impersonation (e.g., mit-edu.com) is designed but not system-tested."
+  - "PubMed false positives from common-word institution names (e.g., 'Lay Sciences' -> 12K articles). Exact affiliation field matching proposed but not tested."
+  - "No automated freight forwarder detection from address alone. Google Places Nearby Search with type=shipping_service proposed but not tested."

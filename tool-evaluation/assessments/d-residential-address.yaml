@@ -1,0 +1,166 @@
+kyc_step: d-residential-address
+measure: M04
+flag: "Residential address"
+follow_up: "Flag triggers manual review; not a hard block"
+
+field_assessments:
+  - endpoint: smarty
+    fields:
+      - field: rdi (Residential Delivery Indicator)
+        description: "USPS classification of address delivery type as Residential or Commercial. Based on USPS mail delivery infrastructure, not building occupancy or zoning."
+        useful_for_flag: partial
+        good_examples:
+          - "Community bio lab at residential address (case 10): RDI=Residential. Correctly flags a residential address."
+          - "MIT (case 1): RDI=Commercial. Correctly classifies university campus."
+          - "Agilent (case 4): RDI=Commercial. Correctly classifies corporate address."
+          - "Moderna HQ (case 31): RDI=Commercial. Correctly classifies biotech HQ."
+        partial_examples:
+          - "42 Brattle St, Cambridge (case 7): RDI=Commercial but this is a mixed residential/commercial area near Harvard Square. RDI reflects the building's USPS classification, not the customer's unit."
+        not_covered_examples:
+          - "Harvard science building, 52 Oxford St (case 29): RDI=Residential. FALSE POSITIVE. University science building misclassified as Residential. A KYC pipeline would incorrectly flag this legitimate institutional shipment."
+          - "NYC residential high-rise, 200 E 89th St (case 30): RDI=Commercial. FALSE NEGATIVE. Large apartment building with managed mailroom classified as Commercial. Customer ordering to their apartment would NOT trigger the Residential flag."
+          - "Non-US addresses: Smarty returns null. US only."
+        geographic_coverage: "US only. RDI is bidirectionally unreliable: university buildings can return Residential (Harvard case), residential high-rises can return Commercial (NYC case). RDI reflects USPS mail delivery infrastructure, not building use."
+        cost_per_call: "$0 (free tier)"
+
+      - field: dpv_match_code + record_type + building_default_indicator
+        description: "Delivery Point Validation details: Y=suite-level match, D=building-level, S=street, H=highrise. building_default_indicator=Y means multi-tenant."
+        useful_for_flag: none
+        good_examples: []
+        partial_examples:
+          - "match_code=D + building_default=Y appears for WeWork, Pfizer, Moderna, freight forwarders, and NYC high-rises alike. Indicates multi-tenant building but does not distinguish residential from commercial multi-tenant."
+          - "record_type=H (highrise) for both Pfizer HQ and residential apartment towers."
+        not_covered_examples:
+          - "Cannot distinguish a residential high-rise from a commercial high-rise using these fields."
+        geographic_coverage: "US only."
+        cost_per_call: "$0"
+
+  - endpoint: google-places-new
+    fields:
+      - field: primaryType + types[]
+        description: "Google's type classification of a location. Can return apartment_building, university, coworking_space, etc. Requires institution or building name in query for useful results."
+        useful_for_flag: partial
+        good_examples:
+          - "MIT with name (case 1): primaryType=university. Clearly not residential."
+          - "Pfizer with name (case 2): primaryType=manufacturer. Clearly not residential."
+          - "WeWork (case 12): primaryType=coworking_space. Not residential."
+          - "MGH (case 33): primaryType=general_hospital. Not residential."
+        partial_examples:
+          - "Genspace (case 27): primaryType=non_profit_organization. Not residential, but also not a standard institutional type."
+          - "University of Ibadan (case 23): primaryType=consultant but university in types array."
+        not_covered_examples:
+          - "Address-only search for all tested addresses returns 'premise' -- no distinction between residential and commercial."
+          - "LabCentral with name (case 6): returns point_of_interest only. No residential/commercial signal."
+          - "Harvard 52 Oxford St address only: returns 'subpremise'. No signal."
+          - "NYC 200 E 89th St address only: returns 'premise'. No residential signal."
+        geographic_coverage: "International coverage for named institutions. Address-only search is useless globally for residential/commercial classification."
+        cost_per_call: "$0.032"
+
+  - endpoint: exa-neural-search
+    fields:
+      - field: search_results (building type intelligence)
+        description: "Exa web search for building type at a given address. Real estate listing sites (LoopNet, CommercialCafe, Zillow, Redfin) provide strong signals."
+        useful_for_flag: partial
+        good_examples:
+          - "MIT, 77 Mass Ave (case 1): Exa returns MIT visit page confirming 'This is 77 Massachusetts Avenue, MIT's main entrance.' Clearly institutional."
+          - "Pfizer, 66 Hudson Blvd (case 2): CommercialCafe lists it as 'The Spiral' commercial property. Office space for lease. Clearly commercial."
+          - "Regus, 1201 3rd Ave Seattle (adv-6): identified as coworking/virtual office. Clear commercial."
+        partial_examples:
+          - "4512 Oak Lane, Bethesda (adv-12): found nearby residential listings on Redfin/RE/MAX but not the specific address. Must infer from context."
+          - "742 Evergreen Terrace (adv-10): Zillow result for nearby real address. Wikipedia identifies as Simpsons' fictional address."
+        not_covered_examples:
+          - "Specific residential addresses that aren't listed on Zillow/Redfin. Coverage is incomplete for individual homes."
+        geographic_coverage: "Strong for commercial addresses in US (LoopNet, CommercialCafe). Weaker for specific residential addresses. Commercial detection works better than residential detection."
+        cost_per_call: "$0.007"
+
+flag_verdict:
+  best_endpoint_combination: >
+    1. Smarty RDI as initial screen (US only, directional signal -- flag RDI=Residential for review, but DO NOT treat RDI=Commercial as proof of non-residential).
+    2. Google Places name+address for institutional verification (if institution name produces university/research_institute/hospital/manufacturer, address is clearly not residential).
+    3. LLM+Exa for ambiguous cases (search for real estate listings, building type, nearby businesses).
+    The fundamental insight: residential detection is better framed as "institutional verification" -- confirm the address IS institutional rather than trying to confirm it ISN'T residential.
+    RDI=Residential is a useful starting signal but generates false positives (Harvard building) and misses false negatives (NYC high-rises). It should trigger review, not block.
+  coverage_summary: >
+    Smarty RDI is the only automated residential/commercial classification but is bidirectionally
+    unreliable: Harvard science building returns Residential (false positive), NYC apartment tower
+    returns Commercial (false negative). US only. Google Places can confirm institutional addresses
+    (university, hospital, manufacturer) but only with institution name in query. Address-only search
+    returns 'premise' for everything. Exa web search provides building-type intelligence from real
+    estate sites for commercial buildings, but residential addresses not listed on Zillow/Redfin are
+    harder to confirm. Best approach: verify the address IS institutional (positive confirmation)
+    rather than trying to prove it IS residential (negative detection).
+
+profile_groups:
+  - group: "US address at a known institution (university, hospital, company HQ)"
+    description: "Shipping address is at a well-known institutional location. Smarty returns RDI=Commercial. Google Places with institution name confirms institutional type."
+    time_tier: auto
+    estimated_time: "0 min"
+    resolution_path: "Smarty RDI=Commercial + Google Places name+address returns institutional type (university, research_institute, hospital, manufacturer) -> auto-pass."
+    fraction_of_test_cases: "6/35 address-classification cases with Smarty PASS (MIT, Pfizer, Agilent, Moderna, Binney St, community-lab-residential)"
+    examples_from_tests:
+      - "MIT: RDI=Commercial, Google Places=university. Auto-pass."
+      - "Pfizer: RDI=Commercial, Google Places=manufacturer. Auto-pass."
+      - "MGH: Google Places=general_hospital. Auto-pass."
+    what_they_share: "Smarty returns Commercial. Google Places returns an institutional type with name in query."
+    distinguishing_factors:
+      - country: "US (Smarty coverage)"
+      - institution_size: "Large enough to be in Google Places"
+
+  - group: "US address that Smarty classifies as Residential"
+    description: "Smarty returns RDI=Residential. May be a genuine residential address or a misclassification (e.g., Harvard science building)."
+    time_tier: quick_review
+    estimated_time: "2-3 min"
+    resolution_path: "Smarty RDI=Residential -> flag. Reviewer checks: (1) Google Places name+address -- does institution show at this location? (2) Is the address on a known university campus (OSM polygon check)? (3) Quick web search of the address. If clearly institutional (Harvard building), override flag."
+    fraction_of_test_cases: "2/35 address-classification cases (Harvard 52 Oxford St = false positive, community lab residential = correct)"
+    examples_from_tests:
+      - "Harvard 52 Oxford St (case 29): RDI=Residential. FALSE POSITIVE. This is Harvard's Science Center area. Reviewer would quickly identify it as institutional via web search."
+      - "7 Standish St residential (case 10): RDI=Residential. Correct flag. Address is genuinely residential."
+    what_they_share: "Smarty says Residential. Quick manual check needed to distinguish real residential from misclassified institutional."
+    distinguishing_factors:
+      - country: "US only"
+
+  - group: "US residential high-rise that Smarty classifies as Commercial"
+    description: "Large residential building with managed mailroom. Smarty returns RDI=Commercial. Customer is shipping to an apartment but the address looks commercial."
+    time_tier: quick_review
+    estimated_time: "1-2 min"
+    resolution_path: "RDI=Commercial but other signals (Google Places returns premise, no institutional type, address is in a residential neighborhood) suggest residential. If step (a) address-to-institution check fails to find any institution at this address, flag for review."
+    fraction_of_test_cases: "1/35 address-classification cases (NYC 200 E 89th St)"
+    examples_from_tests:
+      - "200 E 89th St, NYC (case 30): RDI=Commercial. FALSE NEGATIVE. This is a residential building. Step (a) address-to-institution check would fail to find any institution here, which itself is a flag."
+    what_they_share: "Smarty says Commercial but address is actually residential. The step (a) failure (no institution found at address) is the real detection mechanism."
+    distinguishing_factors:
+      - country: "US -- primarily large urban apartment buildings"
+
+  - group: "International address (no Smarty coverage)"
+    description: "Non-US address where Smarty is unavailable. Must rely on Google Places and Exa for classification."
+    time_tier: quick_review
+    estimated_time: "2-5 min"
+    resolution_path: "No Smarty data. Google Places with institution name+address -> if returns institutional type, pass. If returns premise, Exa search for building type. If commercial listings found, pass. If residential listings or no results, flag."
+    fraction_of_test_cases: "16/35 address-classification cases were non-US (Oxford, Pasteur, IIT Bombay, Tsinghua, USP, Makerere, Ibadan, NUST, WIV, VECTOR, CSIR-CCMB)"
+    examples_from_tests:
+      - "University of Oxford Chemistry (case 3): Google Places returns academic_department even from address alone (building is named in Google Maps). Auto-pass."
+      - "IIT Bombay (case 19): Google Places returns university with institution name. Pass."
+      - "Institut Pasteur (case 5): Google Places address-only returns premise. With name, returns research_institute. Name-dependent."
+    what_they_share: "No Smarty data. Must use Google Places name+address or Exa for classification. International universities generally well-covered."
+    distinguishing_factors:
+      - country: "Any non-US"
+
+  - group: "Address at a coworking/virtual office space"
+    description: "Shipping address is at a known coworking space (WeWork, Regus) or virtual office provider. Not residential but not a dedicated institutional address."
+    time_tier: quick_review
+    estimated_time: "2-3 min"
+    resolution_path: "Google Places returns coworking_space (WeWork, Regus in types array). Smarty returns Commercial. Not residential, but shared space. Reviewer checks: (1) Is the customer a tenant or just using a mail address? (2) Are other KYC steps clean? If company is verified through other steps, pass."
+    fraction_of_test_cases: "4/35 address-classification cases (WeWork PASS, Regus PARTIAL, LabCentral FAIL, BioLabs FAIL)"
+    examples_from_tests:
+      - "WeWork (case 12): Google Places returns coworking_space. Smarty returns Commercial. Not residential."
+      - "Regus (case 13): coworking_space in types array but primaryType=real_estate_agency."
+      - "Virtual office Davinci (case 35): Google Places returns premise. Invisible."
+    what_they_share: "At a coworking or virtual office address. Not residential, but shared/non-dedicated space."
+    distinguishing_factors:
+      - country: "Any"
+
+unresolved_issues:
+  - "Smarty RDI is bidirectionally unreliable: university buildings return Residential (Harvard), residential high-rises return Commercial (NYC). Cannot be used as a hard gate."
+  - "No automated residential classification exists for international addresses. Google Places address-only search returns 'premise' for everything."
+  - "Google Places Nearby Search with residential/commercial type filters was proposed but not tested."
+  - "The residential flag is fundamentally about absence of institutional signal rather than presence of residential signal. Best framed as: 'Did step (a) find an institution at this address? If not, flag for review.'"

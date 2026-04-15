@@ -1,0 +1,339 @@
+kyc_step: c-email-to-affiliation
+measure: "M02 (+M07)"
+flag: "Does not match institution domain / non-institutional domain"
+follow_up: "Soft flag requiring additional affiliation evidence for free email; hard block for disposable email"
+
+field_assessments:
+  - endpoint: disposable-free-mail-blocklist
+    fields:
+      - field: is_disposable (boolean)
+        description: "Whether the email domain is on the canonical disposable-email-domains blocklist (guerrillamail, mailinator, 10minutemail, etc.)."
+        useful_for_flag: full
+        good_examples:
+          - "guerrillamail.com (case 10): on blocklist. CRITICAL: this domain has DMARC p=reject and SPF -all -- better email auth than most universities. Blocklist is the ONLY detection layer."
+          - "mailinator.com (case 18): on blocklist. Also has DMARC p=reject. 23-year-old domain. RDAP age would not flag it."
+          - "10minutemail.com (case 19): on blocklist. Has no MX records (secondary signal)."
+        not_covered_examples:
+          - "New disposable services not yet on the list. The blocklist requires maintenance."
+        geographic_coverage: "Global. The canonical disposable-email-domains list is community-maintained on GitHub."
+        cost_per_call: "$0 (local hashset lookup)"
+
+      - field: is_free_mail (boolean)
+        description: "Whether the email domain is a known free email provider (gmail, outlook, yahoo, 163, qq, mail.ru, naver, etc.)."
+        useful_for_flag: partial
+        good_examples:
+          - "163.com (case 7): correctly classified as free email. Extremely common among Chinese researchers -- 12+ instances in customer dataset."
+          - "qq.com (case 12): Tencent QQ Mail. Free email. 31-year-old domain."
+          - "mail.ru (case 15): Russian free email. DMARC p=reject."
+          - "naver.com (case 16): Korean #1 portal. Very common among Korean researchers."
+        partial_examples:
+          - "protonmail.com (case 38): privacy-focused but not disposable. Soft flag appropriate."
+          - "yahoo.com (case 8): used by Baqiyatallah researcher because bmsu.ac.ir has ZERO email infrastructure. Free email masks sanctioned-institution affiliation."
+        not_covered_examples:
+          - "Country-specific free email providers not on the list (e.g., rambler.ru, daum.net). Blocklist needs expansion."
+        geographic_coverage: "Covers major global providers (gmail, outlook, yahoo) and regional providers (163.com, 126.com, qq.com, mail.ru, yandex.ru, naver.com, hanmail.net). May miss niche regional providers."
+        cost_per_call: "$0"
+
+  - endpoint: rdap
+    fields:
+      - field: creation_date
+        description: "Domain registration date from RDAP/WHOIS. Indicates domain age."
+        useful_for_flag: partial
+        good_examples:
+          - "mit-edu.com (case 20): registered July 2025. Less than 1 year old. PRIMARY signal for .com impersonation detection."
+          - "stanford-edu.com (case 22): registered August 2025. Active Zoho mail. Recent registration + active mail = high risk."
+          - "iitk.ac.in (case 4): registered 2004. 22-year-old domain. Strong age signal confirming legitimacy."
+        partial_examples:
+          - "guerrillamail.com (case 10): registered 2006. 20 years old. Domain age alone would NOT flag this disposable service."
+          - "harvard-edu.com (case 23): registered 2019. 7-year-old impersonation domain. Age alone is not sufficient -- it's already established."
+        not_covered_examples:
+          - ".edu domains: Educause WHOIS returns registrant name only, NO dates."
+          - ".cn (.edu.cn): CNNIC WHOIS returns referral only, no data."
+          - ".ir (.ac.ir): no RDAP, no accessible WHOIS."
+          - ".ru: no RDAP server."
+          - ".au (.edu.au): RDAP exists but returns no dates."
+          - ".uk (.ac.uk): RDAP exists but returns no dates."
+        geographic_coverage: "Domain age available for: .com/.net/.org (Verisign RDAP), .in (NIXI RDAP), .kr (Korean WHOIS). NOT available for: .edu, .cn, .ir, .ru, .au, .uk, .ac. India is the only non-.com TLD with reliable dates."
+        cost_per_call: "$0"
+
+      - field: registrant / status
+        description: "Domain registrant organization and registration status."
+        useful_for_flag: partial
+        good_examples:
+          - "berkeley.edu (case 1): registrant='University of California at Berkeley'. Confirms domain ownership."
+          - "signablok.com (case 5): registrar=Tucows, nameservers=InMotionHosting. Legitimate small business pattern."
+        not_covered_examples:
+          - "Most domains use privacy proxy for registrant. WHOIS privacy reduces this field's value."
+        geographic_coverage: "Available for .edu (registrant only, via Educause). Privacy-proxied for most .com/.net/.org."
+        cost_per_call: "$0"
+
+  - endpoint: mx-spf-dmarc
+    fields:
+      - field: MX records (existence + provider)
+        description: "DNS MX lookup. Shows whether the domain receives mail and which email provider it uses."
+        useful_for_flag: partial
+        good_examples:
+          - "berkeley.edu (case 1): MX points to aspmx.l.google.com (Google Workspace). Full stack confirmed."
+          - "ox.ac.uk (case 30): MX points to outlook.com (Microsoft 365)."
+          - "bmsu.ac.ir (case 36): NO MX records. Zero email infrastructure. Confirms researchers must use free email."
+        partial_examples:
+          - "signablok.com (case 5): MX points to self (signablok.com). Self-hosted mail on shared hosting. Lower trust but legitimate for small business."
+          - "mut.ac.ir (case 37): MX exists (1 record) but no SPF or DMARC. Minimal email config."
+        not_covered_examples:
+          - "MX presence alone says nothing about institutional affiliation. guerrillamail.com has MX records."
+        geographic_coverage: "Universal -- DNS works for all domains globally."
+        cost_per_call: "$0"
+
+      - field: DMARC policy
+        description: "DNS _dmarc TXT record. Shows email authentication enforcement policy."
+        useful_for_flag: none
+        good_examples: []
+        partial_examples: []
+        not_covered_examples:
+          - "DMARC p=reject: berkeley.edu, griffith.edu.au, yahoo.com, guerrillamail.com, mailinator.com. Two disposable services have STRONGER DMARC than most universities."
+          - "DMARC p=none: gmail.com, outlook.com, signablok.com, 163.com, 126.com, naver.com, snu.ac.kr, mit-edu.com."
+          - "DMARC missing: iitk.ac.in, bmsu.ac.ir, mut.ac.ir, stanford-edu.com, harvard-edu.com."
+        geographic_coverage: "Universal (DNS), but the signal is actively misleading for KYC. DMARC policy does not discriminate between legitimate and illegitimate domains."
+        cost_per_call: "$0"
+
+  - endpoint: lookalike-homoglyph-detector
+    fields:
+      - field: match_detected (boolean)
+        description: "Local logic comparing incoming email domains against ROR domain corpus using fuzzy matching for typosquats and homoglyphs."
+        useful_for_flag: full
+        good_examples:
+          - "rnit.edu (case 9/26): 'rn' -> 'm' homoglyph targeting mit.edu. Domain is unregistered. Easy detection."
+          - "miit.edu (case 27): doubled-i insertion targeting mit.edu. Unregistered."
+        partial_examples:
+          - "mit-edu.com (case 20): NOT a typosquat of .edu but a .com impersonation. Detector must cover cross-TLD patterns ({institution}-edu.com)."
+          - "stanford-edu.com (case 22): active Zoho mail. Cross-TLD impersonation is the primary threat vector."
+          - "harvard-edu.com (case 23): 7-year-old domain with active PrivateEmail. Long-established impersonation."
+        not_covered_examples:
+          - ".edu typosquats are mostly unregistered (Educause restricts .edu). The real threat is .com impersonation of .edu institutions."
+          - "Detector was not system-tested as a running endpoint. Architecture defined, not validated."
+        geographic_coverage: "Depends on ROR domain corpus coverage (~50% of institutions have domains in ROR)."
+        cost_per_call: "$0 (local logic)"
+
+  - endpoint: incommon-edugain
+    fields:
+      - field: in_federation (boolean)
+        description: "Whether the institution's domain appears in InCommon/eduGAIN federation metadata. Confirms academic identity federation membership."
+        useful_for_flag: partial
+        good_examples:
+          - "berkeley.edu (case 1): 3 entity IDs in InCommon. Gold standard."
+          - "griffith.edu.au (case 2): in InCommon via eduGAIN/AAF interfederation."
+          - "scripps.edu (case 3): 1 entity ID."
+          - "ox.ac.uk (case 30): 39 entity IDs via UK federation/eduGAIN."
+          - "pku.edu.cn (case 31): in InCommon via CARSI/eduGAIN."
+        partial_examples:
+          - "iitk.ac.in (case 4): NOT directly findable in InCommon MDQ. India's INFED has 317 IdPs but IIT Kanpur not surfaced via substring search."
+          - "sharif.edu (case 34): has .edu domain but NOT in InCommon. .edu does not guarantee InCommon membership."
+        not_covered_examples:
+          - "Iran (IRFED): 2 IdPs only. Near-zero coverage."
+          - "Russia: no federation found on eduGAIN status page. Zero coverage."
+          - "South Korea (KAFE): only 29 IdPs."
+          - "Non-academic entities: InCommon check not applicable."
+        geographic_coverage: "Strong: US (587 IdPs), China/CARSI (573), UK, Australia, many EU countries. Weak: South Korea (29). Near-zero: Iran (2), Russia (0). InCommon MDQ search returns all 14K+ entities for any query -- needs exact-domain matching."
+        cost_per_call: "$0"
+
+  - endpoint: orcid
+    fields:
+      - field: employment records
+        description: "ORCID self-asserted employment/education entries. Links a person to an institution."
+        useful_for_flag: partial
+        good_examples:
+          - "Raiees Andrabi (case 1): ORCID shows UPenn since July 2023, previous Scripps. Self-asserted but more current than OpenAlex."
+          - "Bart Faber (case 2): ORCID shows BPRC since 2002. Self-asserted."
+        partial_examples:
+          - "Qiang He (case 8): 1 ORCID result but employment empty. Cannot verify."
+          - "Shuvankar Dey (case 3): 3 results, first was wrong person (Ayan Dey)."
+        not_covered_examples:
+          - "0/11 tested employment records were institution-verified. ALL self-asserted. ORCID institution-verification is effectively non-existent."
+          - "Satishchandran Chandrasekhar (case 5): 0 ORCID results. Small company researchers invisible."
+          - "Wei Zhang: 3,304 ORCID results. Common names break disambiguation."
+          - "Attacker can create ORCID with any claimed affiliation in ~5 minutes."
+        geographic_coverage: "Global but self-asserted data has zero trust value. Cannot distinguish real affiliation from fabricated ORCID profile."
+        cost_per_call: "$0"
+
+  - endpoint: openalex
+    fields:
+      - field: affiliations + last_known_institutions
+        description: "Publication-derived institutional affiliations from OpenAlex's 114M author database. Harder to fake than ORCID (requires actual publications)."
+        useful_for_flag: partial
+        good_examples:
+          - "Georg Herrler (case 21): unique name, 209 works, h=56. OpenAlex correctly shows TiHo Hannover."
+          - "Giselle Funchal (case 24): unique name, 8 works. PUCRS confirmed."
+          - "Esmaeil Saberfar (case 26): 31 works, Baqiyatallah affiliation confirmed. Sanctioned institution researchers findable."
+        partial_examples:
+          - "Raiees Andrabi (case 1): OpenAlex still lists Scripps first despite moving to UPenn in 2023. 3-year lag."
+          - "Nathalie Bastien (case 25): split across two profiles (146 works vs 15 works)."
+          - "Pierre Charneau (case 20): academic affiliations visible but TheraVectys (his own company) not in personal profile."
+        not_covered_examples:
+          - "Wei Zhang: 9,085 results. Disambiguation impossible."
+          - "Lay Sciences, Fusix Biotech, GREENVAX, Lanzhou Yahua, Darts Bio: 0 OpenAlex institution results. Small companies invisible."
+          - "Du Huifen (case 22): 3 results, none at claimed company. Free 163.com email gives no linkage."
+        geographic_coverage: "Global for publishing researchers. Coverage drops sharply for industry researchers at small companies, common-name researchers, and early-career researchers with <5 publications."
+        cost_per_call: "$0"
+
+  - endpoint: exa-neural-search
+    fields:
+      - field: search_results (domain and email verification)
+        description: "Exa web search for email domain affiliation. Correctly verifies institutional domains AND correctly rejects free email providers."
+        useful_for_flag: partial
+        good_examples:
+          - "mit.edu (case 1): all results from MIT domains confirming mit.edu is official. High confidence."
+          - "ox.ac.uk (case 3): Oxford website pages confirm domain ownership."
+          - "163.com (case 9): correctly identified as NetEase free email. 'Active Free Email Provider'."
+          - "qq.com (adv-5): clearly identified as Tencent QQ Mail free service."
+          - "mail.ru (adv-15): identified as free email registration service."
+          - "uonbi.ac.ke (adv-21): correctly linked to University of Nairobi."
+        partial_examples:
+          - "chula.ac.th (case 4): found Chula website but connection between domain and institution must be inferred from hosting. Weak pass."
+          - "gmail.com + Harvard (adv-7): HALLUCINATION RISK. Returns Harvard's 'Gmail for Harvard' Google Workspace pages. LLM could incorrectly conclude gmail.com is affiliated with Harvard."
+        not_covered_examples:
+          - "Obscure regional free email providers may not be identifiable."
+        geographic_coverage: "Strong globally. Institutional domains reliably confirmed across .edu, .ac.uk, .ac.th, .de, .africa, .ac.ke. Free email providers reliably identified."
+        cost_per_call: "$0.007"
+
+flag_verdict:
+  best_endpoint_combination: >
+    1. Disposable email blocklist (hard block -- only reliable defense, since disposable services pass DNS checks).
+    2. Free email blocklist (soft flag -- require additional affiliation evidence).
+    3. Lookalike/homoglyph detector (must cover cross-TLD: {institution}-edu.com, not just .edu typosquats).
+    4. RDAP creation_date for .com domains (flag domains <2 years old impersonating known institutions).
+    5. ROR domain match (when domain is populated -- ~50% of institutions).
+    6. InCommon/eduGAIN federation check (strong for US/China/UK academic institutions).
+    7. LLM+Exa for ambiguous cases (verify obscure institutional domains, confirm free email status).
+    8. OpenAlex for publication-backed affiliation confirmation (unique-name researchers only).
+    Drop: DMARC as trust signal (actively misleading). ORCID self-asserted employment (zero trust value).
+    Supplementary: MX existence check (absent MX = domain has no mail infrastructure).
+  coverage_summary: >
+    Disposable email blocklist is the critical first line of defense -- the only check that catches
+    guerrillamail/mailinator (which pass all DNS checks). Free email soft-flag handles the high-volume
+    case (163.com, qq.com, gmail.com) without blocking legitimate researchers. .com impersonation
+    of .edu institutions is live and active (mit-edu.com, stanford-edu.com, harvard-edu.com) -- the
+    homoglyph detector must cover cross-TLD patterns. RDAP domain age is the primary signal for
+    detecting newly registered impersonation domains, but is unavailable for .edu, .cn, .ir, .ru,
+    .au, .uk. Sanctioned institutions (Baqiyatallah) have zero email infrastructure, forcing
+    researchers to use free email, which makes step (c) completely blind -- detection must come from
+    entity-level screening.
+
+profile_groups:
+  - group: "Institutional email matching claimed affiliation (.edu, .ac.uk, .ac.in, etc.)"
+    description: "Customer uses an email domain that matches their claimed institution. Domain is in ROR or verifiable via web search."
+    time_tier: auto
+    estimated_time: "0 min"
+    resolution_path: "Email domain matches ROR domain for claimed institution OR email domain matches institution website domain (via Exa) -> auto-pass."
+    fraction_of_test_cases: "10/12 Exa step (c) tests passed for institutional domains; 6/10 email-domain seed cases were institutional"
+    examples_from_tests:
+      - "researcher@mit.edu claiming MIT: domain match via ROR. Auto-pass."
+      - "researcher@ox.ac.uk claiming Oxford: domain match via ROR. Auto-pass."
+      - "researcher@biontech.de claiming BioNTech: domain confirmed via Exa (Impressum page). Auto-pass."
+      - "researcher@uonbi.ac.ke claiming University of Nairobi: domain confirmed via Exa. Auto-pass."
+    what_they_share: "Institutional email domain that can be matched to the claimed institution via registry or web verification."
+    distinguishing_factors:
+      - country: "Global -- works for any country with institutional email domains"
+      - institution_size: "Any institution with its own email domain"
+
+  - group: "Institutional email with domain-institution mismatch"
+    description: "Customer uses an institutional email but claims a different institution. Dual-affiliation pattern (e.g., researcher@pasteur.fr claiming TheraVectys)."
+    time_tier: quick_review
+    estimated_time: "2-3 min"
+    resolution_path: "Email domain is institutional but doesn't match claimed institution. Reviewer checks: (1) Is there a known relationship between the email institution and the claimed institution? (2) OpenAlex/ORCID for dual affiliation? (3) Is the claimed institution a spin-off or subsidiary?"
+    fraction_of_test_cases: "3/28 individual-affiliation cases (Nemirov pasteur.fr/TheraVectys, Altomonte tum.de/Fusix, SOHN yuhs.ac/GREENVAX)"
+    examples_from_tests:
+      - "Kirill Nemirov: pasteur.fr email, claims TheraVectys. OpenAlex shows both affiliations. Legitimate dual-role researcher."
+      - "SOHN Myung Hyun: yuhs.ac email, claims GREENVAX. OpenAlex shows Yonsei only. GREENVAX not in any database."
+    what_they_share: "Real institutional email but claimed affiliation is a different (often smaller) entity."
+    distinguishing_factors:
+      - country: "Any"
+      - institution_size: "Often academic email + small company claim"
+
+  - group: "Free email from country where institutional email is uncommon"
+    description: "Customer uses gmail.com, 163.com, qq.com, naver.com, or similar regional free email. This is the regional norm for Chinese, Korean, Iranian, and Russian researchers."
+    time_tier: quick_review
+    estimated_time: "2-5 min"
+    resolution_path: "Free email soft-flag fires. Reviewer checks: (1) Does the customer's institution exist in ROR? (2) PubMed article count for the institution? (3) OpenAlex for the person (if unique name)? (4) Does the institution have functional email (MX check on institution domain)? If institution confirmed and person plausible, pass."
+    fraction_of_test_cases: "12+ instances of 163.com in customer dataset; tested 163.com, 126.com, qq.com, mail.ru, yandex.ru, naver.com, hanmail.net, gmail.com, outlook.com, yahoo.com"
+    examples_from_tests:
+      - "163.com + China Agricultural University (case 7): free email because 163.com is the regional norm. Institution exists in ROR with PubMed presence."
+      - "yahoo.com + Baqiyatallah (case 8): free email because bmsu.ac.ir has ZERO DNS records. Institution is IRGC-affiliated. This case requires entity screening, not just email screening."
+      - "naver.com + Korean researcher: regional norm. Institution likely in KAFE (29 IdPs) or verifiable via ROR."
+    what_they_share: "Free email is the regional norm, not an evasion attempt. Institution typically exists in registries."
+    distinguishing_factors:
+      - country: "China (163.com, 126.com, qq.com), Russia (mail.ru, yandex.ru), Korea (naver.com, hanmail.net), Iran (gmail.com, yahoo.com due to no local email infra)"
+      - institution_size: "Any"
+
+  - group: "Free email from OECD country researcher"
+    description: "Customer from US/EU/UK uses gmail.com or outlook.com. Less suspicious than non-OECD free email but still lacks institutional linkage."
+    time_tier: quick_review
+    estimated_time: "1-3 min"
+    resolution_path: "Free email soft-flag fires. Reviewer checks: (1) Does the institution have email infrastructure? (If yes, why isn't the customer using it?) (2) OpenAlex for the person? (3) PubMed for the institution? Quick verification since OECD institutions are well-covered in registries."
+    fraction_of_test_cases: "gmail.com and outlook.com tested; common in customer dataset"
+    examples_from_tests:
+      - "gmail.com researcher claiming Stanford: Stanford has email infrastructure (stanford.edu). Why use gmail? Could be personal preference, adjunct faculty, or visiting researcher."
+    what_they_share: "OECD institution that has email infrastructure, but researcher uses free email."
+    distinguishing_factors:
+      - country: "US, EU, UK, AU, JP"
+
+  - group: "Sanctioned-country institution with no email infrastructure"
+    description: "Customer claims affiliation with an institution in Iran/Russia/etc. that has zero or minimal email infrastructure. Must use free email. Step (c) is completely blind."
+    time_tier: investigation
+    estimated_time: "10-15 min"
+    resolution_path: "Free email soft-flag fires. MX check on institution domain returns nothing (bmsu.ac.ir) or minimal (mut.ac.ir). RDAP unavailable (.ir, .ru). Institution may be sanctioned. Reviewer must: (1) Check institution against screening lists, (2) Verify institution exists in ROR, (3) Check if institution is on any sanctions list, (4) If sanctioned, escalate to compliance."
+    fraction_of_test_cases: "2/39 email-domain cases (bmsu.ac.ir, mut.ac.ir); 2/28 individual-affiliation cases (Saberfar, Hashemzadeh at Baqiyatallah)"
+    examples_from_tests:
+      - "yahoo.com + Baqiyatallah (case 8): bmsu.ac.ir has ZERO DNS. IRGC-affiliated. Free email hides the institutional affiliation."
+      - "Esmaeil Saberfar: ORCID empty employment, OpenAlex shows 31 works at Baqiyatallah. Paradoxically well-covered in publication databases but invisible to email screening."
+    what_they_share: "Institution in sanctioned country with no/minimal email infrastructure. Free email is the only option for researchers."
+    distinguishing_factors:
+      - country: "Iran, Russia, North Korea, Syria, Cuba"
+      - institution_size: "Any"
+
+  - group: "Disposable email"
+    description: "Customer uses guerrillamail.com, mailinator.com, 10minutemail.com, or similar disposable email service."
+    time_tier: auto
+    estimated_time: "0 min"
+    resolution_path: "Disposable blocklist match -> hard block. No human review needed. Auto-reject the order."
+    fraction_of_test_cases: "3/39 email-domain cases (guerrillamail, mailinator, 10minutemail)"
+    examples_from_tests:
+      - "guerrillamail.com (case 10): on blocklist. Has DMARC p=reject, 20-year-old domain. ONLY the blocklist catches this."
+      - "mailinator.com (case 18): on blocklist. DMARC p=reject. DNS checks would pass it."
+    what_they_share: "On the disposable email blocklist. No legitimate researcher needs a disposable email for ordering DNA synthesis."
+    distinguishing_factors:
+      - country: "Any"
+
+  - group: "Impersonation domain (.com variant of .edu institution)"
+    description: "Customer uses an email from a recently registered .com domain that mimics a .edu institution (e.g., mit-edu.com, stanford-edu.com)."
+    time_tier: auto
+    estimated_time: "0 min"
+    resolution_path: "Lookalike detector flags domain as similar to known institution. RDAP shows recent registration (<2 years). Hard flag -> reject or immediate investigation."
+    fraction_of_test_cases: "5/39 email-domain cases (mit-edu.com, berkeley-edu.com, stanford-edu.com, harvard-edu.com, mitresearch.com)"
+    examples_from_tests:
+      - "mit-edu.com: registered July 2025, self-hosted MX on single IP. Active impersonation infrastructure."
+      - "stanford-edu.com: registered August 2025, active Zoho mail. Someone can send as professor@stanford-edu.com."
+      - "harvard-edu.com: registered 2019, active PrivateEmail. 7-year-old impersonation with established reputation."
+    what_they_share: "Recently registered .com domain mimicking a known .edu institution. May have active mail infrastructure."
+    distinguishing_factors:
+      - country: "Any (domains can be registered from anywhere)"
+
+  - group: "Common-name researcher with free email"
+    description: "Researcher with a common name (Wei Zhang, Maria Garcia, Qiang He) using free email. Neither name nor email provides disambiguation."
+    time_tier: investigation
+    estimated_time: "5-15 min"
+    resolution_path: "Free email soft-flag fires. OpenAlex/ORCID search returns hundreds or thousands of results. Cannot disambiguate by name alone. Reviewer must: (1) Ask customer for ORCID ID or publication list, (2) Cross-reference with institutional website listing, (3) Use order details (shipping address, order contents) for corroboration."
+    fraction_of_test_cases: "5/28 individual-affiliation cases (Wei Zhang 9K results, Maria Garcia 18K, Yi Shi 1.8K, Qiang He 706, John Smith 1.4K)"
+    examples_from_tests:
+      - "Wei Zhang: 3,304 ORCID results, 9,085 OpenAlex. Hopeless without additional signals."
+      - "Qiang He at Chongqing Medical: even with institution filter, 7 different people in OpenAlex."
+      - "Honglei Sun at China Agricultural + 163.com email: 18 OpenAlex results, none clearly at the claimed institution."
+    what_they_share: "Common name + free email = zero linkage between person and institution. Need customer-provided evidence."
+    distinguishing_factors:
+      - country: "Primarily Chinese, Indian, Korean, common Western names"
+
+unresolved_issues:
+  - "Cross-TLD homoglyph detection system not tested end-to-end. Architecture defined (must cover {institution}-edu.com patterns) but detector not run as a live endpoint."
+  - "RDAP fallback chain for blind-spot TLDs (.edu, .cn, .ir, .ru, .au, .uk) not validated. Proposed: RDAP -> country WHOIS -> DNS creation heuristics."
+  - "Identity binding is missing: ORCID/OpenAlex verify that a person-institution association exists, not that the requester IS that person. Requires ORCID OAuth or institutional SSO."
+  - "LLM hallucination risk on gmail.com + institutional queries (Harvard/Gmail case). Prompt mitigation designed but not system-tested."
+  - "InCommon MDQ search quality poor: returns all 14K+ entities for any query. Needs exact-domain matching implementation."

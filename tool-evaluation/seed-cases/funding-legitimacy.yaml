@@ -1,0 +1,161 @@
+group: funding-legitimacy
+endpoints: [nih-reporter, nsf-awards, ukri, pubmed]
+kyc_steps: [a]
+
+seed_cases:
+  - id: 1
+    name: "Massachusetts Institute of Technology"
+    type: academic
+    country: US
+    source: general_knowledge
+    difficulty: easy
+    query_params:
+      institution_name: "Massachusetts Institute of Technology"
+      alt_names: ["MIT"]
+      pubmed_affiliation_query: "Massachusetts Institute of Technology[Affiliation]"
+      nih_org_name: "MASSACHUSETTS INSTITUTE OF TECHNOLOGY"
+      nsf_keyword: "Massachusetts Institute of Technology"
+    hypothesis: "Baseline easy case. Should have thousands of NIH/NSF awards and tens of thousands of PubMed articles."
+
+  - id: 2
+    name: "University of Oxford"
+    type: academic
+    country: GB
+    source: general_knowledge
+    difficulty: easy
+    query_params:
+      institution_name: "University of Oxford"
+      pubmed_affiliation_query: "University of Oxford[Affiliation]"
+      ukri_query: "Oxford"
+      nsf_keyword: "University of Oxford"
+    hypothesis: "Major UK university. Should be very well covered in UKRI and PubMed. May have some NSF awards through international collaborations. NIH coverage possible but weaker than US institutions."
+
+  - id: 3
+    name: "Pfizer Inc"
+    type: pharma
+    country: US
+    source: general_knowledge
+    difficulty: easy
+    query_params:
+      institution_name: "Pfizer"
+      pubmed_affiliation_query: "Pfizer[Affiliation]"
+      nih_org_name: "PFIZER"
+    hypothesis: "Major pharma company. Strong PubMed presence through clinical trials and publications. NIH may have some collaborative grants. NSF less likely for pharma."
+
+  - id: 4
+    name: "Indian Institute of Technology Kanpur"
+    type: academic
+    country: IN
+    source: customers_csv
+    difficulty: medium
+    query_params:
+      institution_name: "Indian Institute of Technology Kanpur"
+      alt_names: ["IIT Kanpur", "IITK"]
+      pubmed_affiliation_query: "Indian Institute of Technology Kanpur[Affiliation]"
+      nih_org_name: "INDIAN INSTITUTE OF TECHNOLOGY KANPUR"
+    hypothesis: "Large Indian university with life sciences research. Should have PubMed articles. NIH/NSF coverage uncertain — may have international collaboration grants but not direct funding."
+
+  - id: 5
+    name: "Universidade Federal de Minas Gerais"
+    type: academic
+    country: BR
+    source: customers_csv
+    difficulty: medium
+    query_params:
+      institution_name: "Universidade Federal de Minas Gerais"
+      alt_names: ["UFMG", "Federal University of Minas Gerais"]
+      pubmed_affiliation_query: "Universidade Federal de Minas Gerais[Affiliation]"
+    hypothesis: "Major Brazilian university. Strong PubMed presence in tropical medicine/parasitology. NIH Fogarty International Center may have grants. UKRI/NSF less likely."
+
+  - id: 6
+    name: "Christian Medical College Vellore"
+    type: academic
+    country: IN
+    source: customers_csv
+    difficulty: medium
+    query_params:
+      institution_name: "Christian Medical College Vellore"
+      alt_names: ["CMC Vellore"]
+      pubmed_affiliation_query: "Christian Medical College Vellore[Affiliation]"
+    hypothesis: "Well-known Indian medical college. Should have significant PubMed presence. May have some NIH-funded collaborations (Fogarty). Tests non-OECD academic coverage."
+
+  - id: 7
+    name: "Zhejiang Sci-Tech University"
+    type: academic
+    country: CN
+    source: customers_csv
+    difficulty: hard
+    query_params:
+      institution_name: "Zhejiang Sci-Tech University"
+      pubmed_affiliation_query: "Zhejiang Sci-Tech University[Affiliation]"
+    hypothesis: "Smaller Chinese university not focused on biomedical research. May have some PubMed articles but likely low count. No NIH/NSF/UKRI funding expected. Tests boundary of publication-based legitimacy."
+
+  - id: 8
+    name: "Lay Sciences Inc"
+    type: biotech_startup
+    country: US
+    source: customers_csv
+    difficulty: hard
+    query_params:
+      institution_name: "Lay Sciences"
+      pubmed_affiliation_query: "Lay Sciences[Affiliation]"
+      nih_org_name: "LAY SCIENCES"
+    hypothesis: "Small US biotech startup. Unlikely to have NIH/NSF funding or PubMed articles yet. Tests whether funding databases cover early-stage companies."
+
+  - id: 9
+    name: "Genspace"
+    type: community_lab
+    country: US
+    source: general_knowledge
+    difficulty: hard
+    query_params:
+      institution_name: "Genspace"
+      pubmed_affiliation_query: "Genspace[Affiliation]"
+      nih_org_name: "GENSPACE"
+    hypothesis: "Community bio lab in Brooklyn, NY. Extremely unlikely to have federal funding or publications as an institution. Tests the hardest boundary — legitimate but completely outside the funding/publication ecosystem."
+
+  - id: 10
+    name: "Biomedical Primate Research Centre"
+    type: research_institute
+    country: NL
+    source: customers_csv
+    difficulty: medium
+    query_params:
+      institution_name: "Biomedical Primate Research Centre"
+      alt_names: ["BPRC"]
+      pubmed_affiliation_query: "Biomedical Primate Research Centre[Affiliation]"
+      ukri_query: "Biomedical Primate Research Centre"
+    hypothesis: "Dutch research institute. Should have PubMed publications (primate research). May have EU/UKRI connections. NIH unlikely. Tests European non-university research institute coverage."
+
+information_sources:
+  - source: "NIH RePORTER search"
+    url: "https://reporter.nih.gov/"
+    what_to_look_for: "Search by institution name. Check Fogarty International Center grants for non-US institutions. Check SBIR/STTR grants for small companies."
+  - source: "NSF Award Search"
+    url: "https://nsf.gov/awardsearch/"
+    what_to_look_for: "Search by institution. Check international collaboration awards (IRES, PIRE programs) for non-US institutions."
+  - source: "UKRI Gateway to Research"
+    url: "https://gtr.ukri.org/"
+    what_to_look_for: "Search organisations. Check non-UK collaborators. Coverage of EU-funded institutions (post-Brexit gaps)."
+  - source: "PubMed"
+    url: "https://pubmed.ncbi.nlm.nih.gov/"
+    what_to_look_for: "Affiliation field search. Test transliterated institution names (Chinese, Arabic, Russian) to see if they match."
+  - source: "customers.csv"
+    what_to_look_for: "Filter for institutions not in OECD countries. Filter for 'Controlled Agent Industry' type to find small companies."
+
+pre_committed_reasoning: |
+  NIH RePORTER and NSF Awards are strong signals for US academic institutions but will miss
+  most non-US entities. UKRI covers UK institutions well. PubMed is the broadest — any
+  institution with researchers who publish in biomedical journals will appear, regardless of
+  country or funding source.
+
+  Expected coverage gaps:
+  1. Very new biotech startups (< 2 years old) — no time to publish or receive grants
+  2. Community bio labs — operate outside the traditional funding/publication ecosystem
+  3. Small non-OECD universities — may have publications but not in major indexed journals
+  4. Industry companies — some publish (pharma), many don't (contract labs, reagent companies)
+  5. Government labs in non-OECD countries — may publish but under varied institutional names
+
+  The key question for this group is: does the ABSENCE of funding/publication records mean
+  the institution is illegitimate, or just small/new/non-academic? The false-flag rate for
+  legitimate-but-unpublished institutions is the critical metric.

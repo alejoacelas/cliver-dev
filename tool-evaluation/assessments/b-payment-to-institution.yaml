@@ -1,0 +1,256 @@
+kyc_step: b-payment-to-institution
+measure: "M12 (+M10)"
+flag: "Billing address not associated with the institution; gift card BIN"
+follow_up: "Flag triggers manual review of billing-institution relationship"
+
+field_assessments:
+  - endpoint: stripe-test
+    fields:
+      - field: card.funding
+        description: "Card funding type (credit/debit/prepaid) returned by Stripe from the card network. Available pre-charge on PaymentMethod creation."
+        useful_for_flag: full
+        good_examples:
+          - "tok_mastercard_prepaid (case 7): funding=prepaid. The strongest gift card detection signal. Binary decision: prepaid=flag."
+          - "tok_visa (case 1): funding=credit. Clean pass."
+          - "tok_visa_debit (case 4): funding=debit. Researcher using personal debit card -- normal."
+        partial_examples:
+          - "Corporate virtual cards (Ramp, Brex, Divvy) may report funding=prepaid despite being legitimate institutional cards. Cannot confirm without production data."
+        not_covered_examples:
+          - "Test mode always returns country=US. Cannot test international card funding type detection."
+        geographic_coverage: "Global -- works for every card transaction. The single most reliable payment signal."
+        cost_per_call: "$0 (metadata only; $0.30+2.9% if charge is processed)"
+
+      - field: card.country
+        description: "ISO alpha-2 code of the card-issuing country, derived from BIN. Available pre-charge."
+        useful_for_flag: partial
+        good_examples: []
+        partial_examples:
+          - "Test mode always returns US. In production, a card issued in India for an order claiming UK institution would be a soft mismatch signal."
+        not_covered_examples:
+          - "Cannot validate in test mode. All tokens return country=US."
+        geographic_coverage: "Global in production. US-only in test mode."
+        cost_per_call: "$0"
+
+  - endpoint: stripe-avs-prod
+    fields:
+      - field: address_line1_check
+        description: "Issuer verification of billing street address against card records. Returned after charge."
+        useful_for_flag: partial
+        good_examples:
+          - "Documentation predicts pass for US credit card where billing matches institution (case 1 assessment)."
+        partial_examples:
+          - "P-cards (case 3 assessment): AVS line1 likely fails because finance dept address differs from lab address. False positive."
+          - "Prepaid cards (case 4 assessment): AVS may pass against activation address, which is meaningless for KYC."
+        not_covered_examples:
+          - "International cards (case 2 assessment): Most non-US/UK/CA issuers return 'unavailable'. 40-60% of payments for a global provider."
+        geographic_coverage: "Strong: US, UK, CA. Partial: AU, NZ, IE. Null: continental Europe, Asia, Africa, Latin America. AVS was designed for US/UK/CA."
+        cost_per_call: "$0 (included in Stripe charge processing)"
+
+      - field: address_postal_code_check
+        description: "Issuer verification of billing postal/ZIP code. More widely supported than line1."
+        useful_for_flag: partial
+        good_examples:
+          - "May pass even when line1 fails (P-card in same ZIP as lab). Useful partial signal."
+        not_covered_examples:
+          - "Same international coverage gap as line1."
+        geographic_coverage: "Slightly broader than line1 -- some issuers support ZIP-only AVS."
+        cost_per_call: "$0"
+
+  - endpoint: plaid-prod
+    fields:
+      - field: legal_name.score
+        description: "Continuous 0-100 score comparing customer-provided name against bank account holder name. Available via Plaid Identity Match after bank connection."
+        useful_for_flag: full
+        good_examples:
+          - "Documentation predicts high score (90-100) when payer name matches bank account holder (case 5 assessment)."
+          - "Third-party payment (case 6 assessment): expected low score (<30), directly detecting identity mismatch."
+        partial_examples:
+          - "Joint accounts: partial name match may be spouse. is_first_name_or_last_name_match flag helps."
+          - "University departmental accounts: is_business_name_detected flag fires. Name mismatch is expected."
+        not_covered_examples:
+          - "~70% of connected bank Items return no identity data. Check silently fails."
+          - "Non-ACH payments: Plaid not applicable."
+        geographic_coverage: "US (primary), Canada and Europe (extended plans). Coverage limited by bank participation (~30% of Items return identity data)."
+        cost_per_call: "$0.20-1.00"
+
+      - field: address.score
+        description: "Continuous 0-100 score comparing customer-provided address against bank records."
+        useful_for_flag: partial
+        good_examples: []
+        partial_examples:
+          - "Bank address records may be stale (customer moved). Low score may mean the customer moved, not fraud."
+        not_covered_examples:
+          - "Same ~70% silent failure rate as legal_name.score."
+        geographic_coverage: "US primarily."
+        cost_per_call: "$0 (included in Identity Match call)"
+
+  - endpoint: binlist
+    fields:
+      - field: bank.name + type
+        description: "Free BIN lookup returning issuing bank name, card type (credit/debit/prepaid), and country."
+        useful_for_flag: partial
+        good_examples:
+          - "BIN 424242: correctly identified as 'Stripe Payments Uk Limited', type=credit."
+          - "BIN 378282: correctly identified as American Express, type=credit, country=US."
+        partial_examples:
+          - "BIN 411111: mapped to Polish fintech Conotoxia, not expected US bank. BIN reassignment makes static data unreliable."
+        not_covered_examples:
+          - "BIN 520082, 555555: returned HTTP 200 with null/empty fields. 40% of tested BINs had no useful data."
+          - "11 fintech BINs (Mercury, Brex, Ramp, Wise, Divvy, Relay) untestable due to rate limiting (429 after 5 calls)."
+        geographic_coverage: "Global in theory but spotty in practice. Coverage gaps are unpredictable. Rate limiting (5 calls/session) makes production use infeasible."
+        cost_per_call: "$0 (rate-limited free tier)"
+
+  - endpoint: fintech-bin-denylist
+    fields:
+      - field: matched (boolean)
+        description: "Local lookup table matching 6-digit BIN prefixes against known fintech/neobank issuers (Mercury, Brex, Relay, Ramp, Wise, Divvy)."
+        useful_for_flag: partial
+        good_examples:
+          - "BIN 533248 -> Mercury: matched=true. Correctly flagged."
+          - "BIN 556150 -> Brex: matched=true. Correctly flagged."
+          - "All 9 known fintech BINs matched correctly. 6 standard bank BINs correctly not matched. 2 off-by-one edge cases correctly rejected."
+        not_covered_examples:
+          - "New fintech issuers or new BIN ranges from existing issuers will not be in the list. Requires quarterly maintenance."
+        geographic_coverage: "US fintech/neobank issuers only. International fintech (Revolut, N26, etc.) not in the denylist."
+        cost_per_call: "$0 (local logic)"
+
+  - endpoint: billing-shipping-consistency
+    fields:
+      - field: result (pass/soft_flag/hard_flag)
+        description: "Three-way address comparison: billing vs shipping vs institution canonical address. Normalized comparison."
+        useful_for_flag: partial
+        good_examples:
+          - "Exact match MIT (case 1): billing=institution -> pass."
+          - "Cross-state mismatch (case 4): Springfield IL vs Springfield MA -> hard_flag. Correct."
+        partial_examples:
+          - "Researcher home billing (case 2): Somerville MA vs Cambridge MA -> soft_flag. This is the NORMAL case for legitimate researchers."
+          - "Satellite campus JPL vs Caltech (case 3): same city different street -> soft_flag. Benign organizational relationship."
+          - "International Singapore (case 5): minor formatting differences -> soft_flag (string comparison fallback)."
+        not_covered_examples:
+          - "Mercury PMB address (case 8): 'PMB 82560' embedded in address broke the parser -> hard_flag instead of soft_flag. Needs Smarty normalization."
+        geographic_coverage: "US addresses work with regex parsing (7/8 pass). International addresses fall back to string comparison -- unreliable."
+        cost_per_call: "$0 (local logic; Smarty integration for normalization adds per-call cost)"
+
+  - endpoint: exa-neural-search
+    fields:
+      - field: search_results (billing entity web intelligence)
+        description: "Exa search for corporate entity registration and billing entity identity. Finds SEC filings, corporate registries, investor pages."
+        useful_for_flag: partial
+        good_examples:
+          - "Pfizer (case 2): SEC EDGAR filing found with matching mailing and business addresses. Corporate identity confirmed."
+          - "BioNTech (case 5): Investor relations and Impressum pages confirm corporate entity."
+        partial_examples:
+          - "Helix Therapeutics (case 8): Name collision with a real unrelated company. LLM might incorrectly match billing entity to wrong company."
+        not_covered_examples:
+          - "Only 3 cases tested for step (b). Limited coverage data."
+          - "Billing entity names for small companies rarely appear on the public web linked to addresses."
+        geographic_coverage: "Works for public companies with SEC filings or European Impressum pages. Not useful for small private companies."
+        cost_per_call: "$0.007"
+
+flag_verdict:
+  best_endpoint_combination: >
+    1. Stripe card.funding (every card payment -- prepaid=flag, globally reliable).
+    2. Fintech BIN denylist (local, deterministic, catches Mercury/Brex/Relay/Ramp/Wise/Divvy).
+    3. Billing-shipping-institution consistency (every order, no issuer dependency).
+    4. Stripe AVS (supplementary when available -- US/UK/CA cards only).
+    5. Plaid Identity Match legal_name.score (supplementary when available -- ~30% of US ACH).
+    6. BIN/card country (weak tiebreaker).
+    Drop: binlist.net (unreliable coverage, aggressive rate limits). Use for opportunistic enrichment only.
+    Design: Exa for corporate identity on flagged cases (not every order).
+  coverage_summary: >
+    card.funding is the single strongest signal: binary, global, available pre-charge. The
+    fintech BIN denylist catches neobank cards that binlist.net misses. Billing-shipping-institution
+    consistency works for every order but most legitimate researchers trigger soft_flag (personal
+    card billed to home). AVS and Plaid are supplementary -- strong when available, absent for
+    40-70% of payments. The three-layer defense (funding type + BIN denylist + address consistency)
+    stacks independent signals. Critical insight: billing != institution is the NORMAL case for
+    legitimate researchers using personal cards. The system must tolerate soft flags and only
+    escalate when multiple signals coincide.
+
+profile_groups:
+  - group: "Institutional card matching institution address"
+    description: "Corporate card or P-card billed to the institution's address. card.funding=credit. Billing matches institution."
+    time_tier: auto
+    estimated_time: "0 min"
+    resolution_path: "card.funding=credit/debit + billing-institution consistency=pass + not on fintech denylist -> auto-pass."
+    fraction_of_test_cases: "3/10 seed cases (MIT exact match, Pfizer corporate Amex, Brex matching institution)"
+    examples_from_tests:
+      - "MIT standard Visa credit (case 1): funding=credit, billing=institution -> pass"
+      - "Pfizer corporate Amex (case 2): funding=credit, billing=institution -> pass"
+    what_they_share: "Institutional payment method. Billing address matches or is very close to institution address. No BIN flags."
+    distinguishing_factors:
+      - country: "Any"
+      - institution_size: "Large enough to have corporate cards"
+
+  - group: "Personal card from researcher's home address"
+    description: "Researcher paying with personal debit/credit card billed to their home address. This is the NORMAL case for academic purchases."
+    time_tier: auto
+    estimated_time: "0 min"
+    resolution_path: "card.funding=credit/debit + billing-institution consistency=soft_flag (same region, different street) + not on fintech denylist -> auto-pass with soft_flag logged."
+    fraction_of_test_cases: "2/10 seed cases (researcher home billing, three-way mismatch); documented as the most common legitimate pattern"
+    examples_from_tests:
+      - "Researcher home billing (case 4): funding=debit, billing Somerville vs institution Cambridge -> soft_flag. Normal pattern."
+      - "JPL vs Caltech (case 6): billing=Pasadena Oak Grove vs institution=Pasadena California Blvd -> soft_flag. Satellite campus."
+    what_they_share: "Personal payment method, home address. Billing and institution are in the same metro area but different streets."
+    distinguishing_factors:
+      - country: "Global -- most common in academia worldwide"
+      - institution_size: "Any"
+
+  - group: "International card from non-AVS country"
+    description: "Card issued outside US/UK/CA where AVS returns 'unavailable'. Only signals: card.funding, card.country, billing-institution consistency."
+    time_tier: auto
+    estimated_time: "0 min"
+    resolution_path: "card.funding=credit/debit + card.country matches institution country + billing-institution consistency -> auto-pass. If card.country mismatches institution country -> soft_flag for quick review."
+    fraction_of_test_cases: "1/10 seed cases (Singapore biotech); documented as 40-60% of payments for global provider"
+    examples_from_tests:
+      - "Singapore biotech (case 5): Stripe test always returns US. In production, AVS would return 'unavailable' for Singapore-issued card. Only signals: funding type + country match."
+    what_they_share: "Non-US/UK/CA card. AVS not available. Reduced signal set."
+    distinguishing_factors:
+      - country: "Continental Europe, Asia, Africa, Latin America, Middle East"
+
+  - group: "Prepaid card or gift card"
+    description: "card.funding=prepaid. This is the highest-risk payment type: anonymous, untraceable to an institution."
+    time_tier: investigation
+    estimated_time: "5-10 min"
+    resolution_path: "card.funding=prepaid -> hard_flag. Reviewer checks: (1) Is this a corporate virtual card (Ramp/Brex/Divvy)? If yes and institution is verified through other steps, may be legitimate. (2) Is billing address a known institution? (3) Are other KYC steps clean?"
+    fraction_of_test_cases: "2/10 seed cases (prepaid Mastercard, gift card pattern)"
+    examples_from_tests:
+      - "Prepaid Mastercard (case 7): funding=prepaid -> hard_flag. Combined with unknown institution -> strong investigation signal."
+      - "Gift card pattern (case 10): funding=prepaid + billing mismatch + residential billing -> three signals stacked."
+    what_they_share: "Prepaid funding type. May be legitimate (corporate virtual card) or suspicious (gift card). Requires human review."
+    distinguishing_factors:
+      - country: "Any"
+      - institution_size: "Any -- but legitimate large institutions rarely use prepaid"
+
+  - group: "Fintech neobank card (Mercury, Brex, etc.)"
+    description: "Card from a fintech/neobank issuer on the denylist. Common for startups and small companies."
+    time_tier: quick_review
+    estimated_time: "1-2 min"
+    resolution_path: "Fintech denylist match -> soft_flag. Reviewer checks: (1) Is the company legitimate? (2) Is the BIN consistent with the type of company? Mercury/Brex are normal for startups. (3) Are other KYC steps clean? If company is verified via web search, pass. If not, escalate."
+    fraction_of_test_cases: "2/10 seed cases (Mercury startup, Brex corporate)"
+    examples_from_tests:
+      - "Mercury BIN 533248 (case 8): denylist match. Mercury PMB billing address broke parser. Normal for US startup."
+      - "Brex BIN 556150 (case 9): denylist match. Billing matches institution. Clean pass after quick review."
+    what_they_share: "Fintech-issued card. Common for legitimate startups. Should be soft flag, not hard reject."
+    distinguishing_factors:
+      - country: "Primarily US (where these fintechs operate)"
+      - institution_size: "Small to medium companies, startups"
+
+  - group: "Wire transfer or non-card payment"
+    description: "Payment via wire transfer, SEPA, or other non-card method. Neither Stripe AVS nor Plaid provides signals."
+    time_tier: quick_review
+    estimated_time: "2-5 min"
+    resolution_path: "Only signal: originating bank name/country from SWIFT/BIC code. Reviewer checks: (1) Does the originating bank country match the institution country? (2) Is the bank name a known institution's bank? (3) Is the wire amount consistent with the order?"
+    fraction_of_test_cases: "0/10 -- not represented in test data (all test cases used card payments)"
+    examples_from_tests: []
+    what_they_share: "Non-card payment. Very limited automated signals available."
+    distinguishing_factors:
+      - country: "Common for international orders, especially where card payment is less common"
+
+unresolved_issues:
+  - "binlist.net coverage for fintech/prepaid BINs is untestable due to rate limiting. 11 BINs could not be evaluated. A paid BIN database (Maxmind minFraud, Binbase) should be evaluated for production."
+  - "International card behavior untested: Stripe test mode always returns country=US. Cannot validate card.country detection for non-US cards."
+  - "Corporate virtual cards (Ramp, Brex, Divvy) may report card.funding=prepaid. False positive rate unknown without production data."
+  - "P-card false positive rate for AVS unknown without production data."
+  - "Plaid score calibration impossible without production data: sandbox returns binary 0/100 only."
+  - "Wire transfer screening has no automated coverage."

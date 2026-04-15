@@ -1,0 +1,284 @@
+kyc_step: e-po-box-freight
+measure: "M03 (+M06)"
+flag: "P.O. Box; freight forwarder address"
+follow_up: "PO Box -> hard flag. Freight forwarder -> investigation. Export control -> auto-deny or license check."
+
+field_assessments:
+  - endpoint: po-box-regex
+    fields:
+      - field: hit (boolean) + match_token
+        description: "Local regex matching against PO Box patterns in 7 language families (English, German, Spanish, French, Portuguese, Dutch, Italian) plus Australian, South African, and US military (APO/FPO/PSC) variants. Includes PMB (Private Mailbox)."
+        useful_for_flag: full
+        good_examples:
+          - "P.O. Box (case 7): detected. Standard US format."
+          - "PO Box (case 11): detected. No periods."
+          - "Post Office Box (case 12): detected. Full form."
+          - "PMB 1 (case 8): detected. Private Mailbox (freight forwarder/CMRA format)."
+          - "FPO AP (case 13): detected. Navy fleet post."
+          - "PSC 1 (case 4): detected. Military postal service center."
+          - "Postfach (case 15): detected. German."
+          - "Boite Postale / BP (cases 16-17): detected. French."
+          - "Casella Postale (case 18): detected. Italian."
+          - "Apartado Postal (case 19): detected. Spanish."
+          - "Postbus (case 20): detected. Dutch."
+          - "Caixa Postal (case 21): detected. Portuguese."
+          - "Locked Bag (case 22): detected. Australian."
+          - "Private Bag (case 23): detected. South African."
+          - "Fullwidth Unicode PO Box (case 32): detected after NFKC normalization."
+          - "All 6 false-positive bait addresses (Boxwood Lane, Polar Bear St, etc.) correctly NOT flagged."
+        partial_examples: []
+        not_covered_examples:
+          - "Chinese 信箱 (case 33): not detected. CJK characters outside regex scope."
+          - "Arabic ص.ب (case 34): not detected."
+          - "Russian а/я (case 35): not detected."
+          - "P 0 Box (case 30): zero-for-O substitution bypasses regex. Fix: add [oO0] character class."
+          - "'Post Office Lock Box' (case 31/9): 'Lock' insertion breaks pattern match."
+        geographic_coverage: "Excellent for Latin-script PO Box variants (7 language families + AU/ZA/military). Zero coverage for CJK, Arabic, Russian. Estimated impact of CJK/Arabic/Russian gap: 20-40% of customers in non-covered-language countries, though most synthesis order forms use Latin script."
+        cost_per_call: "$0 (local regex)"
+
+  - endpoint: smarty
+    fields:
+      - field: dpv_cmra
+        description: "Commercial Mail Receiving Agency flag. Supposed to detect UPS Store, Mailboxes Etc., and similar mail forwarding services. US only."
+        useful_for_flag: none
+        good_examples: []
+        partial_examples: []
+        not_covered_examples:
+          - "UPS Store at 1 Mifflin Pl (case 8): dpv_cmra=N. WRONG."
+          - "UPS Store at 955 Mass Ave via PMB (case 15): dpv_cmra=N. WRONG."
+          - "UPS Store at 186 Alewife Brook Pkwy (case 16): dpv_cmra=N. WRONG."
+          - "ALL 4 tested CMRA addresses returned dpv_cmra=N. The flag is systematically non-functional."
+        geographic_coverage: "US only. The CMRA flag appears to be non-functional in Smarty's free tier across all tested locations. Cannot be used for CMRA detection."
+        cost_per_call: "$0"
+
+      - field: components.pmb_designator
+        description: "Parsed PMB (Private Mailbox) designator from address components. Smarty correctly parses PMB in the address string even when dpv_cmra fails."
+        useful_for_flag: partial
+        good_examples:
+          - "UPS Store PMB address (case 15): dpv_cmra=N but pmb_designator='PMB' is correctly parsed. The PMB designator is a STRONGER CMRA heuristic than the dpv_cmra flag itself."
+        not_covered_examples:
+          - "CMRA addresses without PMB in the address string (e.g., UPS Store with suite number instead of PMB) will not be caught by this heuristic."
+        geographic_coverage: "US only."
+        cost_per_call: "$0"
+
+  - endpoint: google-places-new
+    fields:
+      - field: primaryType + types[] (for freight forwarder detection)
+        description: "Google Places type classification. Can return shipping_service for freight forwarder locations, but only with freight-related keywords in the query."
+        useful_for_flag: partial
+        good_examples:
+          - "Freight forwarder Elmont with keyword (case 9): primaryType=shipping_service. 5+ freight companies at the address found."
+          - "Freight forwarder LAX with keyword (case 18): primaryType=shipping_service. 8 shipping companies found."
+        partial_examples:
+          - "UPS Store by name (case 8): courier_service type found but at a DIFFERENT location than searched. Google Places finds UPS Stores but may not match the exact queried address."
+        not_covered_examples:
+          - "Freight forwarder Elmont address-only (case 9): returns 'premise'. No freight signal without keyword."
+          - "Freight forwarder LAX address-only (case 18): returns 'premise'. Same failure."
+          - "All address-only freight forwarder searches return generic 'premise'."
+        geographic_coverage: "International in theory, but freight forwarder detection requires keyword injection ('freight forwarder' or 'shipping service' in query) which is not available in a normal KYC flow. Proposed workaround: Google Places Nearby Search with type=shipping_service at address coordinates."
+        cost_per_call: "$0.032"
+
+  - endpoint: bis-country-groups
+    fields:
+      - field: disposition (auto_deny / license_required / pass / escalate_unmapped)
+        description: "Static BIS Country Group lookup. Maps ISO country code to export control disposition. Includes Part 746 overlay for Russia/Belarus de-facto embargo."
+        useful_for_flag: full
+        good_examples:
+          - "Iran (case 6): Group E -> auto_deny. Clearest hard-block case."
+          - "Cuba (case 36): Group E -> auto_deny."
+          - "North Korea (case 37): Group E -> auto_deny."
+          - "Syria (case 38): Group E -> auto_deny."
+          - "Russia (case 39): Group D + Part 746 -> auto_deny."
+          - "Belarus (case 40): Group D + Part 746 -> auto_deny."
+          - "China (case 5): Group D -> license_required."
+          - "Vietnam (case 41): Group D -> license_required."
+          - "Hong Kong (case 50): Group B -> pass (correctly separate from CN)."
+          - "US, Japan, Germany, Australia, South Korea, Switzerland, Taiwan (cases 1-3, 45-51): Group A/B -> pass."
+        not_covered_examples:
+          - "Kosovo (case 52): normalization bug mapped to Serbia instead of XK. BIS disposition was still escalate_unmapped (correct behavior for unknown code), but the normalization is wrong."
+        geographic_coverage: "All countries with ISO codes. Deterministic lookup. 100% accuracy on 17 tested cases."
+        cost_per_call: "$0 (local logic)"
+
+  - endpoint: iso-country-normalize
+    fields:
+      - field: iso2 (normalized country code)
+        description: "Normalizes country names/codes/abbreviations to ISO 3166-1 alpha-2. Custom alias table handles non-English names, old names, abbreviations, and dangerous ambiguities."
+        useful_for_flag: full
+        good_examples:
+          - "USA, UK, PRC, DPRK: all correctly resolved via custom alias or alpha-3 paths."
+          - "Deutschland, Allemagne, Rossiya, Zhongguo, Nihon, Estados Unidos: non-English names correctly resolved."
+          - "Persia -> IR (Group E), Burma -> MM, Formosa -> TW: old names correctly resolved for high-stakes cases."
+          - "Korea (ambiguous): correctly returned null with ambiguity warning. Would be catastrophic if silently mapped to KR instead of KP."
+          - "Hong Kong, Macau, Taiwan: territories correctly resolved."
+        partial_examples:
+          - "Kosovo (case 52): fuzzy-matched to Serbia (RS) instead of XK. Bug. Custom alias 'KOSOVO':'XK' needed."
+          - "Australa (case 75): misspelling not resolved. pycountry fuzzy search too strict."
+        not_covered_examples:
+          - "Novel misspellings beyond pycountry's fuzzy threshold."
+        geographic_coverage: "97.4% accuracy (76/78). Custom alias table is essential -- without it, pycountry alone would fail on Rossiya, Zhongguo, PRC, UK, People's Republic of China, etc."
+        cost_per_call: "$0 (local logic)"
+
+  - endpoint: consolidated-screening-list
+    fields:
+      - field: ALL FIELDS
+        description: "OFAC SDN, BIS Entity List, BIS DPL, BIS UVL, BIS MEU List. Entity-level screening against denied/sanctioned persons and organizations."
+        useful_for_flag: full
+        good_examples: []
+        not_covered_examples:
+          - "API BLOCKED: deprecated endpoint returns HTTP 301. Zero entity-level screening available."
+          - "An order to a named BIS Entity List entity in China (non-embargoed country) would pass ALL working endpoints."
+        geographic_coverage: "ZERO. Critical gap. No automated entity-level screening."
+        cost_per_call: "N/A (blocked)"
+
+  - endpoint: exa-neural-search
+    fields:
+      - field: search_results (PO box and freight forwarder intelligence)
+        description: "Exa web search for PO box, freight forwarder, and virtual office detection at a given address."
+        useful_for_flag: partial
+        good_examples:
+          - "PO Box 330267 Miami (case 10): Exa confirms it's a PO box but adds no value over regex."
+          - "WeWork 115 Broadway (adv-2): all 3 results identify as coworking space. Strong."
+          - "Shipito with name (adv-18): Shipito website found with pricing page. Easy when name is known."
+          - "MyUS Orlando with name (adv-16): myus.com found as 'Shop US & UK Stores and Ship Worldwide'."
+        partial_examples:
+          - "150 Broadway Suite 1202 (case 7): found as commercial building (LoopNet). No freight/PO box signal. But virtual office services appeared in tangential results."
+          - "Pfizer 66 Hudson Blvd (case 2): results about nearby freight forwarders (Hudson's Worldwide Logistics) confused by 'Hudson' in name. Noisy."
+        not_covered_examples:
+          - "Shipito address without name (adv-3): 1396 W Herndon Ave not identified as freight forwarder."
+          - "UPS Store address without name (adv-8): 8950 Cal Center Dr Suite 208 not identified as CMRA."
+          - "Freight forwarders and CMRAs at arbitrary street addresses are invisible to web search."
+        geographic_coverage: "Works for named/known coworking and forwarding services. Cannot detect unlabeled freight forwarder warehouses or CMRAs from address alone."
+        cost_per_call: "$0.007"
+
+flag_verdict:
+  best_endpoint_combination: >
+    PO Box detection:
+    1. PO Box regex (primary -- 100% precision/recall on Latin-script variants, zero cost).
+    2. Smarty components.pmb_designator (secondary PMB heuristic, stronger than dpv_cmra).
+    Drop: Smarty dpv_cmra (systematically broken -- 0/4 CMRA addresses detected).
+
+    Freight forwarder detection:
+    1. Static freight forwarder address denylist (proposed, not tested -- finite list of ~50-100 known forwarding addresses).
+    2. Google Places Nearby Search with type=shipping_service (proposed workaround, not tested).
+    3. LLM+Exa when company name is known (works when name is in query, fails on address alone).
+
+    Export control:
+    1. ISO country normalization -> BIS Country Group lookup (deterministic, 100% accuracy on tested cases).
+    2. Part 746 overlay for Russia/Belarus de-facto embargo.
+    3. Consolidated Screening List for entity-level screening (BLOCKED -- critical gap requiring vendor solution or CSV download).
+  coverage_summary: >
+    PO Box regex is excellent within its Latin-script scope (14/14 true positives, 0/11 false
+    positives). CJK/Arabic/Russian gaps exist but most synthesis forms use Latin script. CMRA
+    detection via Smarty dpv_cmra is completely broken -- use pmb_designator heuristic instead.
+    Freight forwarders are invisible to all automated tools from address alone -- a maintained
+    denylist is the only viable approach. BIS country-level export control is 100% accurate but
+    entity-level screening is BLOCKED (Consolidated Screening List API deprecated). This is the
+    single most critical gap across all KYC steps: a denied party at a non-embargoed address
+    passes every working check.
+
+profile_groups:
+  - group: "Standard street address in OECD country"
+    description: "Normal street address in US, EU, UK, Japan, Australia, etc. No PO Box pattern. Country is Group A or B."
+    time_tier: auto
+    estimated_time: "0 min"
+    resolution_path: "PO Box regex=no hit + ISO normalization -> BIS Group A/B -> pass. Zero flags."
+    fraction_of_test_cases: "3/78 export-control seed cases (US academic, German pharma, Japanese institute) + the majority of address-classification cases"
+    examples_from_tests:
+      - "77 Massachusetts Ave, Cambridge MA: no PO Box hit, US=Group A -> pass."
+      - "An der Goldgrube 12, Mainz, Germany: no PO Box hit, DE=Group A -> pass."
+    what_they_share: "No PO Box indicators. OECD destination country. Clean auto-pass."
+    distinguishing_factors:
+      - country: "OECD Group A/B countries"
+
+  - group: "Street address in BIS Group D country (China, Vietnam, Pakistan, etc.)"
+    description: "Normal street address but destination is in a BIS Country Group D country requiring export license review."
+    time_tier: quick_review
+    estimated_time: "2-5 min"
+    resolution_path: "PO Box regex=no hit + ISO normalization -> BIS Group D -> license_required flag. Reviewer checks: (1) Is the institution a known university/company? (2) Is the order for controlled items? (3) Are other KYC steps clean? If university order for standard reagents, may proceed with license documentation."
+    fraction_of_test_cases: "4/17 BIS-tested countries (China, Vietnam, Pakistan, Venezuela)"
+    examples_from_tests:
+      - "Chinese university (case 5): Group D -> license_required. PubMed confirms institutional legitimacy."
+      - "Hong Kong (case 50): Group B -> pass (separate from CN despite PRC sovereignty)."
+    what_they_share: "Destination country requires export license review. Not embargoed, but regulated."
+    distinguishing_factors:
+      - country: "China, Vietnam, Pakistan, Iraq, Venezuela, and other Group D countries"
+
+  - group: "Address in embargoed country (Iran, Cuba, North Korea, Syria, Russia, Belarus)"
+    description: "Destination in a BIS Group E country or Part 746 de-facto embargo. Auto-deny."
+    time_tier: auto
+    estimated_time: "0 min"
+    resolution_path: "ISO normalization -> BIS Group E or Part 746 -> auto_deny. No human review needed for the export decision."
+    fraction_of_test_cases: "5/17 BIS-tested countries (Iran, Cuba, North Korea, Russia, Belarus)"
+    examples_from_tests:
+      - "Iran (case 6): Group E -> auto_deny."
+      - "Russia (case 39): Part 746 -> auto_deny (de-facto embargo since 2022)."
+      - "DPRK (case 37): custom alias 'DPRK'->KP, Group E -> auto_deny."
+    what_they_share: "Embargoed destination. Deterministic denial."
+    distinguishing_factors:
+      - country: "Iran, Cuba, North Korea, Syria, Russia, Belarus"
+
+  - group: "Explicit PO Box in address (Latin script)"
+    description: "Address contains a PO Box pattern (PO Box, P.O. Box, Postfach, Boite Postale, Apartado Postal, PMB, APO/FPO, etc.)."
+    time_tier: auto
+    estimated_time: "0 min"
+    resolution_path: "PO Box regex match -> hard flag. Auto-reject or require alternative shipping address. PO Box addresses cannot receive physical shipments of synthesis reagents."
+    fraction_of_test_cases: "14/52 PO Box regex cases were true positives across all tested language variants"
+    examples_from_tests:
+      - "P.O. Box 425 Cambridge (case 7): detected."
+      - "PMB 1, Shipito address (case 8): detected. PMB indicates mail forwarding service."
+      - "Postfach 1234, Germany (case 15): detected."
+      - "Boite Postale 45, France (case 16): detected."
+      - "APO AE 09096 (case 4): military address detected."
+    what_they_share: "PO Box pattern in Latin script. Cannot accept physical shipments."
+    distinguishing_factors:
+      - country: "Any (7 language families covered)"
+
+  - group: "Freight forwarder address (known or suspected)"
+    description: "Address is at a known freight forwarder or package re-shipper (Shipito, MyUS, etc.). May or may not have PO Box/PMB indicators."
+    time_tier: investigation
+    estimated_time: "5-15 min"
+    resolution_path: "If PMB in address -> regex catches it. If no PMB, address looks like normal commercial. Reviewer: (1) Check address against freight forwarder denylist, (2) Google Maps the address for shipping/logistics businesses, (3) Exa search with freight-related keywords. If multiple shipping companies at the address, flag."
+    fraction_of_test_cases: "2/35 address-classification cases (Elmont freight cluster, LAX freight cluster); 3/48 Exa cases (Shipito, MyUS, generic freight)"
+    examples_from_tests:
+      - "1975 Linden Blvd, Elmont (case 9): Smarty=Commercial. Google address-only=premise. With 'freight forwarder' keyword, 5 shipping companies found."
+      - "11099 S La Cienega Blvd, LAX (case 18): With keyword, 8 freight companies found."
+      - "Shipito address without name (Exa adv-3): not identified. With 'Shipito' in query, easily found."
+    what_they_share: "Address is at a freight forwarder warehouse. No automated detection from address alone. Denylist or keyword-enhanced search needed."
+    distinguishing_factors:
+      - country: "Primarily US (where package forwarding services are concentrated)"
+
+  - group: "UPS Store / CMRA address (no PMB designator)"
+    description: "Address is at a UPS Store or similar CMRA but uses suite number instead of PMB. Smarty dpv_cmra is broken. No automated detection."
+    time_tier: investigation
+    estimated_time: "5-10 min"
+    resolution_path: "Smarty dpv_cmra=N (broken). No PMB designator. Looks like normal commercial suite. Reviewer: (1) Google the address for UPS Store, (2) Check building_default_indicator=Y + match_code=D pattern, (3) Exa search. If UPS Store or CMRA confirmed, flag."
+    fraction_of_test_cases: "4/35 address-classification cases (3 UPS Store locations + 1 PMB)"
+    examples_from_tests:
+      - "1 Mifflin Pl (case 8): dpv_cmra=N. Hosts BOTH UPS Store AND Regus coworking."
+      - "186 Alewife Brook Pkwy (case 16): dpv_cmra=N. Confirmed UPS Store."
+      - "955 Mass Ave (case 15): dpv_cmra=N but pmb_designator='PMB' parsed. PMB is the backup signal."
+    what_they_share: "CMRA address invisible to all automated tools. Smarty CMRA flag is broken. Need manual investigation or maintained CMRA address denylist."
+    distinguishing_factors:
+      - country: "US only (Smarty limitation)"
+
+  - group: "CJK/Arabic/Russian PO Box equivalent"
+    description: "Address contains a PO Box equivalent in Chinese, Arabic, Russian, or other non-Latin script that the regex does not cover."
+    time_tier: quick_review
+    estimated_time: "1-3 min"
+    resolution_path: "Regex does not fire. If the order form uses Latin script, this gap may not manifest. If CJK/Arabic/Russian text passes through, manual review of address for local PO Box patterns."
+    fraction_of_test_cases: "3/52 PO Box regex cases (Chinese, Arabic, Russian)"
+    examples_from_tests:
+      - "Chinese 信箱 (case 33): not detected by regex."
+      - "Arabic ص.ب (case 34): not detected."
+      - "Russian а/я (case 35): not detected."
+    what_they_share: "PO Box equivalent in non-Latin script. Regex gap. Most synthesis order forms use Latin script, limiting real-world impact."
+    distinguishing_factors:
+      - country: "China, Middle East, Russia, and other non-Latin-script regions"
+
+unresolved_issues:
+  - "CRITICAL: Consolidated Screening List API is BLOCKED (deprecated, returns 301). No automated entity-level screening against OFAC SDN, BIS Entity List, DPL, UVL, or MEU. Must implement vendor solution ($5K-50K/yr) or manual CSV/XML download before production deployment."
+  - "Freight forwarders are invisible to all automated tools from address alone. Maintained denylist and Google Places Nearby Search proposed but not tested."
+  - "Smarty dpv_cmra is systematically broken (0/4 known CMRA addresses detected). Cannot rely on it."
+  - "CJK/Arabic/Russian PO Box equivalents not covered by regex. Extending regex is low engineering cost."
+  - "Kosovo ISO normalization bug: fuzzy-matched to Serbia. Fix: add 'KOSOVO':'XK' to custom alias table."
+  - "Zero-for-O character substitution ('P 0 Box') bypasses regex. Fix: add [oO0] character class."

@@ -1,0 +1,497 @@
+group: funding-legitimacy
+endpoints: [nih-reporter, nsf-awards, ukri, pubmed]
+kyc_steps: [a]
+tested_at: "2026-04-14"
+total_cases: 25
+rounds: 2
+
+summary:
+  covered: 15
+  partially_covered: 5
+  not_covered: 5
+
+coverage_boundaries:
+  - boundary: "Community bio labs / makerspaces"
+    status: not_covered
+    evidence: "Tested 3 community labs (Genspace, BioCurious, Counter Culture Labs). NIH: 0 grants for all. NSF: 0 for all. UKRI: 404 error for all. PubMed: 2-5 articles each (likely coincidental name matches, not institutional affiliations)."
+    cases: [9, 15, 16]
+
+  - boundary: "Small biotech startups (<3 years)"
+    status: not_covered
+    evidence: "Tested Lay Sciences. NIH: 0, NSF: 0, UKRI: 0, PubMed: 12066 (but 'Lay Sciences' matches 'lay' as a word in titles — false positive). No legitimate funding signal."
+    cases: [8]
+
+  - boundary: "Non-US, non-UK institutions — NIH/NSF"
+    status: partially_covered
+    evidence: "NIH found grants for University of Nairobi (146), Makerere (269), Chulalongkorn (5), UFMG (20), Chinese Academy of Sciences (48), but 0 for Tsinghua, 0 for Zhejiang Sci-Tech, 0 for IIT Kanpur. NSF found IIT Kanpur but 0 for all other non-US institutions."
+    cases: [4, 5, 7, 11, 12, 13, 14, 17]
+
+  - boundary: "CROs and contract labs"
+    status: partially_covered
+    evidence: "Charles River: NIH 220, UKRI found, PubMed 1294. WuXi AppTec: NIH 0, PubMed 550. Eurofins: NIH 59, PubMed 1443. Mixed — large CROs with publications are covered; smaller ones may not be."
+    cases: [18, 19, 20]
+
+  - boundary: "PubMed as universal fallback"
+    status: covered
+    evidence: "PubMed found publications for 22/25 tested institutions. Only community bio labs had <10 articles. Even sanctioned institutions, non-OECD universities, and CROs had hundreds to thousands of articles. PubMed is by far the broadest legitimacy signal."
+    cases: [1, 2, 3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23, 24, 25]
+
+results:
+  # Round 1 — Seed cases
+  - case_id: 1
+    round: 1
+    name: "Massachusetts Institute of Technology"
+    type: academic
+    country: US
+    difficulty: easy
+    endpoints_tested:
+      - endpoint: nih-reporter
+        query: 'POST /v2/projects/search {"criteria":{"org_names":["MASSACHUSETTS INSTITUTE OF TECHNOLOGY"]}}'
+        status: covered
+        response_summary: {total_grants: 14753}
+      - endpoint: nsf-awards
+        query: 'GET /awards.json?awardeeName="Massachusetts Institute of Technology"'
+        status: covered
+        response_summary: {found: true, awardeeName: "Massachusetts Institute of Technology"}
+      - endpoint: ukri
+        query: "GET /organisations?q=MIT"
+        status: covered
+        response_summary: {totalSize: 707, note: "MIT appears in UKRI through international collaborations"}
+      - endpoint: pubmed
+        query: "GET /esearch.fcgi?term=Massachusetts+Institute+of+Technology[Affiliation]"
+        status: covered
+        response_summary: {article_count: 52235}
+    notes: "Baseline. All four databases have strong coverage."
+
+  - case_id: 2
+    round: 1
+    name: "University of Oxford"
+    type: academic
+    country: GB
+    difficulty: easy
+    endpoints_tested:
+      - endpoint: nih-reporter
+        status: covered
+        response_summary: {total_grants: 236}
+      - endpoint: nsf-awards
+        status: covered
+        response_summary: {found: true}
+      - endpoint: ukri
+        status: covered
+        response_summary: {totalSize: 707, note: "Major UK research university, very strong UKRI presence"}
+      - endpoint: pubmed
+        status: covered
+        response_summary: {article_count: 123044}
+    notes: "UK baseline. UKRI is the strongest signal; NIH has grants through Fogarty/international programs."
+
+  - case_id: 3
+    round: 1
+    name: "Pfizer Inc"
+    type: pharma
+    country: US
+    difficulty: easy
+    endpoints_tested:
+      - endpoint: nih-reporter
+        status: partially_covered
+        response_summary: {total_grants: 1, note: "Only 1 NIH grant — pharma companies rarely receive direct federal grants"}
+      - endpoint: nsf-awards
+        status: not_covered
+        response_summary: {found: false}
+      - endpoint: ukri
+        status: covered
+        response_summary: {totalSize: 27}
+      - endpoint: pubmed
+        status: covered
+        response_summary: {article_count: 22588}
+    notes: "Large pharma has massive PubMed presence but minimal direct government funding. NIH/NSF not useful for pharma."
+
+  - case_id: 4
+    round: 1
+    name: "Indian Institute of Technology Kanpur"
+    type: academic
+    country: IN
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: nih-reporter
+        status: not_covered
+        response_summary: {total_grants: 0, note: "Searched 'INDIAN INSTITUTE OF TECHNOLOGY' — 0 results. IITs don't receive direct NIH funding."}
+      - endpoint: nsf-awards
+        status: covered
+        response_summary: {found: true, awardeeName: "Indian Institute of Technology Kanpur"}
+      - endpoint: ukri
+        status: covered
+        response_summary: {totalSize: 14629, note: "Surprisingly high — UK-India research collaborations are extensive"}
+      - endpoint: pubmed
+        status: covered
+        response_summary: {article_count: 2978}
+    notes: "Non-US academic. No NIH but found in NSF and UKRI. PubMed confirms research activity."
+
+  - case_id: 5
+    round: 1
+    name: "Universidade Federal de Minas Gerais"
+    type: academic
+    country: BR
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: nih-reporter
+        status: covered
+        response_summary: {total_grants: 20, note: "Fogarty International Center grants"}
+      - endpoint: nsf-awards
+        status: not_covered
+        response_summary: {found: false}
+      - endpoint: pubmed
+        status: covered
+        response_summary: {article_count: 23206}
+    notes: "Brazilian university. NIH has Fogarty grants. NSF doesn't cover. PubMed is the strong signal."
+
+  - case_id: 6
+    round: 1
+    name: "Christian Medical College Vellore"
+    type: academic
+    country: IN
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: nih-reporter
+        status: covered
+        response_summary: {total_grants: 48}
+      - endpoint: nsf-awards
+        status: not_covered
+        response_summary: {found: false}
+      - endpoint: pubmed
+        status: covered
+        response_summary: {article_count: 439}
+    notes: "Indian medical college. Has NIH grants (infectious disease research). Lower PubMed count than expected."
+
+  - case_id: 7
+    round: 1
+    name: "Zhejiang Sci-Tech University"
+    type: academic
+    country: CN
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: nih-reporter
+        status: not_covered
+        response_summary: {total_grants: 0}
+      - endpoint: nsf-awards
+        status: not_covered
+        response_summary: {found: false}
+      - endpoint: pubmed
+        status: covered
+        response_summary: {article_count: 5850}
+    notes: "Smaller Chinese university. No US/UK funding but substantial PubMed presence. PubMed is the only signal."
+
+  - case_id: 8
+    round: 1
+    name: "Lay Sciences Inc"
+    type: biotech_startup
+    country: US
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: nih-reporter
+        status: not_covered
+        response_summary: {total_grants: 0}
+      - endpoint: nsf-awards
+        status: not_covered
+        response_summary: {found: false}
+      - endpoint: pubmed
+        status: not_covered
+        response_summary: {article_count: 12066, note: "FALSE POSITIVE — 'Lay Sciences' matches 'lay' in article titles/abstracts. Not a real institutional match."}
+    notes: "Small startup. No funding signal. PubMed count is misleading (common word match). All endpoints fail."
+
+  - case_id: 9
+    round: 1
+    name: "Genspace"
+    type: community_lab
+    country: US
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: nih-reporter
+        status: not_covered
+        response_summary: {total_grants: 0}
+      - endpoint: nsf-awards
+        status: not_covered
+        response_summary: {found: false}
+      - endpoint: ukri
+        status: not_covered
+        response_summary: {error: "HTTP 404 — not found in UKRI"}
+      - endpoint: pubmed
+        status: not_covered
+        response_summary: {article_count: 5, note: "5 articles likely coincidental — Genspace is a common word in genomics contexts"}
+    notes: "Community bio lab. Zero coverage across all four databases. Definitive boundary."
+
+  - case_id: 10
+    round: 1
+    name: "Biomedical Primate Research Centre"
+    type: research_institute
+    country: NL
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: nih-reporter
+        status: not_covered
+        response_summary: {total_grants: 0}
+      - endpoint: ukri
+        status: covered
+        response_summary: {totalSize: 764}
+      - endpoint: pubmed
+        status: covered
+        response_summary: {article_count: 733}
+    notes: "Dutch research institute. No NIH but strong UKRI and PubMed presence."
+
+  # Round 2 — Adversarial probing
+  - case_id: 11
+    round: 2
+    name: "University of Nairobi"
+    type: academic
+    country: KE
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: nih-reporter
+        status: covered
+        response_summary: {total_grants: 146}
+      - endpoint: nsf-awards
+        status: not_covered
+        response_summary: {found: false}
+      - endpoint: pubmed
+        status: covered
+        response_summary: {article_count: 6460}
+    notes: "Kenyan university. NIH has grants (Fogarty, PEPFAR). Strong PubMed presence."
+
+  - case_id: 12
+    round: 2
+    name: "Makerere University"
+    type: academic
+    country: UG
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: nih-reporter
+        status: covered
+        response_summary: {total_grants: 269}
+      - endpoint: ukri
+        status: covered
+        response_summary: {totalSize: 9666, first_match: "Makerere University"}
+      - endpoint: pubmed
+        status: covered
+        response_summary: {article_count: 12981}
+    notes: "Ugandan university. Surprisingly strong coverage — major recipient of NIH global health funding."
+
+  - case_id: 13
+    round: 2
+    name: "Chulalongkorn University"
+    type: academic
+    country: TH
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: nih-reporter
+        status: partially_covered
+        response_summary: {total_grants: 5}
+      - endpoint: ukri
+        status: covered
+        response_summary: {totalSize: 9664}
+      - endpoint: pubmed
+        status: covered
+        response_summary: {article_count: 24088}
+    notes: "Thai university. Minimal NIH but strong UKRI and PubMed."
+
+  - case_id: 14
+    round: 2
+    name: "Chinese Academy of Sciences"
+    type: government_lab
+    country: CN
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: nih-reporter
+        status: covered
+        response_summary: {total_grants: 48}
+      - endpoint: ukri
+        status: covered
+        response_summary: {totalSize: 41819}
+      - endpoint: pubmed
+        status: covered
+        response_summary: {article_count: 287706}
+    notes: "China's largest research organization. Massive PubMed presence. NIH has collaborative grants."
+
+  - case_id: 15
+    round: 2
+    name: "BioCurious"
+    type: community_lab
+    country: US
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: nih-reporter
+        status: not_covered
+        response_summary: {total_grants: 0}
+      - endpoint: nsf-awards
+        status: not_covered
+        response_summary: {found: false}
+      - endpoint: pubmed
+        status: not_covered
+        response_summary: {article_count: 3}
+    notes: "Community bio lab in Silicon Valley. Zero meaningful coverage."
+
+  - case_id: 16
+    round: 2
+    name: "Counter Culture Labs"
+    type: community_lab
+    country: US
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: nih-reporter
+        status: not_covered
+        response_summary: {total_grants: 0}
+      - endpoint: nsf-awards
+        status: not_covered
+        response_summary: {found: false}
+      - endpoint: pubmed
+        status: not_covered
+        response_summary: {article_count: 2}
+    notes: "Oakland community lab. Zero meaningful coverage."
+
+  - case_id: 17
+    round: 2
+    name: "University of Lagos"
+    type: academic
+    country: NG
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: nih-reporter
+        status: covered
+        response_summary: {total_grants: 25}
+      - endpoint: pubmed
+        status: covered
+        response_summary: {article_count: 4959}
+    notes: "Nigerian university. Has NIH grants, good PubMed presence."
+
+  - case_id: 18
+    round: 2
+    name: "Charles River Laboratories"
+    type: cro
+    country: US
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: nih-reporter
+        status: covered
+        response_summary: {total_grants: 220}
+      - endpoint: ukri
+        status: covered
+        response_summary: {totalSize: 693}
+      - endpoint: pubmed
+        status: covered
+        response_summary: {article_count: 1294}
+    notes: "Major CRO. Well covered across all databases — large enough to have its own grants."
+
+  - case_id: 19
+    round: 2
+    name: "WuXi AppTec"
+    type: cro
+    country: CN
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: nih-reporter
+        status: not_covered
+        response_summary: {total_grants: 0}
+      - endpoint: pubmed
+        status: covered
+        response_summary: {article_count: 550}
+    notes: "Chinese CRO. No US funding but has PubMed publications."
+
+  - case_id: 20
+    round: 2
+    name: "Eurofins"
+    type: cro
+    country: LU
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: nih-reporter
+        status: covered
+        response_summary: {total_grants: 59}
+      - endpoint: pubmed
+        status: covered
+        response_summary: {article_count: 1443}
+    notes: "Luxembourg-based global CRO. Has NIH grants (likely US subsidiary) and publications."
+
+  - case_id: 21
+    round: 2
+    name: "Tsinghua University"
+    type: academic
+    country: CN
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: nih-reporter
+        status: not_covered
+        response_summary: {total_grants: 0}
+      - endpoint: ukri
+        status: covered
+        response_summary: {totalSize: 9666}
+      - endpoint: pubmed
+        status: covered
+        response_summary: {article_count: 58637}
+    notes: "Top Chinese university. No NIH but massive UKRI and PubMed presence."
+
+  - case_id: 22
+    round: 2
+    name: "Centers for Disease Control and Prevention"
+    type: government_lab
+    country: US
+    difficulty: easy
+    endpoints_tested:
+      - endpoint: nih-reporter
+        status: covered
+        response_summary: {total_grants: 40}
+      - endpoint: nsf-awards
+        status: covered
+        response_summary: {found: true}
+      - endpoint: pubmed
+        status: covered
+        response_summary: {article_count: 55284}
+    notes: "US government lab. Well covered across all databases."
+
+  - case_id: 23
+    round: 2
+    name: "CSIRO"
+    type: government_lab
+    country: AU
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: nih-reporter
+        status: not_covered
+        response_summary: {total_grants: 0}
+      - endpoint: ukri
+        status: covered
+        response_summary: {totalSize: 10}
+      - endpoint: pubmed
+        status: covered
+        response_summary: {article_count: 19390}
+    notes: "Australia's national science agency. No NIH but present in UKRI and strong PubMed."
+
+  - case_id: 24
+    round: 2
+    name: "INRAE"
+    type: government_lab
+    country: FR
+    difficulty: medium
+    endpoints_tested:
+      - endpoint: nih-reporter
+        status: not_covered
+        response_summary: {total_grants: 0}
+      - endpoint: ukri
+        status: partially_covered
+        response_summary: {totalSize: 3}
+      - endpoint: pubmed
+        status: covered
+        response_summary: {article_count: 23691}
+    notes: "French national agricultural research institute. Strong PubMed, minimal UKRI/NIH."
+
+  - case_id: 25
+    round: 2
+    name: "La Paillasse"
+    type: community_lab
+    country: FR
+    difficulty: hard
+    endpoints_tested:
+      - endpoint: nih-reporter
+        status: not_covered
+        response_summary: {total_grants: 0}
+      - endpoint: pubmed
+        status: not_covered
+        response_summary: {article_count: 2}
+    notes: "French community bio lab. Zero meaningful coverage."

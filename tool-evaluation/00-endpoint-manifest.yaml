@@ -1,0 +1,504 @@
+endpoints:
+  # --- Institution Registry group ---
+  - id: ror
+    name: Research Organization Registry (ROR) v2
+    url: https://api.ror.org/v2/organizations
+    auth: none
+    status: live
+    credential_env_var: null
+    test_result: "OK — query 'MIT' returned 38 results, first match 'MIT'"
+    rate_limit: "2000 requests/5min (undocumented soft limit)"
+    max_test_budget: 150
+    cost_per_call: "$0"
+    cost_source: "free API"
+    measures: [M02, M05, M07]
+    kyc_steps: [a, c]
+    group: institution-registry
+    notes: "~110K organizations. Returns names, types, country, city, domains, external IDs (ISNI, Wikidata, GRID). City-level location only — no street address."
+
+  - id: gleif
+    name: GLEIF LEI Registry
+    url: https://api.gleif.org/api/v1/lei-records
+    auth: none
+    status: live
+    credential_env_var: null
+    test_result: "OK — query 'Google' returned LEI record for GOOGLE FRANCE"
+    rate_limit: "no documented limit; ~60/min observed"
+    max_test_budget: 150
+    cost_per_call: "$0"
+    cost_source: "free API"
+    measures: [M05]
+    kyc_steps: [a]
+    group: institution-registry
+    notes: "~2.9M legal entities. Returns registered street address and headquarters address. Biased toward financial/commercial entities — most academic institutions won't have LEIs."
+
+  - id: companies-house
+    name: UK Companies House
+    url: https://api.company-information.service.gov.uk
+    auth: HTTP basic (API key as username)
+    status: live
+    credential_env_var: COMPANIES_HOUSE_API_KEY
+    test_result: "OK — query 'ginkgo' returned 90 results, first match 'GINKGO LIMITED'"
+    rate_limit: "600 requests/5min (documented)"
+    max_test_budget: 150
+    cost_per_call: "$0"
+    cost_source: "free API"
+    measures: [M05, M09]
+    kyc_steps: [a]
+    group: institution-registry
+    notes: "~5.5M UK entities. Returns registered address, SIC codes, incorporation date, company status (active/dissolved). UK only."
+
+  - id: opencorporates
+    name: OpenCorporates
+    url: https://api.opencorporates.com/v0.4/companies/search
+    auth: API token (optional, free tier available)
+    status: blocked
+    credential_env_var: null
+    test_result: "FAILED — 401 'Invalid Api Token'. Free tier no longer supports unauthenticated API access."
+    rate_limit: "unknown (blocked)"
+    max_test_budget: 0
+    cost_per_call: "unknown"
+    cost_source: "opencorporates.com"
+    measures: [M05, M09]
+    kyc_steps: [a]
+    group: institution-registry
+    notes: "Covers 140+ jurisdictions. API requires paid account as of 2026. Web search at opencorporates.com still works for manual lookups."
+
+  # --- Address Classification group ---
+  - id: smarty
+    name: Smarty US Street API
+    url: https://us-street.api.smarty.com/street-address
+    auth: auth-id + auth-token query params
+    status: live
+    credential_env_var: SMARTY_AUTH_ID, SMARTY_AUTH_TOKEN
+    test_result: "OK — 77 Massachusetts Ave Cambridge MA → DPV=Y, RDI=Commercial, CMRA=N"
+    rate_limit: "250 lookups/month (free tier)"
+    max_test_budget: 50
+    cost_per_call: "$0 (free tier) / $0.003-$0.009 (paid)"
+    cost_source: "smarty.com pricing"
+    measures: [M03, M04, M05]
+    kyc_steps: [a, d, e]
+    group: address-classification
+    notes: "US addresses only. Key fields: RDI (Residential/Commercial), CMRA (Commercial Mail Receiving Agency), DPV vacancy. Prioritize adversarial cases — don't waste free-tier budget on easy ones."
+
+  - id: google-places-new
+    name: Google Places API (New)
+    url: https://places.googleapis.com/v1/places:searchText
+    auth: X-Goog-Api-Key header
+    status: live
+    credential_env_var: GOOGLE_MAPS_API_KEY
+    test_result: "OK — 'Massachusetts Institute of Technology' → primaryType=university, address returned"
+    rate_limit: "no documented per-minute limit; $200/month free credit"
+    max_test_budget: 200
+    cost_per_call: "$0.032 (Text Search)"
+    cost_source: "cloud.google.com/maps-platform/pricing"
+    measures: [M04, M05]
+    kyc_steps: [a, d]
+    group: address-classification
+    notes: "Use New API (not legacy). Two-step: Text Search to geocode → Nearby Search to find institutions near the address. primaryType field is key signal (university, apartment_building, coworking_space, etc.). International coverage."
+
+  - id: geonames
+    name: GeoNames geographic database
+    url: http://api.geonames.org/
+    auth: username query param
+    status: live
+    credential_env_var: GEONAMES_USERNAME
+    test_result: "OK — query 'MIT' returned 1486 results, first='Mit Ghamr' (city). Need more specific queries for institution lookup."
+    rate_limit: "20,000 credits/day (1 credit per request)"
+    max_test_budget: 200
+    cost_per_call: "$0"
+    cost_source: "free tier"
+    measures: [M05]
+    kyc_steps: [a]
+    group: address-classification
+    notes: "Coarser type taxonomy than Google Places. Useful for reverse geocoding and campus-center coordinates via ROR's geonames_id. Not directly useful for institution identification — better for geographic context."
+
+  - id: osm-overpass
+    name: OSM Overpass API
+    url: https://overpass-api.de/api/interpreter
+    auth: none
+    status: live
+    credential_env_var: null
+    test_result: "OK — query for MIT amenity=university returned 0 elements (query too narrow). API functional but needs broader queries."
+    rate_limit: "2 concurrent requests, 10,000 queries/day (soft limits)"
+    max_test_budget: 100
+    cost_per_call: "$0"
+    cost_source: "free API"
+    measures: [M05]
+    kyc_steps: [a]
+    group: address-classification
+    notes: "Campus polygon containment. Can check if coordinate falls within institution boundary. Requires Overpass QL queries. Coverage varies — major universities well-mapped, smaller institutions less so."
+
+  # --- Email / Domain Verification group ---
+  - id: rdap
+    name: RDAP domain registration
+    url: https://rdap.verisign.com/
+    auth: none
+    status: live
+    credential_env_var: null
+    test_result: "OK — pfizer.com returned registration date 1992-04-28, expiration 2027-04-29. Note: .edu domains have NO RDAP server (IANA returns 404). Use whois fallback for .edu."
+    rate_limit: "no documented limit; ~100/min observed"
+    max_test_budget: 100
+    cost_per_call: "$0"
+    cost_source: "free protocol"
+    measures: [M02]
+    kyc_steps: [c]
+    group: email-domain
+    notes: "Works for .com, .net, .org. .edu domains lack RDAP support — must fall back to whois (whois.educause.edu). Returns registration/expiration dates, registrant info (often privacy-proxied)."
+
+  - id: disposable-blocklist
+    name: Disposable/free-mail blocklist
+    url: null
+    auth: none
+    status: live
+    credential_env_var: null
+    test_result: "OK — local logic. Check against known disposable domain lists (Mailinator, 10minutemail, etc.) and free providers (Gmail, Yahoo, Outlook)."
+    rate_limit: "N/A (local)"
+    max_test_budget: 999
+    cost_per_call: "$0"
+    cost_source: "local logic"
+    measures: [M02]
+    kyc_steps: [c]
+    group: email-domain
+    notes: "Static hashset comparison. Zero-cost. Disposable = hard reject. Free provider (Gmail/Yahoo/Outlook) = soft flag. Reference list: github.com/disposable-email-domains/disposable-email-domains."
+
+  - id: mx-spf-dmarc
+    name: MX/SPF/DMARC tenant check
+    url: null
+    auth: none
+    status: live
+    credential_env_var: null
+    test_result: "OK — mit.edu: MX=mit-edu.mail.protection.outlook.com (Microsoft 365), SPF=autospf.email, DMARC=v=DMARC1 p=none"
+    rate_limit: "N/A (DNS queries)"
+    max_test_budget: 200
+    cost_per_call: "$0"
+    cost_source: "DNS queries"
+    measures: [M02, M07]
+    kyc_steps: [c]
+    group: email-domain
+    notes: "DNS queries: dig MX, dig TXT (SPF), dig TXT _dmarc. Can detect Microsoft/Google Workspace tenants. Confirms domain has real mail infrastructure."
+
+  - id: lookalike-detector
+    name: Lookalike/homoglyph domain detector
+    url: null
+    auth: none
+    status: live
+    credential_env_var: null
+    test_result: "OK — local logic. Compare customer email domain against ROR domain corpus using edit distance, homoglyph substitution tables."
+    rate_limit: "N/A (local)"
+    max_test_budget: 999
+    cost_per_call: "$0"
+    cost_source: "local logic"
+    measures: [M18]
+    kyc_steps: [c]
+    group: email-domain
+    notes: "Catches typosquat/impersonation domains (rnit.edu vs mit.edu, mít.edu with accent). Requires ROR domain corpus as reference. Could also use dnstwist tool."
+
+  - id: incommon
+    name: InCommon/eduGAIN federation metadata
+    url: https://md.incommon.org/InCommon/InCommon-metadata.xml
+    auth: none
+    status: live
+    credential_env_var: null
+    test_result: "OK — metadata XML downloaded (108MB). Contains IdP entries for federated institutions."
+    rate_limit: "no limit (static XML file)"
+    max_test_budget: 10
+    cost_per_call: "$0"
+    cost_source: "free"
+    measures: [M07]
+    kyc_steps: [c]
+    group: email-domain
+    notes: "108MB XML file. Parse for IdP entityIDs to confirm institution participates in federated identity. US-focused (InCommon) + international (eduGAIN). One-time download, parse locally."
+
+  # --- Payment / BIN group ---
+  - id: stripe-test
+    name: Stripe test mode
+    url: https://api.stripe.com/v1/payment_methods
+    auth: secret key (HTTP basic)
+    status: live
+    credential_env_var: STRIPE_TEST_SK
+    test_result: "OK — created PaymentMethod pm_1TMJ4z... with tok_visa → brand=visa, funding=credit, country=US. Note: raw card numbers blocked (must use test tokens like tok_visa, tok_mastercard_prepaid)."
+    rate_limit: "100 reads/sec, 100 writes/sec (test mode)"
+    max_test_budget: 100
+    cost_per_call: "$0 (test mode)"
+    cost_source: "stripe.com/docs"
+    measures: [M10, M12]
+    kyc_steps: [b]
+    group: payment-bin
+    notes: "Test mode returns deterministic results based on test tokens. Use tok_visa (credit), tok_mastercard_prepaid (prepaid), tok_amex (Amex). Funding type field (credit/debit/prepaid) is the key signal. Cannot test real AVS in test mode."
+
+  - id: stripe-avs-prod
+    name: Stripe AVS (production)
+    url: https://api.stripe.com/v1/charges
+    auth: secret key
+    status: docs-only
+    credential_env_var: null
+    test_result: "N/A — production only. Test mode AVS is deterministic and doesn't reflect real issuer behavior."
+    rate_limit: "N/A"
+    max_test_budget: 0
+    cost_per_call: "$0.30 + 2.9% per charge"
+    cost_source: "stripe.com/pricing"
+    measures: [M12]
+    kyc_steps: [b]
+    group: docs-only
+    notes: "AVS responses vary by card issuer and country. US/UK/CA issuers generally support full AVS; other countries often return null. Documentation review only — cannot test without live charges."
+
+  - id: plaid-sandbox
+    name: Plaid sandbox
+    url: https://sandbox.plaid.com/
+    auth: client_id + secret
+    status: live
+    credential_env_var: PLAID_CLIENT_ID, PLAID_SECRET
+    test_result: "OK — created sandbox link token, expiration 2026-04-15. Sandbox uses synthetic data."
+    rate_limit: "100 requests/min (sandbox)"
+    max_test_budget: 50
+    cost_per_call: "$0 (sandbox)"
+    cost_source: "plaid.com/pricing"
+    measures: [M12]
+    kyc_steps: [b]
+    group: payment-bin
+    notes: "Sandbox returns synthetic data. Good for schema validation and integration testing. Identity Match requires completing the Link flow with test credentials."
+
+  - id: plaid-prod
+    name: Plaid Identity Match (production)
+    url: https://production.plaid.com/
+    auth: client_id + secret
+    status: docs-only
+    credential_env_var: null
+    test_result: "N/A — production only. Sandbox data is synthetic."
+    rate_limit: "N/A"
+    max_test_budget: 0
+    cost_per_call: "$0.20-$1.00 per call"
+    cost_source: "plaid.com/pricing"
+    measures: [M12]
+    kyc_steps: [b]
+    group: docs-only
+    notes: "Production Identity Match provides per-field match scores (name, address, phone, email). US bank accounts only. Requires production credentials and real bank connections."
+
+  - id: binlist
+    name: binlist.net BIN lookup
+    url: https://lookup.binlist.net/
+    auth: none
+    status: live
+    credential_env_var: null
+    test_result: "OK — BIN 411111 → brand=Visa Classic, type=debit, bank=Conotoxia Sp. Z O.O"
+    rate_limit: "10 requests/min (free tier, rate-limited)"
+    max_test_budget: 30
+    cost_per_call: "$0"
+    cost_source: "free API"
+    measures: [M10]
+    kyc_steps: [b]
+    group: payment-bin
+    notes: "Free BIN lookup. Returns brand, type (debit/credit/prepaid), bank name, country. Missing many fintech/neobank BINs. Rate limited to ~10/min."
+
+  - id: billing-shipping-consistency
+    name: Billing-shipping-institution consistency
+    url: null
+    auth: none
+    status: live
+    credential_env_var: null
+    test_result: "OK — local logic. Triple-address comparison: billing vs. shipping vs. canonical institution address."
+    rate_limit: "N/A (local, uses Smarty for normalization)"
+    max_test_budget: 999
+    cost_per_call: "$0 (logic) + Smarty cost for normalization"
+    cost_source: "local logic"
+    measures: [M12]
+    kyc_steps: [b]
+    group: payment-bin
+    notes: "Compares billing address, shipping address, and institution canonical address (from ROR/GLEIF). Uses Smarty for US address normalization before comparison. Logic: all-three-match → pass, billing≠institution → flag."
+
+  - id: fintech-bin-denylist
+    name: Fintech-neobank BIN denylist
+    url: null
+    auth: none
+    status: live
+    credential_env_var: null
+    test_result: "OK — local logic. Static list of known fintech/neobank BIN prefixes."
+    rate_limit: "N/A (local)"
+    max_test_budget: 999
+    cost_per_call: "$0"
+    cost_source: "local logic"
+    measures: [M12]
+    kyc_steps: [b]
+    group: payment-bin
+    notes: "Known fintech BIN ranges: Mercury (533248, 535332), Brex (556150, 531993), Relay (various), Wise/TransferWise (various). Flags neobank-funded payments that bypass traditional bank KYC."
+
+  # --- Funding / Legitimacy group ---
+  - id: nih-reporter
+    name: NIH RePORTER
+    url: https://api.reporter.nih.gov/v2/projects/search
+    auth: none
+    status: live
+    credential_env_var: null
+    test_result: "OK — MIT returned 14,753 projects. First PI: FREEMAN, DENNIS M."
+    rate_limit: "no documented limit; ~30/min recommended"
+    max_test_budget: 150
+    cost_per_call: "$0"
+    cost_source: "free API"
+    measures: [M18]
+    kyc_steps: [a]
+    group: funding-legitimacy
+    notes: "US NIH-funded research. ~2,500 institutions. Strong legitimacy signal for US biomedical institutions. POST API with JSON body. Returns project details, PI info, organization."
+
+  - id: nsf-awards
+    name: NSF Awards API
+    url: https://api.nsf.gov/services/v1/awards.json
+    auth: none
+    status: live
+    credential_env_var: null
+    test_result: "OK — keyword 'MIT' returned award results."
+    rate_limit: "no documented limit"
+    max_test_budget: 150
+    cost_per_call: "$0"
+    cost_source: "free API"
+    measures: [M18]
+    kyc_steps: [a]
+    group: funding-legitimacy
+    notes: "US NSF-funded research. Broader than NIH — covers all sciences. Returns award details, institution, PI. Useful for non-biomedical institutions."
+
+  - id: ukri
+    name: UKRI Gateway to Research
+    url: https://gtr.ukri.org/gtr/api/
+    auth: none
+    status: live
+    credential_env_var: null
+    test_result: "OK — query 'Oxford' returned 707 organisations. Note: minimum page size is 10 (p param), omit pagination for default."
+    rate_limit: "no documented limit; ~30/min recommended"
+    max_test_budget: 100
+    cost_per_call: "$0"
+    cost_source: "free API"
+    measures: [M18]
+    kyc_steps: [a]
+    group: funding-legitimacy
+    notes: "UK research funding. Covers EPSRC, MRC, BBSRC, etc. Returns organisation details, projects, outcomes. Accept: application/json header required."
+
+  - id: pubmed
+    name: PubMed (NCBI E-utilities)
+    url: https://eutils.ncbi.nlm.nih.gov/entrez/eutils/
+    auth: none
+    status: live
+    credential_env_var: null
+    test_result: "OK — MIT affiliation search returned 43,706 articles. First PMID: 41979678."
+    rate_limit: "3 requests/sec without API key, 10/sec with NCBI API key"
+    max_test_budget: 100
+    cost_per_call: "$0"
+    cost_source: "free API"
+    measures: [M09]
+    kyc_steps: [a]
+    group: funding-legitimacy
+    notes: "Publication affiliation search. Confirms institution has life-sciences publication activity. Use [Affiliation] field tag. Returns PMIDs — can fetch abstracts for detail."
+
+  # --- Individual Affiliation group ---
+  - id: orcid
+    name: ORCID public API
+    url: https://pub.orcid.org/v3.0/
+    auth: none
+    status: live
+    credential_env_var: null
+    test_result: "OK — query affiliation-org-name:MIT returned 6,313 results. First ORCID: 0000-0003-2646-0606."
+    rate_limit: "no documented per-minute limit; 24 requests/sec recommended"
+    max_test_budget: 100
+    cost_per_call: "$0"
+    cost_source: "free API"
+    measures: [M19]
+    kyc_steps: [c]
+    group: individual-affiliation
+    notes: "Employment/education records. ~2% institution-verified (near-conclusive), ~98% self-asserted. Search by affiliation org name, then fetch individual record for employment history. Accept: application/json header required."
+
+  - id: openalex
+    name: OpenAlex API
+    url: https://api.openalex.org/
+    auth: none
+    status: live
+    credential_env_var: null
+    test_result: "OK — institution search 'MIT' returned 39 results. First: Massachusetts Institute of Technology."
+    rate_limit: "100,000 requests/day (polite pool with email in User-Agent)"
+    max_test_budget: 150
+    cost_per_call: "$0"
+    cost_source: "free API"
+    measures: [M19]
+    kyc_steps: [c]
+    group: individual-affiliation
+    notes: "114M authors with affiliation history, ROR IDs, h-index, topic tags. Can search by author name + institution to verify affiliation. Largest open scholarly dataset."
+
+  # --- Export Control group ---
+  - id: screening-list
+    name: Consolidated Screening List
+    url: https://api.trade.gov/v1/consolidated_screening_list/search
+    auth: API key
+    status: blocked
+    credential_env_var: SCREENING_LIST_API_KEY
+    test_result: "FAILED — API endpoint returns 301 redirect to HTML page (developer.trade.gov). The v1 API appears deprecated/migrated. API key present but endpoint non-functional."
+    rate_limit: "unknown (blocked)"
+    max_test_budget: 0
+    cost_per_call: "$0"
+    cost_source: "free API"
+    measures: [M06]
+    kyc_steps: [e]
+    group: export-control
+    notes: "OFAC SDN, BIS Entity List, DPL, UVL, MEU. API appears to have migrated from api.trade.gov. Need to find new endpoint or use bulk download at sanctionslist.ofac.treas.gov."
+
+  - id: bis-country-groups
+    name: BIS Country Group D/E + EAR matrix
+    url: null
+    auth: none
+    status: live
+    credential_env_var: null
+    test_result: "OK — local logic. Static lookup table mapping countries to BIS export control groups."
+    rate_limit: "N/A (local)"
+    max_test_budget: 999
+    cost_per_call: "$0"
+    cost_source: "local logic"
+    measures: [M06]
+    kyc_steps: [e]
+    group: export-control
+    notes: "Country Group D (various subgroups: D:1 national security, D:2 nuclear, D:3 biological/chemical, D:4 missile, D:5 arms embargo) and E (embargoed). Maps destination country to licensing requirements."
+
+  - id: iso-country-normalize
+    name: ISO 3166 country normalization
+    url: null
+    auth: none
+    status: live
+    credential_env_var: null
+    test_result: "OK — local logic. Maps common country name variants to ISO 3166-1 alpha-2 codes."
+    rate_limit: "N/A (local)"
+    max_test_budget: 999
+    cost_per_call: "$0"
+    cost_source: "local logic"
+    measures: [M06]
+    kyc_steps: [e]
+    group: export-control
+    notes: "Normalizes 'USA'→'US', 'United Kingdom'→'GB', 'Korea, Republic of'→'KR', etc. Prerequisite for BIS country group lookup and sanctions checks."
+
+  - id: po-box-regex
+    name: PO Box regex
+    url: null
+    auth: none
+    status: live
+    credential_env_var: null
+    test_result: "OK — local logic. Pattern matching for PO Box, APO/FPO, PMB address formats."
+    rate_limit: "N/A (local)"
+    max_test_budget: 999
+    cost_per_call: "$0"
+    cost_source: "local logic"
+    measures: [M03]
+    kyc_steps: [e]
+    group: export-control
+    notes: "Zero-cost, zero false negatives on standard formats: 'PO Box', 'P.O. Box', 'Post Office Box', 'PMB', 'APO AE/AP/AA', 'FPO'. Won't catch creative rewording or non-English equivalents."
+
+  # --- LLM+Exa group ---
+  - id: exa
+    name: Exa neural search (LLM+Exa standalone)
+    url: https://api.exa.ai/search
+    auth: x-api-key header
+    status: live
+    credential_env_var: EXA_API_KEY
+    test_result: "OK — query 'MIT biosafety' returned 1 result: 'Biological - MIT EHS'."
+    rate_limit: "1,000 searches/month (free tier)"
+    max_test_budget: 100
+    cost_per_call: "$0.001-$0.01 (varies by mode)"
+    cost_source: "exa.ai/pricing"
+    measures: [M02, M03, M04, M05, M12]
+    kyc_steps: [a, b, c, d, e]
+    group: llm-exa
+    notes: "Neural search mode by default. Used as standalone 'endpoint' — LLM formulates a query per KYC step, Exa searches, LLM interprets results. Each KYC step gets its own prompt template."
