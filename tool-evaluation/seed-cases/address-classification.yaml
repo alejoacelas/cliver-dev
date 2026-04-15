@@ -1,0 +1,312 @@
+group: address-classification
+endpoints: [smarty, google-places-new, geonames, osm-overpass]
+kyc_steps: [a, d, e]
+
+seed_cases:
+  - id: 1
+    name: "Massachusetts Institute of Technology"
+    type: academic
+    country: US
+    source: general_knowledge
+    difficulty: easy
+    query_params:
+      smarty:
+        street: "77 Massachusetts Ave"
+        city: "Cambridge"
+        state: "MA"
+        zipcode: "02139"
+        country: "US"
+      google_places:
+        textQuery: "77 Massachusetts Ave, Cambridge, MA 02139"
+    hypothesis: >
+      Baseline easy case. Smarty should return RDI=Commercial, CMRA=N, DPV=Y.
+      Google Places should return primaryType=university or nearby university result.
+      OSM has a detailed campus polygon (relation 65066, 234 nodes) confirmed in prior testing.
+      GeoNames reverse geocode should land on campus. All four endpoints should agree: institutional address.
+
+  - id: 2
+    name: "Pfizer Global HQ"
+    type: pharma_hq
+    country: US
+    source: general_knowledge
+    difficulty: easy
+    query_params:
+      smarty:
+        street: "66 Hudson Blvd E"
+        city: "New York"
+        state: "NY"
+        zipcode: "10001"
+        country: "US"
+      google_places:
+        textQuery: "66 Hudson Blvd E, New York, NY 10001"
+    hypothesis: >
+      Large pharma HQ in a new high-rise (Spiral building, opened ~2023). Smarty should return
+      RDI=Commercial, CMRA=N. Google Places should classify as pharmaceutical_company or office.
+      OSM likely has no Pfizer-specific polygon (commercial tenant in multi-tenant building),
+      so this tests the polygon fallback path. GeoNames won't add much beyond city-level context.
+
+  - id: 3
+    name: "University of Oxford - Chemistry"
+    type: academic
+    country: GB
+    source: general_knowledge
+    difficulty: easy
+    query_params:
+      smarty: null  # Smarty is US-only; skip
+      google_places:
+        textQuery: "Chemistry Research Laboratory, 12 Mansfield Rd, Oxford OX1 3TA, United Kingdom"
+    hypothesis: >
+      Tests international coverage. Smarty cannot process this (US-only), so the pipeline falls
+      through to Google Places, GeoNames, and OSM. Google Places should return university or
+      education-related primaryType. OSM should have Oxford campus polygons. This establishes
+      the baseline for non-US institutional addresses where Smarty provides zero signal.
+
+  - id: 4
+    name: "Agilent Technologies - office park biotech"
+    type: biotech_industry
+    country: US
+    source: general_knowledge
+    difficulty: medium
+    query_params:
+      smarty:
+        street: "5301 Stevens Creek Blvd"
+        city: "Santa Clara"
+        state: "CA"
+        zipcode: "95051"
+        country: "US"
+      google_places:
+        textQuery: "5301 Stevens Creek Blvd, Santa Clara, CA 95051"
+    hypothesis: >
+      Medium case: legitimate biotech company in a Silicon Valley office park. Smarty should
+      return RDI=Commercial, CMRA=N, DPV=Y. But Google Places may return a generic office or
+      shopping-center type rather than anything biotech-specific. OSM almost certainly has no
+      polygon for Agilent (commercial tenant). Tests whether the pipeline can distinguish
+      "legitimate company at a generic commercial address" from the adversarial cases below.
+
+  - id: 5
+    name: "Institut Pasteur"
+    type: academic_research
+    country: FR
+    source: general_knowledge
+    difficulty: medium
+    query_params:
+      smarty: null  # US-only
+      google_places:
+        textQuery: "25-28 Rue du Docteur Roux, 75015 Paris, France"
+    hypothesis: >
+      International research institute with non-English address. Google Places should find
+      Institut Pasteur and return a research or education-related type. OSM likely has a campus
+      polygon. Tests whether Google Places handles French addresses and non-university research
+      institutes correctly. GeoNames reverse geocode should place this in the 15th arrondissement.
+
+  - id: 6
+    name: "LabCentral coworking lab"
+    type: coworking_lab
+    country: US
+    source: adversarial_knowledge
+    difficulty: hard
+    query_params:
+      smarty:
+        street: "700 Main St"
+        city: "Cambridge"
+        state: "MA"
+        zipcode: "02139"
+        country: "US"
+      google_places:
+        textQuery: "700 Main St, Cambridge, MA 02139"
+    hypothesis: >
+      Adversarial: LabCentral is a shared wet-lab incubator for biotech startups. A customer
+      using this address may be a real startup but could also be a transient tenant with
+      minimal vetting. Smarty should return RDI=Commercial, CMRA=N -- it will look like a
+      normal commercial address. The key question is whether Google Places returns
+      primaryType=coworking_space or similar, or whether it just shows "office". Prior
+      Smarty research showed coworking spaces are invisible to the RDI/CMRA signals.
+      This is the core gap for KYC step (a).
+
+  - id: 7
+    name: "Residential home address"
+    type: residential
+    country: US
+    source: adversarial_constructed
+    difficulty: hard
+    query_params:
+      smarty:
+        street: "42 Brattle St"
+        city: "Cambridge"
+        state: "MA"
+        zipcode: "02138"
+        country: "US"
+      google_places:
+        textQuery: "42 Brattle St, Cambridge, MA 02138"
+    hypothesis: >
+      Adversarial for KYC step (d). This is a residential address in Cambridge near Harvard.
+      Smarty should return RDI=Residential, which is the primary signal for flagging.
+      Google Places should return primaryType=premise or street_address, not institution.
+      Tests the residential detection path. A customer claiming university affiliation but
+      shipping to a home address should trigger a soft flag. The address is real and
+      deliverable -- the issue is classification, not validity.
+
+  - id: 8
+    name: "UPS Store / CMRA"
+    type: cmra
+    country: US
+    source: adversarial_knowledge
+    difficulty: hard
+    query_params:
+      smarty:
+        street: "1 Mifflin Pl Ste 400"
+        city: "Cambridge"
+        state: "MA"
+        zipcode: "02138"
+        country: "US"
+      google_places:
+        textQuery: "The UPS Store, 1 Mifflin Pl, Cambridge, MA 02138"
+    hypothesis: >
+      Adversarial for KYC step (e). UPS Stores are Commercial Mail Receiving Agencies.
+      Prior testing (archive investigation) showed CMRA flag is UNRELIABLE -- a UPS Store
+      at 186 Alewife Brook Pkwy returned dpv_cmra=N. This case tests a different UPS Store
+      location to see if the CMRA database has better coverage here. If dpv_cmra=N again,
+      it confirms the CMRA flag cannot be relied upon alone. Google Places should return
+      primaryType containing "shipping" or "store" -- a supplementary signal. The suite
+      number format (Ste/PMB/#) is itself a heuristic for CMRA detection.
+
+  - id: 9
+    name: "Freight forwarder address"
+    type: freight_forwarder
+    country: US
+    source: adversarial_constructed
+    difficulty: hard
+    query_params:
+      smarty:
+        street: "1975 Linden Blvd"
+        city: "Elmont"
+        state: "NY"
+        zipcode: "11003"
+        country: "US"
+      google_places:
+        textQuery: "1975 Linden Blvd, Elmont, NY 11003 freight forwarder"
+    hypothesis: >
+      Adversarial for KYC step (e). This area near JFK airport is dense with freight
+      forwarders and package consolidators used for international re-shipping. Smarty
+      should return RDI=Commercial, CMRA=N (freight forwarders are not CMRAs in the USPS
+      database). Google Places may or may not surface the freight-forwarding business.
+      This tests the hardest gap: freight forwarders look like normal commercial addresses
+      to every endpoint in this group. Detection likely requires a supplementary denylist
+      of known freight forwarder addresses, not API-based classification.
+
+  - id: 10
+    name: "Community bio lab at residential address"
+    type: community_lab
+    country: US
+    source: adversarial_knowledge
+    difficulty: hard
+    query_params:
+      smarty:
+        street: "7 Standish St"
+        city: "Cambridge"
+        state: "MA"
+        zipcode: "02138"
+        country: "US"
+      google_places:
+        textQuery: "7 Standish St, Cambridge, MA 02138"
+    hypothesis: >
+      Adversarial edge case combining steps (a) and (d). Some community bio labs operate
+      from residential addresses or converted garages. Smarty will likely return
+      RDI=Residential. Google Places will show a residential address. OSM will have no
+      polygon. There is no API signal that distinguishes "legitimate community lab at a
+      home address" from "person ordering reagents to their house." This tests the
+      fundamental limit of address-based classification -- some legitimate use cases
+      are indistinguishable from concerning ones at the address layer alone.
+
+information_sources:
+  - source: "Known coworking/incubator lab directories"
+    url: "https://www.labcentral.org/"
+    what_to_look_for: >
+      LabCentral, BioLabs (multiple cities), JLABS by J&J, Cove (various),
+      QB3 (UCSF). Get their street addresses for adversarial coworking cases.
+      Also check Regus/WeWork/Industrious directories for virtual office addresses.
+
+  - source: "USPS PO Box lookup"
+    url: "https://tools.usps.com/find-a-post-office.htm"
+    what_to_look_for: >
+      Valid PO Box addresses at real post offices. Need real PO Box numbers to
+      test record_type=P detection (prior testing used a fabricated PO Box that
+      returned empty). Try PO Box 425, Cambridge, MA 02139 or similar.
+
+  - source: "Known freight forwarder clusters"
+    what_to_look_for: >
+      Areas near major international airports (JFK, MIA, LAX, ORD) with high
+      density of freight forwarding businesses. Search Google Maps for "freight
+      forwarder" near these airports and collect addresses. Also check the
+      archive idea m06-freight-forwarder-denylist for compiled lists.
+
+  - source: "Archive investigation: Smarty API results"
+    url: "archive-2026-04-kyc-research/investigations/a-address-to-institution/07-smarty-api.md"
+    what_to_look_for: >
+      7 addresses already tested live with Smarty. Reuse these as baselines.
+      Key finding: CMRA flag returned N for a known UPS Store. WeWork returned
+      Commercial with dpv_match_code=D (building default). IDT HQ passed cleanly.
+
+  - source: "Archive investigation: OSM Overpass results"
+    url: "archive-2026-04-kyc-research/investigations/a-address-to-institution/04-osm-overpass.md"
+    what_to_look_for: >
+      5 institutions tested: MIT, UCT, Sanger, Makerere, Ginkgo. Universities
+      all had polygons; Ginkgo (commercial) did not. Tag diversity matters:
+      university vs research_institute vs office. Rate limiting is aggressive.
+
+  - source: "Community bio lab directories"
+    what_to_look_for: >
+      Genspace (Brooklyn), BioCurious (Santa Clara), La Paillasse (Paris),
+      Open Science Network (Vancouver), Bosslab (Boston area). Get their
+      physical addresses. Many operate from residential or converted
+      industrial spaces that will stump every endpoint in this group.
+
+  - source: "customers.csv dataset"
+    url: "tool-evaluation/customers.csv"
+    what_to_look_for: >
+      Filter for US customers to test with Smarty. Filter for non-US customers
+      to test Google Places international coverage. Look for customers at
+      non-university institutions (industry, government labs) whose addresses
+      may not have OSM polygons. 535 records across 18+ countries.
+
+  - source: "Google Places API type taxonomy"
+    url: "https://developers.google.com/maps/documentation/places/web-service/place-types"
+    what_to_look_for: >
+      Full list of primaryType values. Key types for KYC: university,
+      school, library, hospital, pharmacy, office, coworking_space,
+      apartment_building, premise, post_office, shipping_company.
+      Understanding the taxonomy helps predict what Google Places will
+      return for ambiguous addresses.
+
+pre_committed_reasoning: |
+  The central tension in this endpoint group is that Smarty provides strong binary signals
+  (RDI, CMRA) but only for US addresses, while Google Places provides richer type
+  classification internationally but with less KYC-specific granularity. The four endpoints
+  have complementary strengths but overlapping blind spots.
+
+  Smarty's RDI (Residential/Commercial) is the single most useful signal for KYC step (d),
+  but it is binary and US-only. A "Commercial" RDI tells you nothing about WHAT kind of
+  commercial -- MIT and a UPS Store both return Commercial. The CMRA flag was supposed to
+  catch mail forwarding agencies, but prior live testing showed it returning N for a known
+  UPS Store, which means it cannot be trusted as the sole CMRA detector. The dpv_match_code
+  (Y/S/D) and building_default_indicator provide supplementary texture: coworking spaces
+  and CMRAs tend to show match_code=D or S rather than Y.
+
+  Google Places is the most promising endpoint for coworking/virtual office detection because
+  it returns a primaryType field that can distinguish university from coworking_space from
+  apartment_building. The key unknowns are: (1) how reliably does it classify addresses in
+  non-OECD countries, (2) does it surface the correct institution when an address hosts
+  multiple tenants, and (3) does a text search by street address actually return the
+  institution or just a geocoded point?
+
+  OSM Overpass works well for universities with mapped campus polygons but fails for
+  commercial companies (confirmed: Ginkgo Bioworks not in OSM). GeoNames adds reverse
+  geocoding coordinates but its type taxonomy is too coarse to distinguish institutional
+  from residential.
+
+  The hardest cases for this group are: (1) freight forwarders, which look like normal
+  commercial addresses to every endpoint; (2) community labs at residential addresses,
+  which are legitimate but indistinguishable from home orders; (3) legitimate startups at
+  coworking spaces, where the FLAG is correct (coworking) but the DISPOSITION is ambiguous
+  (should this block or just flag?). The stage 3 agent should spend most of its budget on
+  these three categories rather than confirming that well-known universities work.
