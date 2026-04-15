@@ -1,0 +1,172 @@
+group: individual-affiliation
+endpoints: [orcid, openalex]
+kyc_steps: [c]
+
+seed_cases:
+  - id: 1
+    name: "Raiees Andrabi"
+    institution: "Scripps Research"
+    type: academic_researcher
+    country: US
+    source: customers_csv
+    difficulty: easy
+    query_params:
+      researcher_name: "Raiees Andrabi"
+      institution_name: "Scripps Research"
+      email_domain: "scripps.edu"
+      orcid_query: "family-name:Andrabi AND affiliation-org-name:Scripps"
+      openalex_query: "Raiees Andrabi"
+    hypothesis: "Well-published HIV vaccine researcher at a major US institute. Should have ORCID record and extensive OpenAlex profile."
+
+  - id: 2
+    name: "Bart Faber"
+    institution: "Biomedical Primate Research Centre"
+    type: academic_researcher
+    country: NL
+    source: customers_csv
+    difficulty: easy
+    query_params:
+      researcher_name: "Bart Faber"
+      institution_name: "Biomedical Primate Research Centre"
+      email_domain: "bprc.nl"
+      orcid_query: "family-name:Faber AND affiliation-org-name:Biomedical Primate Research"
+      openalex_query: "Bart Faber"
+    hypothesis: "European researcher at established institute. Should have publications and likely has ORCID. Tests non-US but OECD coverage."
+
+  - id: 3
+    name: "Shuvankar Dey"
+    institution: "Indian Institute of Technology Kanpur"
+    type: academic_researcher
+    country: IN
+    source: customers_csv
+    difficulty: medium
+    query_params:
+      researcher_name: "Shuvankar Dey"
+      institution_name: "Indian Institute of Technology Kanpur"
+      email_domain: "iitk.ac.in"
+      orcid_query: "family-name:Dey AND affiliation-org-name:Indian Institute of Technology Kanpur"
+      openalex_query: "Shuvankar Dey"
+    hypothesis: "Indian university researcher. Common last name ('Dey') may cause disambiguation issues. IIT Kanpur is well-known but OpenAlex coverage of Indian institutions varies."
+
+  - id: 4
+    name: "Bárbara N. Porto"
+    institution: "Infant Center for Biomedical Research, PUCRS"
+    type: academic_researcher
+    country: BR
+    source: customers_csv
+    difficulty: medium
+    query_params:
+      researcher_name: "Bárbara Porto"
+      institution_name: "Pontifícia Universidade Católica do Rio Grande do Sul"
+      email_domain: "pucrs.br"
+      orcid_query: "family-name:Porto AND affiliation-org-name:PUCRS"
+      openalex_query: "Bárbara Porto"
+    hypothesis: "Brazilian researcher. Tests accented character handling in ORCID/OpenAlex search. PUCRS is large but non-OECD. Dual institution name (Infant Center vs PUCRS) may complicate matching."
+
+  - id: 5
+    name: "Satishchandran Chandrasekhar"
+    institution: "Lay Sciences Inc"
+    type: industry_researcher
+    country: US
+    source: customers_csv
+    difficulty: hard
+    query_params:
+      researcher_name: "Satishchandran Chandrasekhar"
+      institution_name: "Lay Sciences Inc"
+      email_domain: "laysciences.com"
+      orcid_query: "family-name:Chandrasekhar AND affiliation-org-name:Lay Sciences"
+      openalex_query: "Satishchandran Chandrasekhar"
+    hypothesis: "Small US startup founder. May have ORCID/publications from prior academic career but current affiliation is a tiny company unlikely to be in any database. Tests industry gap."
+
+  - id: 6
+    name: "Kirill Nemirov"
+    institution: "TheraVectys Immunize"
+    type: industry_researcher
+    country: FR
+    source: customers_csv
+    difficulty: hard
+    query_params:
+      researcher_name: "Kirill Nemirov"
+      institution_name: "TheraVectys Immunize"
+      email_domain: "pasteur.fr"
+      orcid_query: "family-name:Nemirov"
+      openalex_query: "Kirill Nemirov"
+    hypothesis: "Interesting case: industry company but using pasteur.fr email (Institut Pasteur). Tests whether affiliation verification catches mismatched email domain vs. claimed institution."
+
+  - id: 7
+    name: "Jennifer Altomonte"
+    institution: "Fusix Biotech"
+    type: industry_researcher
+    country: NL
+    source: customers_csv
+    difficulty: hard
+    query_params:
+      researcher_name: "Jennifer Altomonte"
+      institution_name: "Fusix Biotech"
+      email_domain: "tum.de"
+      orcid_query: "family-name:Altomonte"
+      openalex_query: "Jennifer Altomonte"
+    hypothesis: "Another mismatch case: industry company Fusix Biotech but email at tum.de (TU Munich). Prior academic affiliation may show in ORCID/OpenAlex. Tests whether tools surface the right current affiliation."
+
+  - id: 8
+    name: "Qiang He"
+    institution: "First Affiliated Hospital, Chongqing Medical University"
+    type: academic_researcher
+    country: CN
+    source: customers_csv
+    difficulty: hard
+    query_params:
+      researcher_name: "Qiang He"
+      institution_name: "Chongqing Medical University"
+      email_domain: "126.com"
+      orcid_query: "family-name:He AND given-names:Qiang AND affiliation-org-name:Chongqing"
+      openalex_query: "Qiang He"
+    hypothesis: "Chinese researcher using free email (126.com). Very common name will cause disambiguation problems in both ORCID and OpenAlex. Tests worst case for name-based lookup."
+
+  - id: 9
+    name: "Hypothetical community lab member"
+    institution: "Genspace"
+    type: community_lab_member
+    country: US
+    source: general_knowledge
+    difficulty: hard
+    query_params:
+      researcher_name: "N/A — test institution presence"
+      institution_name: "Genspace"
+      orcid_query: "affiliation-org-name:Genspace"
+      openalex_query_institution: "Genspace"
+    hypothesis: "Community bio lab. ORCID search for Genspace affiliation will likely return 0 results. OpenAlex may have Genspace as an institution if any members published. Tests floor of coverage."
+
+information_sources:
+  - source: "ORCID search"
+    url: "https://orcid.org/orcid-search/search"
+    what_to_look_for: "Search by affiliation org name to find researchers at specific institutions. Check institution-verified vs self-asserted affiliations."
+  - source: "OpenAlex authors search"
+    url: "https://api.openalex.org/authors"
+    what_to_look_for: "Search by display_name, filter by last_known_institution. Check disambiguation quality for common names."
+  - source: "OpenAlex institutions"
+    url: "https://api.openalex.org/institutions"
+    what_to_look_for: "Check if small companies and community labs exist as institutions. Look at works_count to assess publication activity."
+  - source: "customers.csv"
+    what_to_look_for: "Researchers with free email domains (163.com, yahoo.com, gmail.com) — these are the hardest cases for affiliation verification since the email doesn't match the institution."
+
+pre_committed_reasoning: |
+  ORCID and OpenAlex serve different purposes for affiliation verification:
+  - ORCID: explicitly lists employment/education history. ~2% of records are institution-verified
+    (near-conclusive), but 98% are self-asserted (an attacker could create a fake ORCID with
+    any claimed affiliation). The key signal is whether a verified trust marker exists.
+  - OpenAlex: derives affiliations from publication metadata. More objective (you can't fake
+    having published from an institution) but only works for researchers with publications.
+
+  Expected coverage gaps:
+  1. Common names (especially Chinese, Korean, Indian names): disambiguation will fail or return
+     wrong person. "Qiang He" will match hundreds of researchers.
+  2. Industry researchers: may have prior academic publications but current company affiliation
+     won't be in either system.
+  3. Early-career researchers: few or no publications, may not have ORCID yet.
+  4. Community lab members: operate completely outside the scholarly publication system.
+  5. Mismatched affiliations: researchers using one institution's email but claiming a different
+     institution (e.g., pasteur.fr email for a startup employee — was a postdoc there, now at startup).
+
+  The critical question: can ORCID/OpenAlex confirm a specific person is at a specific institution
+  right now? Or only that they were associated at some point in the past?

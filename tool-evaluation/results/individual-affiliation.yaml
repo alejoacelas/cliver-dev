@@ -1,0 +1,560 @@
+group: individual-affiliation
+endpoints: [orcid, openalex]
+kyc_steps: [c]
+tested_at: "2026-04-14"
+total_cases: 28
+rounds: 2
+
+summary:
+  covered: 8
+  partially_covered: 9
+  not_covered: 11
+
+coverage_boundaries:
+  - boundary: "Common names (Chinese, Korean, Indian)"
+    status: not_covered
+    evidence: "Wei Zhang: 9085 OpenAlex results, 3304 ORCID. Qiang He: 706 OpenAlex, 1 ORCID (with Chongqing filter). Even with OpenAlex institution filter, 7 different 'Qiang He' at Chongqing Medical University — none identifiable as the target. Maria Garcia: 17865 OpenAlex. Name-only search is useless for disambiguation."
+    cases: [8, 10, 11, 12]
+
+  - boundary: "Industry researchers at small companies"
+    status: not_covered
+    evidence: "Satishchandran Chandrasekhar (Lay Sciences): 0 ORCID, 0 OpenAlex. Du Huifen (Lanzhou Yahua): 1 ORCID (empty employment), OpenAlex shows only academic affiliations. Institutions not in OpenAlex: Lay Sciences, Fusix Biotech, GREENVAX, Lanzhou Yahua, Darts Bio — all returned 0 institution results."
+    cases: [5, 22, 25]
+
+  - boundary: "Researchers who changed institutions"
+    status: partially_covered
+    evidence: "Raiees Andrabi moved from Scripps to UPenn in 2023. ORCID correctly shows UPenn as current (self-asserted). OpenAlex last_known_institutions still lists Scripps first, UPenn fourth. OpenAlex affiliations lag the actual move by potentially years. Gert Zimmer shows Hannover in our data but ORCID says IVI Switzerland since 2009."
+    cases: [1, 16]
+
+  - boundary: "Mismatched email domain vs claimed institution"
+    status: partially_covered
+    evidence: "Kirill Nemirov (TheraVectys, pasteur.fr email): OpenAlex shows both Institut Pasteur and Theravectys affiliations. Jennifer Altomonte (Fusix Biotech, tum.de email): OpenAlex shows TU Munich, no Fusix Biotech. SOHN Myung Hyun (GREENVAX, yuhs.ac email): OpenAlex shows Yonsei, no GREENVAX. Neither ORCID nor OpenAlex can connect these researchers to their startup employers."
+    cases: [6, 7, 28]
+
+  - boundary: "Community bio lab members"
+    status: not_covered
+    evidence: "Genspace: 2 ORCID records (both self-asserted), 0 OpenAlex institutions. BioCurious: 0 OpenAlex institutions. Counter Culture Labs: 0 OpenAlex institutions. Community labs are invisible to both systems."
+    cases: [9]
+
+  - boundary: "Early-career / low-publication researchers"
+    status: partially_covered
+    evidence: "Ina Trotz: 0 ORCID, 1 OpenAlex (2 works only). Giselle Funchal: 0 ORCID matching, 1 OpenAlex (8 works). Low-publication researchers exist in OpenAlex but with thin profiles that provide weak evidence."
+    cases: [23, 24]
+
+  - boundary: "ORCID self-asserted vs institution-verified"
+    status: not_covered
+    evidence: "0 out of 11 employment records tested were institution-verified. All were self-asserted. MIT has 3484 records via ringgold search but individual records we checked had self-asserted employments. The 'institution-verified' trust marker barely exists in practice for the researchers we tested."
+    cases: [1, 2, 3, 16, 17, 25]
+
+  - boundary: "Sanctioned institution researchers"
+    status: covered
+    evidence: "Esmaeil Saberfar: found in both ORCID (1 result) and OpenAlex (31 works, h=8) with Baqiyatallah University affiliation. Mohammad Sadegh Hashemzadeh: OpenAlex shows 52 works at Baqiyatallah. Baqiyatallah exists as OpenAlex institution with 12385 works. Sanctioned institutions are paradoxically well-covered because they publish extensively."
+    cases: [26, 27]
+
+  - boundary: "PubMed-active researchers with unique names"
+    status: covered
+    evidence: "Bart Faber: 1 ORCID match (correct, BPRC confirmed), 1 OpenAlex top match (76 works, h=32). Georg Herrler: 1 ORCID match, 2 OpenAlex (top=209 works, h=56). Pierre Charneau: ORCID found, OpenAlex 160 works, h=60. Unique names + publication records = reliable identification."
+    cases: [2, 21, 20]
+
+  - boundary: "Large biotech companies (Genentech, Twist)"
+    status: covered
+    evidence: "Genentech: 1512 ORCID affiliation results, OpenAlex institution exists (936 works). Twist Bioscience: OpenAlex institution exists (119 works). Large biotechs with publications are findable. The gap is small companies."
+    cases: [19]
+
+results:
+  # Round 1 — Seed cases
+  - case_id: 1
+    round: 1
+    name: "Raiees Andrabi"
+    institution: "Scripps Research"
+    type: academic_researcher
+    country: US
+    difficulty: easy
+    orcid:
+      query: "family-name:Andrabi AND affiliation-org-name:Scripps"
+      num_found: 1
+      orcid_id: "0000-0001-8837-7520"
+      affiliation_found: true
+      current_affiliation: "University of Pennsylvania (since 2023)"
+      previous_affiliations: ["Scripps Research Institute (2013-2023)"]
+      assertion_type: self-asserted
+      notes: "CRITICAL: ORCID shows UPenn since July 2023. Our seed data says Scripps. ORCID is more current than the publication record. All 3 employment entries are self-asserted."
+    openalex:
+      query: "Raiees Andrabi"
+      num_results: 3
+      top_match: "Raiees Andrabi (A5051894320)"
+      works_count: 120
+      h_index: 30
+      last_known_institutions: ["Scripps Research Institute", "International AIDS Vaccine Initiative", "California University of Pennsylvania", "University of Pennsylvania"]
+      affiliation_years: {scripps: "2013-2025", iavi: "2015-2025", upenn: "2025"}
+      notes: "OpenAlex still lists Scripps first in last_known_institutions despite the move to UPenn. Publication lag means OpenAlex takes years to reflect job changes. Disambiguated correctly due to unique name."
+    verdict: partially_covered
+    verdict_reason: "Person found unambiguously. But ORCID and OpenAlex disagree on current institution. ORCID is more current but self-asserted. OpenAlex affiliations lag reality."
+
+  - case_id: 2
+    round: 1
+    name: "Bart Faber"
+    institution: "Biomedical Primate Research Centre"
+    type: academic_researcher
+    country: NL
+    difficulty: easy
+    orcid:
+      query: "family-name:Faber AND affiliation-org-name:Biomedical Primate Research"
+      num_found: 2
+      orcid_id: "0000-0001-6808-1204"
+      affiliation_found: true
+      current_affiliation: "Biomedical Primate Research Centre (since 2002)"
+      assertion_type: self-asserted
+      notes: "Second result (0000-0003-4800-1216) was 'Mark Faber' at Roswell Park — false match from the affiliation query hitting different Fabers."
+    openalex:
+      query: "Bart Faber"
+      num_results: 5
+      top_match: "Bart W. Faber (A5027896255)"
+      works_count: 76
+      h_index: 32
+      last_known_institutions: ["Netherlands Institute for Neuroscience (2004)", "Utrecht University (1992)", "Sahlgrenska University Hospital (SE)"]
+      notes: "BPRC does NOT appear in OpenAlex affiliations for this author. OpenAlex shows historical academic affiliations but misses the current employer entirely. This is a false negative for the claimed institution."
+    verdict: partially_covered
+    verdict_reason: "Person found but BPRC affiliation only in ORCID (self-asserted), not in OpenAlex. Need cross-reference."
+
+  - case_id: 3
+    round: 1
+    name: "Shuvankar Dey"
+    institution: "Indian Institute of Technology Kanpur"
+    type: academic_researcher
+    country: IN
+    difficulty: medium
+    orcid:
+      query: "given-names:Shuvankar AND family-name:Dey"
+      num_found: 3
+      orcid_id: "0000-0002-8540-6020"
+      affiliation_found: true
+      current_affiliation: "IIT Kanpur (Postdoctoral Fellow)"
+      previous_affiliations: ["University of Illinois at Chicago (Postdoctoral Research Associate)"]
+      assertion_type: self-asserted
+      notes: "Initial broad query (family-name:Dey AND affiliation:IIT Kanpur) returned 392 results — unusable. Narrowing to given-names:Shuvankar returned 3, workable. First result (0009-0006-0109-0329) was wrong person (Ayan Dey)."
+    openalex:
+      query: "Shuvankar Dey"
+      num_results: 5
+      top_match: "Shuvankar Dey (A5025970505)"
+      works_count: 53
+      h_index: 15
+      notes: "Top match has IIT Kanpur in affiliations but ALSO includes Gujarat University, Assam Don Bosco, University of Illinois — OpenAlex clearly merging multiple 'S. Dey' authors. raw_author_names includes 'Sarthak Dey' and 'Sudip Dey' — these are different people. Disambiguation failure."
+    verdict: partially_covered
+    verdict_reason: "Found in ORCID with correct IIT Kanpur affiliation (self-asserted). OpenAlex has conflated multiple Dey authors into one profile."
+
+  - case_id: 4
+    round: 1
+    name: "Bárbara N. Porto"
+    institution: "Pontifícia Universidade Católica do Rio Grande do Sul"
+    type: academic_researcher
+    country: BR
+    difficulty: medium
+    orcid:
+      query: "family-name:Porto AND affiliation-org-name:PUCRS"
+      num_found: 1
+      orcid_id: "0009-0007-7468-5048"
+      affiliation_found: true
+      current_affiliation: "PUCRS"
+      assertion_type: self-asserted
+      notes: "ORCID returned the record but the source-name is 'Bruna Porto' not 'Bárbara Porto'. This may be a different person — the ORCID profile name doesn't match. Accented character 'Bárbara' was handled correctly in the search."
+    openalex:
+      query: "Bárbara Porto"
+      num_results: 30
+      top_match: "Bárbara N. Porto (A5065451968)"
+      works_count: 48
+      h_index: 19
+      orcid: "0000-0002-1995-9874"
+      notes: "OpenAlex found the correct person. Has ORCID 0000-0002-1995-9874 (different from ORCID search result!). Accented characters handled well. Affiliations include UFRJ, PUCRS (via lineage), UFRGS. OpenAlex has a different ORCID than the ORCID search returned."
+    verdict: partially_covered
+    verdict_reason: "OpenAlex found correct person. ORCID search returned wrong person (Bruna vs Bárbara). Accented names handled OK but cross-referencing ORCID<->OpenAlex revealed data inconsistency."
+
+  - case_id: 5
+    round: 1
+    name: "Satishchandran Chandrasekhar"
+    institution: "Lay Sciences Inc"
+    type: industry_researcher
+    country: US
+    difficulty: hard
+    orcid:
+      query: "family-name:Chandrasekhar AND affiliation-org-name:Lay Sciences"
+      num_found: 0
+      notes: "Zero results. Lay Sciences does not appear in any ORCID record."
+    openalex:
+      query: "Satishchandran Chandrasekhar"
+      num_results: 0
+      notes: "Zero results. Person does not exist in OpenAlex. Lay Sciences also not in OpenAlex institutions."
+    verdict: not_covered
+    verdict_reason: "Complete blind spot. Industry researcher at small startup invisible to both systems."
+
+  - case_id: 6
+    round: 1
+    name: "Kirill Nemirov"
+    institution: "TheraVectys Immunize"
+    type: industry_researcher
+    country: FR
+    difficulty: hard
+    orcid:
+      query: "family-name:Nemirov"
+      num_found: 6
+      notes: "6 results for 'Nemirov' but first match's employment was empty. Would need to check all 6 to find the right one. No affiliation-based filtering for TheraVectys."
+    openalex:
+      query: "Kirill Nemirov"
+      num_results: 1
+      top_match: "Kirill Nemirov (A5000673374)"
+      works_count: 39
+      h_index: 22
+      affiliations: ["Université Claude Bernard Lyon 1", "École Normale Supérieure de Lyon", "CNRS", "University of Helsinki", "Inserm", "Institut Pasteur (2020-2025)", "Université Paris Cité", "Swedish Institute", "Karolinska Institutet", "Theravectys (France) (2020-2023)", "Chumakov Institute"]
+      notes: "OpenAlex shows BOTH Institut Pasteur and Theravectys as affiliations. This is valuable — confirms the dual affiliation. TheraVectys exists as an OpenAlex institution (178 works). The pasteur.fr email matches the Institut Pasteur affiliation."
+    verdict: partially_covered
+    verdict_reason: "OpenAlex shows both academic and industry affiliations. ORCID less useful (no employment filled in). But claims the current employer is TheraVectys — neither system can confirm this as 'current'."
+
+  - case_id: 7
+    round: 1
+    name: "Jennifer Altomonte"
+    institution: "Fusix Biotech"
+    type: industry_researcher
+    country: NL
+    difficulty: hard
+    orcid:
+      query: "family-name:Altomonte"
+      num_found: 18
+      notes: "18 results. Checked two (0000-0001-7339-9487, 0000-0002-6718-6212) — both had empty employment records. Would need to scan all 18."
+    openalex:
+      query: "Jennifer Altomonte"
+      num_results: 2
+      top_match: "Jennifer Altomonte (works: 87, h: 29)"
+      affiliations: ["Klinikum rechts der Isar (2008-2025)", "Technical University of Munich (2008-2025)", "Icahn School of Medicine at Mount Sinai (2002-2009)"]
+      notes: "Strong academic profile at TU Munich. Fusix Biotech does NOT appear in OpenAlex affiliations or institutions (0 results). tum.de email matches the academic profile. If she moved to Fusix, OpenAlex shows no trace."
+    verdict: not_covered
+    verdict_reason: "Academic history visible but Fusix Biotech affiliation invisible. Cannot confirm current industry employment."
+
+  - case_id: 8
+    round: 1
+    name: "Qiang He"
+    institution: "First Affiliated Hospital, Chongqing Medical University"
+    type: academic_researcher
+    country: CN
+    difficulty: hard
+    orcid:
+      query: "family-name:He AND given-names:Qiang AND affiliation-org-name:Chongqing"
+      num_found: 1
+      orcid_id: "0009-0009-3203-4479"
+      affiliation_found: false
+      notes: "1 ORCID result but employment records were empty. Cannot verify affiliation."
+    openalex:
+      query: "Qiang He"
+      num_results: 706
+      filter_by_institution: "display_name.search:Qiang He,affiliations.institution.id:I87780372 returned 7 results"
+      notes: "706 unfiltered results. Even filtering by Chongqing Medical University still returns 7 different 'Qiang He' researchers. None clearly identifiable as the one from First Affiliated Hospital. Top result has 332 works but primary affiliation is South China Agricultural University. Disambiguation impossible without additional signals."
+    verdict: not_covered
+    verdict_reason: "Name too common. Even with institution filter, 7 candidates. Cannot identify the specific person."
+
+  - case_id: 9
+    round: 1
+    name: "Community lab member"
+    institution: "Genspace"
+    type: community_lab_member
+    country: US
+    difficulty: hard
+    orcid:
+      query: "affiliation-org-name:Genspace"
+      num_found: 2
+      notes: "2 results. Naomi Gelfer (student/intern, self-asserted). Laura Maria Gonzalez (instructor, self-asserted). Both have thin profiles. Self-asserted — anyone could claim Genspace affiliation."
+    openalex:
+      query_institution: "Genspace"
+      num_results: 0
+      notes: "Genspace does not exist as an OpenAlex institution. Also tested BioCurious (0) and Counter Culture Labs (0). Community bio labs are completely absent."
+    verdict: not_covered
+    verdict_reason: "Genspace invisible to OpenAlex. 2 self-asserted ORCID records exist but provide zero trust — anyone could create an ORCID claiming Genspace affiliation."
+
+  # Round 2 — Adversarial probing
+  - case_id: 10
+    round: 2
+    name: "Wei Zhang"
+    category: common_name_disambiguation
+    orcid:
+      query: "family-name:Zhang AND given-names:Wei"
+      num_found: 3304
+    openalex:
+      query: "Wei Zhang"
+      num_results: 9085
+    verdict: not_covered
+    verdict_reason: "Disambiguation impossible by name alone. 3304 ORCID, 9085 OpenAlex."
+
+  - case_id: 11
+    round: 2
+    name: "John Smith"
+    category: common_name_disambiguation
+    orcid:
+      query: "family-name:Smith AND given-names:John"
+      num_found: 262
+    openalex:
+      query: "John Smith"
+      num_results: 1415
+      notes: "Top result is John Maynard Smith (evolutionary biologist, deceased). Search conflates variant names."
+    verdict: not_covered
+    verdict_reason: "Hopelessly ambiguous."
+
+  - case_id: 12
+    round: 2
+    name: "Maria Garcia"
+    category: common_name_disambiguation
+    orcid:
+      query: "family-name:Garcia AND given-names:Maria"
+      num_found: 2464
+    openalex:
+      query: "Maria Garcia"
+      num_results: 17865
+    verdict: not_covered
+    verdict_reason: "Worst case tested. 17865 OpenAlex results."
+
+  - case_id: 13
+    round: 2
+    name: "George F. Gao"
+    category: high_profile_researcher
+    openalex:
+      query: "George Gao"
+      num_results: 64
+      top_match_works: 1192
+      top_match_h_index: 135
+      top_match_affiliations_count: 100+
+      notes: "Top result has 1192 works across 100+ institutions. Clearly a conflation of many 'George Gao' researchers. The real George F. Gao (CDC China director) is mixed with other George Gaos. Disambiguation failure even for a famous scientist."
+    verdict: partially_covered
+    verdict_reason: "Person exists in OpenAlex but the record is a conflation of multiple researchers with similar names."
+
+  - case_id: 14
+    round: 2
+    name: "Honglei Sun"
+    category: early_career_free_email
+    institution: "China Agricultural University"
+    email: "shlei668@163.com"
+    openalex:
+      query: "Honglei Sun"
+      num_results: 18
+      notes: "18 results, top 3 all at different Chinese institutions (Shanxi Agri, Wenzhou, Qingdao). None clearly at China Agricultural University. Free email (163.com) provides no disambiguation signal."
+    verdict: not_covered
+    verdict_reason: "Multiple Honglei Sun, none identifiable as the target. Free email provides no linkage."
+
+  - case_id: 15
+    round: 2
+    name: "Yi Shi"
+    category: common_name_chinese_academy
+    institution: "Chinese Academy of Sciences"
+    openalex:
+      query: "Yi Shi"
+      num_results: 1820
+    verdict: not_covered
+    verdict_reason: "1820 results. Hopeless disambiguation."
+
+  - case_id: 16
+    round: 2
+    name: "Gert Zimmer"
+    category: institution_change
+    institution_claimed: "Tierärztliche Hochschule Hannover"
+    institution_actual: "Institute of Virology and Immunology, Switzerland (since 2009)"
+    orcid:
+      orcid_id: "0000-0002-2708-2507"
+      num_found: 1
+      employments: ["IVI (2009-present)", "Vet Med Hanover (1999-2009)", "U Marburg (1995-1999)"]
+      assertion_type: self-asserted
+    openalex:
+      top_match_works: 159
+      top_match_h_index: 46
+      last_known_institution: "University of Bern (2024-2026)"
+      notes: "OpenAlex shows Bern (not IVI or Hannover). ORCID shows IVI. Our seed data says Hannover. Three different answers for 'current institution'."
+    verdict: partially_covered
+    verdict_reason: "Person found but three sources disagree on current institution. Researchers who move create persistent data lag."
+
+  - case_id: 17
+    round: 2
+    name: "ORCID verification rate"
+    category: self_vs_institutional_verification
+    notes: "Tested 5 ORCID records (Andrabi, Faber, Dey, Zimmer, Saberfar): 0/11 employment records were institution-verified. All self-asserted. MIT ringgold search returns 3484 records, but the individual records we checked still had self-asserted employments."
+    verdict: not_covered
+    verdict_reason: "Institution-verified ORCID employment is effectively non-existent for the researchers we tested. The trust marker that would make ORCID conclusive barely exists in practice."
+
+  - case_id: 18
+    round: 2
+    name: "Dibyendu Kumar Das"
+    category: dual_affiliation_academic
+    institution: "IIT Kanpur"
+    openalex:
+      num_results: 2
+      top_match: "Dibyendu Kumar Das (works: 97, h: 31)"
+      affiliations_include_iit_kanpur: true
+      iit_kanpur_years: [2025, 2024, 2022, 2020]
+      other_affiliations: ["Tata Institute", "Tufts University", "Johns Hopkins", "IIT Bombay", "IIT Delhi", "Vanderbilt"]
+      notes: "IIT Kanpur appears in affiliations but is 12th in the list. Person has extensive mobility history. Could verify affiliation but need to know the right time period."
+    verdict: covered
+    verdict_reason: "Unique name, OpenAlex shows IIT Kanpur in affiliations with year coverage through 2025."
+
+  - case_id: 19
+    round: 2
+    name: "Industry institution coverage"
+    category: industry_institution_presence
+    tests:
+      - institution: "Genentech"
+        orcid_affiliations: 1512
+        openalex_works: 936
+        openalex_type: company
+        status: covered
+      - institution: "Twist Bioscience"
+        openalex_works: 119
+        openalex_type: company
+        status: covered
+      - institution: "TheraVectys"
+        openalex_works: 178
+        openalex_type: company
+        status: covered
+      - institution: "Lay Sciences"
+        openalex_works: 0
+        status: not_found
+      - institution: "Fusix Biotech"
+        openalex_works: 0
+        status: not_found
+      - institution: "GREENVAX"
+        openalex_works: 0
+        status: not_found
+      - institution: "Lanzhou Yahua Biotech"
+        openalex_works: 0
+        status: not_found
+      - institution: "Darts Bio"
+        openalex_works: 0
+        status: not_found
+    verdict: partially_covered
+    verdict_reason: "Large biotechs with publications exist in OpenAlex. Small startups (<200 works) are invisible."
+
+  - case_id: 20
+    round: 2
+    name: "Pierre Charneau"
+    category: dual_academic_industry
+    institution_claimed: "TheraVectys Immunize"
+    openalex:
+      num_results: 4
+      top_match_works: 160
+      top_match_h_index: 60
+      affiliations: ["CNRS", "Bordeaux", "Inserm", "Institut Pasteur (2023-2025)", "Université Paris Cité"]
+      notes: "Charneau is the founder of TheraVectys and a senior Pasteur researcher. OpenAlex shows academic affiliations but TheraVectys doesn't appear in HIS affiliations (though it exists as institution). The industry role is invisible even for the company founder."
+    verdict: partially_covered
+    verdict_reason: "Academic history visible. Industry affiliation (TheraVectys) missing from personal profile despite TheraVectys existing as institution."
+
+  - case_id: 21
+    round: 2
+    name: "Georg Herrler"
+    category: unique_name_established
+    institution: "Tierärztliche Hochschule Hannover"
+    openalex:
+      num_results: 2
+      top_match_works: 209
+      top_match_h_index: 56
+      last_known_institution: "University of Veterinary Medicine Hannover, Foundation (2023-2025)"
+      notes: "Unique name, unambiguous match. OpenAlex correctly shows Hannover as recent affiliation."
+    verdict: covered
+    verdict_reason: "Unique name + strong publication record = clean match."
+
+  - case_id: 22
+    round: 2
+    name: "Du Huifen"
+    category: chinese_industry_free_email
+    institution: "Lanzhou Yahua Biotech Co. Ltd."
+    email: "shwjshzhx@163.com"
+    orcid:
+      query: "family-name:Du AND given-names:Huifen"
+      num_found: 1
+      orcid_id: "0000-0002-8707-0401"
+      employment: "empty"
+    openalex:
+      num_results: 3
+      results: ["Huifen Du (7 works, Gansu Provincial Cancer Hospital)", "DU Hui-fen (19 works, Gansu Agricultural University)", "DU Huifen (1 work, Central University of Finance)"]
+      notes: "None of the results are affiliated with Lanzhou Yahua Biotech. The company doesn't exist in OpenAlex. Free 163.com email gives no signal."
+    verdict: not_covered
+    verdict_reason: "Industry company invisible. ORCID exists but empty. OpenAlex matches are wrong people."
+
+  - case_id: 23
+    round: 2
+    name: "Ina Trotz"
+    category: early_career_no_email
+    institution: "Tierärztliche Hochschule Hannover"
+    orcid:
+      num_found: 0
+    openalex:
+      num_results: 1
+      top_match_works: 2
+      notes: "Only 2 publications. Thin profile but at least exists. Would give weak evidence of affiliation."
+    verdict: partially_covered
+    verdict_reason: "Exists in OpenAlex but with only 2 works. No ORCID. Very weak signal."
+
+  - case_id: 24
+    round: 2
+    name: "Giselle A. Funchal"
+    category: early_career_brazilian
+    institution: "PUCRS"
+    openalex:
+      num_results: 1
+      top_match_works: 8
+      top_match_h_index: 5
+      affiliations: ["PUCRS (2017, 2020, 2023)"]
+      notes: "Found with correct PUCRS affiliation. Thin profile but unambiguous."
+    verdict: covered
+    verdict_reason: "Unique name, PUCRS affiliation confirmed in OpenAlex."
+
+  - case_id: 25
+    round: 2
+    name: "Nathalie Bastien"
+    category: government_researcher
+    institution: "National Microbiology Laboratory, Canadian Science Center"
+    openalex:
+      num_results: 11
+      top_matches:
+        - "Nathalie Bastien (146 works, h=51): Health Canada, CDC, BC Cancer"
+        - "Nathalie Bastien (15 works, h=7): Public Health Agency of Canada, Canadian Science Centre"
+      notes: "Two Nathalie Bastien profiles in OpenAlex — the person has been split. The 15-works profile shows the correct 'Canadian Science Centre' affiliation. The 146-works profile likely contains her earlier work but attributes it to Health Canada. Government institution naming is inconsistent."
+    verdict: partially_covered
+    verdict_reason: "Person split across two profiles. Correct affiliation exists in smaller profile. Disambiguation required."
+
+  - case_id: 26
+    round: 2
+    name: "Esmaeil Saberfar"
+    category: sanctioned_institution
+    institution: "Baqiyatallah University of Medical Sciences"
+    orcid:
+      num_found: 1
+      orcid_id: "0000-0003-3358-704X"
+      employment: "empty (0 records)"
+    openalex:
+      num_results: 2
+      top_match_works: 31
+      top_match_h_index: 8
+      affiliations: ["Baqiyatallah University (2013-2015)", "Pasteur Institute of Iran (2001)", "Tehran University of Medical Sciences"]
+      baqiyatallah_in_openalex: true
+      baqiyatallah_works: 12385
+    verdict: covered
+    verdict_reason: "Sanctioned institution researcher found in OpenAlex with correct affiliation. Baqiyatallah is well-represented."
+
+  - case_id: 27
+    round: 2
+    name: "Mohammad Sadegh Hashemzadeh"
+    category: sanctioned_institution
+    institution: "Baqiyatallah University of Medical Sciences"
+    openalex:
+      num_results: 3
+      top_match_works: 52
+      top_match_h_index: 14
+      affiliations: ["Imam Hossein University (2017)", "Baqiyatallah University (2022-2024)"]
+    verdict: covered
+    verdict_reason: "Found with Baqiyatallah affiliation."
+
+  - case_id: 28
+    round: 2
+    name: "SOHN Myung Hyun"
+    category: industry_academic_mismatch
+    institution_claimed: "GREENVAX INC."
+    email: "mhsohn@yuhs.ac"
+    openalex:
+      num_results: 9
+      top_match: "Myung Hyun Sohn (457 works, h=37)"
+      affiliations: ["Yonsei University (2024-2026)", "Johns Hopkins (2024-2025)", "University of Wisconsin-Madison (2003)"]
+      notes: "Strong Yonsei academic profile. GREENVAX does not appear. The yuhs.ac email matches Yonsei Hospital. If the person claims GREENVAX, neither ORCID nor OpenAlex can verify it."
+    verdict: not_covered
+    verdict_reason: "GREENVAX invisible. Only academic affiliation at Yonsei visible. Industry role unverifiable."
