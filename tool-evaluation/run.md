@@ -58,12 +58,17 @@ Stripe AVS (production), Plaid Identity Match (production).
 | 1 — Endpoint map | [`stages/01-endpoint-map.md`](stages/01-endpoint-map.md) | — | Static file | — | — |
 | 2 — Seed cases | [`stages/02-seed-cases.md`](stages/02-seed-cases.md) | ~9 | Parallel | Stage 0 | Light |
 | 3 — Adversarial testing | [`stages/03-adversarial-testing.md`](stages/03-adversarial-testing.md) | ~9 | Parallel | Stage 2 | **Heavy** |
-| 4 — Field assessment | [`stages/04-field-assessment.md`](stages/04-field-assessment.md) | 5 | Parallel | Stage 3 | Medium |
-| 5 — Adversarial review | [`stages/05-adversarial-review.md`](stages/05-adversarial-review.md) | 5 | Parallel | Stage 4 | Medium |
-| 6 — BOTEC synthesis | [`stages/06-botec-synthesis.md`](stages/06-botec-synthesis.md) | 1 | Sequential | Stage 5 | Light |
+| 5 — Adversarial review | [`stages/05-adversarial-review.md`](stages/05-adversarial-review.md) | ~9 | Parallel | Stage 3 | Medium |
+| 3↺ — Testing re-run | (same as stage 3) | ~9 | Parallel | Stage 5 | Heavy |
+| 4 — Field assessment | [`stages/04-field-assessment.md`](stages/04-field-assessment.md) | 5 | Parallel | Stages 3+5 loop | Medium |
+| 6 — BOTEC synthesis | [`stages/06-botec-synthesis.md`](stages/06-botec-synthesis.md) | 1 | Sequential | Stage 4 | Medium |
 | 7 — Final synthesis | [`stages/07-final-synthesis.md`](stages/07-final-synthesis.md) | 1 | Sequential | Stage 6 | Light |
 
-Stage 1 is a static file (hardcoded endpoint-to-measure mapping), not an agent stage. Read each stage file for the full prompt, schema, and output spec.
+Stage 1 is a static file (hardcoded endpoint-to-measure mapping), not an agent stage.
+
+**Stage 3↔5 loop:** Stage 5 reviews stage 3 results per endpoint group. High-severity findings trigger a stage 3 re-run with expanded test cases. Up to 3 iterations. Stage 4 runs after the loop completes.
+
+Read each stage file for the full prompt, schema, and output spec.
 
 ---
 
@@ -90,11 +95,12 @@ tool-evaluation/
   results/                               # stage 3 output
     {group-name}.yaml
     {group-name}.md
-  assessments/                           # stage 4 output (revised after stage 5)
+  assessments/                           # stage 4 output
     {kyc-step}.yaml
     {kyc-step}.md
-  adversarial-reviews/                   # stage 5 output
-    {kyc-step}.md
+  adversarial-reviews/                   # stage 5 output (per endpoint group, versioned)
+    {group-name}-v{N}.md                 # per-iteration findings
+    {group-name}-final.md                # final state after loop
   06-cost-coverage-synthesis.md          # stage 6 output
   07-final-synthesis.md                  # stage 7 output
 ```
