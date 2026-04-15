@@ -18,11 +18,11 @@ The previous pipeline (in `archive-2026-04-kyc-research/`) researched 103 implem
 |---|---|---|---|
 | **(a) Address → institution** | M05 | No public association between affiliation and shipping address | Line 77 |
 | **(b) Payment → institution** | M12 (+M10) | Billing address not associated with the institution; gift card BIN | Lines 82, 84 |
-| **(c) Email → affiliation** | M02 | Does not match institution domain / non-institutional domain | Line 74 |
+| **(c) Email → affiliation** | M02 (+M07) | Does not match institution domain / non-institutional domain | Line 74 |
 | **(d) Residential address** | M04 | Residential address | Line 76 |
 | **(e) PO box / freight forwarder** | M03 (+M06) | P.O. Box; freight forwarder address | Line 75 |
 
-Adjacent measures pulled in because they share endpoints: M06, M07, M10.
+Adjacent measures pulled in because they share endpoints: M06, M07, M10, M18, M19.
 
 ## Inputs
 
@@ -33,40 +33,20 @@ Adjacent measures pulled in because they share endpoints: M06, M07, M10.
 | API investigations | `archive-2026-04-kyc-research/investigations/a-address-to-institution/` | Deep-dive API docs (ROR, GLEIF, Companies House, OSM, Smarty, Stripe, Plaid, BIN, GeoNames) |
 | Measure definitions | `archive-2026-04-kyc-research/pipeline/measures.md` | Canonical measure list with stable numbering |
 | Customer dataset | `tool-evaluation/customers.csv` | 535 deanonymized records (name, institution, email, order) from patent/LinkedIn data |
-| Credentials | `.env` | Keys for Smarty, Stripe, Plaid, Companies House, Exa, Tavily, Screening List |
+| Credentials | `.env` | Keys for Smarty, Stripe, Plaid, Companies House, Exa, Tavily, Screening List, Google Maps, GeoNames |
 
 ## Endpoint inventory
 
-After deduplication by underlying API, the distinct endpoints:
+31 endpoints across 9 groups. See [`stages/01-endpoint-map.md`](stages/01-endpoint-map.md) for the full mapping of endpoints to KYC steps.
 
-**Free / no-auth (hit live):**
-- ROR API v2 — research org registry (~110K orgs). Measures: M02, M05, M07, M12.
-- GLEIF API — legal entity identifiers (~2.9M entities). Measures: M05, M12.
-- RDAP/WHOIS — domain registration data. Measures: M02.
-- Consolidated Screening List API — OFAC SDN, BIS Entity List, DPL, UVL, etc. Measures: M06.
-- OSM Overpass — campus polygon containment. Measures: M05.
-- binlist.net — free BIN lookup. Measures: M10.
-- InCommon/eduGAIN — academic federation IdP list. Measures: M07.
-- ISO country normalization — local logic, no API. Measures: M06.
-- PO Box regex — local logic. Measures: M03.
+**API endpoints (17 requiring network calls):**
+ROR, GLEIF, RDAP, Consolidated Screening List, OSM Overpass, binlist.net, InCommon/eduGAIN, Smarty, Stripe (test), Plaid (sandbox), Companies House, Exa, GeoNames, Google Places (New API), NIH RePORTER, NSF Awards, UKRI, PubMed, OpenCorporates, ORCID, OpenAlex.
 
-**Credentialed (have keys in .env):**
-- Smarty US Street API — address verification (RDI, CMRA, DPV). 250 free/month. Measures: M03, M04, M05.
-- Stripe test mode — card metadata + AVS. Free, deterministic test responses. Measures: M10, M12.
-- Plaid sandbox — bank account Identity Match. Free, synthetic data. Measures: M12.
-- Companies House — UK company registry. Free, 600 req/5min. Measures: M05, M12.
-- Exa neural search — standalone LLM+search tool. Measures: all (as alternative to structured APIs).
-- Tavily search — fallback web search.
+**Local logic (7):**
+Disposable/free-mail blocklist, MX/SPF/DMARC, lookalike domain detector, PO Box regex, BIS Country Groups, ISO 3166 normalization, billing-shipping consistency, fintech BIN denylist.
 
-**Missing credentials (document setup, don't test):**
-- GeoNames — reverse geocoding, campus coordinates. Needs account creation.
-- Google Places — business presence detection. Needs API key.
-- BinDB — commercial BIN database. Optional, paid.
-
-**Documentation-only (use docs + coverage matrices, not live calls):**
-- Stripe AVS in production — live responses vary by issuer/country; test mode is deterministic.
-- Plaid Identity Match in production — sandbox is synthetic.
-- Google Places business detection — docs sufficient for coverage assessment.
+**Docs-only (2):**
+Stripe AVS (production), Plaid Identity Match (production).
 
 ---
 
@@ -75,15 +55,15 @@ After deduplication by underlying API, the distinct endpoints:
 | Stage | File | Agents | Parallelism | Depends on | Effort |
 |---|---|---|---|---|---|
 | 0 — Credential check | [`stages/00-credential-check.md`](stages/00-credential-check.md) | 1 | Sequential | — | Light |
-| 1 — Relevance classification | [`stages/01-relevance-classification.md`](stages/01-relevance-classification.md) | 2 | Parallel | Stage 0 | Light |
-| 2 — Test set construction | [`stages/02-test-set-construction.md`](stages/02-test-set-construction.md) | ~8 | Parallel | Stage 1 | Medium |
-| 3 — Endpoint testing | [`stages/03-endpoint-testing.md`](stages/03-endpoint-testing.md) | ~8 | Parallel | Stage 2 | Heavy |
+| 1 — Endpoint map | [`stages/01-endpoint-map.md`](stages/01-endpoint-map.md) | — | Static file | — | — |
+| 2 — Seed cases | [`stages/02-seed-cases.md`](stages/02-seed-cases.md) | ~9 | Parallel | Stage 0 | Light |
+| 3 — Adversarial testing | [`stages/03-adversarial-testing.md`](stages/03-adversarial-testing.md) | ~9 | Parallel | Stage 2 | **Heavy** |
 | 4 — Field assessment | [`stages/04-field-assessment.md`](stages/04-field-assessment.md) | 5 | Parallel | Stage 3 | Medium |
 | 5 — Adversarial review | [`stages/05-adversarial-review.md`](stages/05-adversarial-review.md) | 5 | Parallel | Stage 4 | Medium |
 | 6 — BOTEC synthesis | [`stages/06-botec-synthesis.md`](stages/06-botec-synthesis.md) | 1 | Sequential | Stage 5 | Light |
 | 7 — Final synthesis | [`stages/07-final-synthesis.md`](stages/07-final-synthesis.md) | 1 | Sequential | Stage 6 | Light |
 
-Read each stage file for the full prompt, schema, and output spec.
+Stage 1 is a static file (hardcoded endpoint-to-measure mapping), not an agent stage. Read each stage file for the full prompt, schema, and output spec.
 
 ---
 
@@ -93,11 +73,11 @@ Read each stage file for the full prompt, schema, and output spec.
 tool-evaluation/
   run.md                                 # this file
   customers.csv                          # deanonymized test data (535 records)
-  stages/                                # stage execution specs
+  stages/                                # stage specs (read before executing)
     00-credential-check.md
-    01-relevance-classification.md
-    02-test-set-construction.md
-    03-endpoint-testing.md
+    01-endpoint-map.md                   # static — endpoint-to-KYC-step mapping
+    02-seed-cases.md
+    03-adversarial-testing.md
     04-field-assessment.md
     05-adversarial-review.md
     06-botec-synthesis.md
@@ -105,14 +85,11 @@ tool-evaluation/
   00-endpoint-manifest.yaml              # stage 0 output
   00-credential-check.md                 # stage 0 output
   setup-guides/                          # stage 0 (blocked endpoints)
-    geonames.md
-    google-places.md
-  01-endpoint-relevance.md               # stage 1 output
-  test-sets/                             # stage 2 output
-    {endpoint-id}.yaml
+  seed-cases/                            # stage 2 output
+    {group-name}.yaml
   results/                               # stage 3 output
-    {endpoint-id}.yaml
-    {endpoint-id}.md
+    {group-name}.yaml
+    {group-name}.md
   assessments/                           # stage 4 output (revised after stage 5)
     {kyc-step}.yaml
     {kyc-step}.md
@@ -125,7 +102,7 @@ tool-evaluation/
 ## Verification
 
 After the pipeline completes:
-1. Every endpoint in the manifest has a corresponding results file.
+1. Every endpoint group in the manifest has a corresponding results file.
 2. Every assessment references real test results (not hallucinated).
 3. Spot-check 2-3 API responses by re-running calls manually.
 4. Cost numbers in the final synthesis are internally consistent.
@@ -133,7 +110,8 @@ After the pipeline completes:
 ## Notes
 
 - **Resumability:** Each stage writes outputs before the next starts. If interrupted, re-run from the last incomplete stage. YAML outputs are source of truth; markdown is derived.
-- **Rate limit safety:** Stage 3 agents for rate-limited APIs (Smarty, OSM Overpass) implement delays and respect the budget in the manifest.
+- **Rate limits and budgets:** Stage 0 determines rate limits and sets `max_test_budget` per endpoint. Stage 3 agents read these from the manifest — they are not hardcoded in stage 3.
 - **No credential setup automation:** Stage 0 documents what's missing but does NOT create accounts. That's a manual step.
-- **LLM+Exa tool:** Runs as a standalone "endpoint" alongside structured APIs. Uses Exa's neural search mode by default. Each search prompt is measure-specific.
-- **Cross-referencing:** Each API is tested once; results are cross-referenced to multiple KYC steps in stage 4. The agent testing an endpoint knows which measures it serves and evaluates fields against all relevant flags.
+- **LLM+Exa tool:** Runs as a standalone "endpoint" alongside structured APIs. Uses Exa's neural search mode by default. Each search prompt is measure-specific. Agents doing case discovery in stages 2-3 use their own web search, not Exa.
+- **Cross-referencing:** Each API is tested once (in stage 3, grouped by endpoint group). Results are cross-referenced to multiple KYC steps in stage 4.
+- **Adversarial mindset:** Stage 3 is the core of the pipeline. The goal is to find where endpoints fail, not confirm they work. A test run that only finds successes has failed at its job.

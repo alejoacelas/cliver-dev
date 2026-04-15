@@ -1,7 +1,7 @@
 # Stage 0 — Credential check & endpoint classification
 
 **Scope:** One agent, sequential.  
-**Goal:** Verify every credential works. Classify each endpoint as: `live`, `docs-only`, or `blocked`.  
+**Goal:** Verify every credential works. Classify each endpoint as: `live`, `docs-only`, or `blocked`. Document rate limits and set test budgets.  
 **Depends on:** Nothing — this is the first stage.
 
 ## Tasks
@@ -10,34 +10,55 @@
 2. For each credentialed API: make one minimal test call, confirm it returns data.
 3. For each free/no-auth API: make one minimal test call.
 4. For blocked APIs (missing credentials): write setup guides in `setup-guides/`.
-5. Produce the endpoint manifest and credential check log.
+5. For each API: determine the rate limit (from docs or testing) and set a `max_test_budget` for stage 3.
+6. Produce the endpoint manifest and credential check log.
 
-### APIs to test
+## APIs to test
 
-**Free / no-auth:**
+**Free / no-auth (network calls):**
 - ROR API v2 — `curl "https://api.ror.org/v2/organizations?query=MIT"`
 - GLEIF API — `curl "https://api.gleif.org/api/v1/lei-records?filter[entity.legalName]=Google"`
 - RDAP — `curl "https://rdap.org/domain/mit.edu"`
 - Consolidated Screening List — `curl "https://api.trade.gov/v1/consolidated_screening_list/search?api_key=$SCREENING_LIST_API_KEY&q=test"`
 - OSM Overpass — `curl -d 'data=[out:json];node[name="MIT"][amenity=university];out;' "https://overpass-api.de/api/interpreter"`
 - binlist.net — `curl "https://lookup.binlist.net/411111"`
-- InCommon/eduGAIN — fetch federation metadata XML
+- InCommon/eduGAIN — fetch federation metadata XML from `https://md.incommon.org/InCommon/InCommon-metadata.xml`
+- NIH RePORTER — `curl "https://api.reporter.nih.gov/v2/projects/search" -d '{"criteria":{"org_names":["MASSACHUSETTS INSTITUTE OF TECHNOLOGY"]},"limit":1}'`
+- NSF Awards — `curl "https://api.nsf.gov/services/v1/awards.json?keyword=MIT&printFields=id,title&offset=0&rpp=1"`
+- UKRI Gateway — `curl "https://gtr.ukri.org/gtr/api/organisations?q=Oxford&s=0&p=1"` (Accept: application/json)
+- PubMed (NCBI E-utilities) — `curl "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=MIT[Affiliation]&retmax=1&retmode=json"`
+- OpenCorporates — `curl "https://api.opencorporates.com/v0.4/companies/search?q=ginkgo+bioworks"`
+- ORCID public API — `curl -H "Accept: application/json" "https://pub.orcid.org/v3.0/search?q=affiliation-org-name:MIT&rows=1"`
+- OpenAlex — `curl "https://api.openalex.org/institutions?search=MIT&per_page=1"`
 
 **Credentialed:**
-- Smarty — US Street API with auth_id + auth_token
-- Stripe test mode — create a test PaymentMethod or retrieve a test charge
-- Plaid sandbox — create a sandbox link token
-- Companies House — `curl -u "$COMPANIES_HOUSE_API_KEY:" "https://api.company-information.service.gov.uk/search/companies?q=test"`
-- Exa — `curl -H "x-api-key: $EXA_API_KEY" -d '{"query":"test","numResults":1}' "https://api.exa.ai/search"`
+- Smarty — US Street API with auth_id + auth_token. `curl "https://us-street.api.smarty.com/street-address?auth-id=$SMARTY_AUTH_ID&auth-token=$SMARTY_AUTH_TOKEN&street=77+Massachusetts+Ave&city=Cambridge&state=MA&zipcode=02139"`
+- Stripe test mode — `curl https://api.stripe.com/v1/tokens -u $STRIPE_TEST_SK: -d "card[number]=4242424242424242" -d "card[exp_month]=12" -d "card[exp_year]=2027" -d "card[cvc]=123"`
+- Plaid sandbox — create a sandbox link token via API
+- Companies House — `curl -u "$COMPANIES_HOUSE_API_KEY:" "https://api.company-information.service.gov.uk/search/companies?q=ginkgo"`
+- Exa — `curl https://api.exa.ai/search -H "x-api-key: $EXA_API_KEY" -H "Content-Type: application/json" -d '{"query":"MIT biosafety","numResults":1}'`
+- GeoNames — `curl "http://api.geonames.org/searchJSON?q=MIT&maxRows=1&username=$GEONAMES_USERNAME"`
+- Google Places (New API) — `curl -H "X-Goog-Api-Key: $GOOGLE_MAPS_API_KEY" -H "X-Goog-FieldMask: places.displayName,places.formattedAddress,places.types,places.primaryType" -H "Content-Type: application/json" -d '{"textQuery":"Massachusetts Institute of Technology"}' "https://places.googleapis.com/v1/places:searchText"`
 
-**Blocked (write setup guides):**
-- GeoNames — needs account + web services enabled. Reuse instructions from `archive-2026-04-kyc-research/investigations/a-address-to-institution/00-api-key-setup.md`.
-- Google Places — needs Google Cloud API key with Places API enabled.
-- BinDB — optional, paid.
+**Local logic (verify the logic works, no network call):**
+- Disposable/free-mail blocklist — test against a known disposable domain and a known legitimate domain
+- MX/SPF/DMARC — `dig MX mit.edu`, `dig TXT mit.edu` (look for SPF), check DMARC at `_dmarc.mit.edu`
+- Lookalike/homoglyph domain detector — test with `rnit.edu` vs `mit.edu` (homoglyph)
+- PO Box regex — test patterns: "PO Box 123", "P.O. Box 456", "PMB 789", "APO AE 09001"
+- BIS Country Group D/E — verify the country group lookup table is correct
+- ISO 3166 normalization — test common variants: "USA" → "US", "United Kingdom" → "GB"
+- Billing-shipping-institution consistency — verify comparison logic with sample addresses
+- Fintech-neobank BIN denylist — verify against known Mercury/Brex BIN prefixes
+
+**Docs-only (no test call, just note status):**
+- Stripe AVS (production) — document that test mode is deterministic
+- Plaid Identity Match (production) — document that sandbox is synthetic
 
 ## Output: endpoint manifest
 
-Write to `tool-evaluation/00-endpoint-manifest.yaml`:
+Write to `tool-evaluation/00-endpoint-manifest.yaml`.
+
+**Manifest schema** — every endpoint gets these fields:
 
 ```yaml
 endpoints:
@@ -45,106 +66,17 @@ endpoints:
     name: Research Organization Registry
     url: https://api.ror.org/v2/organizations
     auth: none
-    status: live                    # live | docs-only | blocked
+    status: live                      # live | docs-only | blocked | local
     credential_env_var: null
     test_result: "OK — returned MIT record"
     rate_limit: "2000/5min (undocumented soft limit)"
+    max_test_budget: 100              # max calls for this pipeline run (stage 3)
     cost_per_call: "$0"
     cost_source: "free API"
     measures: [M02, M05, M07, M12]
-    ideas: [m02-ror-domain-match, m05-ror-gleif-canonical]
-    free_tier_budget: null
+    kyc_steps: [a, c]
+    group: institution-registry       # from 01-endpoint-map.md grouping
     notes: ""
-
-  - id: gleif
-    name: Global Legal Entity Identifier Foundation
-    url: https://api.gleif.org/api/v1/lei-records
-    auth: none
-    status: live
-    credential_env_var: null
-    test_result: ""                 # fill after testing
-    rate_limit: "undocumented"
-    cost_per_call: "$0"
-    cost_source: "free API"
-    measures: [M05, M12]
-    ideas: [m05-ror-gleif-canonical]
-    free_tier_budget: null
-    notes: ""
-
-  - id: rdap
-    name: RDAP/WHOIS domain lookup
-    url: https://rdap.org/domain/{domain}
-    auth: none
-    status: live
-    credential_env_var: null
-    test_result: ""
-    rate_limit: "varies by registrar"
-    cost_per_call: "$0"
-    cost_source: "protocol standard"
-    measures: [M02]
-    ideas: [m02-rdap-age]
-    free_tier_budget: null
-    notes: ""
-
-  - id: screening-list
-    name: Consolidated Screening List (trade.gov)
-    url: https://api.trade.gov/v1/consolidated_screening_list/search
-    auth: api_key query param
-    status: live
-    credential_env_var: SCREENING_LIST_API_KEY
-    test_result: ""
-    rate_limit: "undocumented"
-    cost_per_call: "$0"
-    cost_source: "free government API"
-    measures: [M06]
-    ideas: [m06-bis-entity-list]
-    free_tier_budget: null
-    notes: "Covers OFAC SDN, BIS Entity List, DPL, UVL, MEU"
-
-  - id: osm-overpass
-    name: OpenStreetMap Overpass API
-    url: https://overpass-api.de/api/interpreter
-    auth: none
-    status: live
-    credential_env_var: null
-    test_result: ""
-    rate_limit: "~4 queries before 429; add 2s delays"
-    cost_per_call: "$0"
-    cost_source: "community infrastructure"
-    measures: [M05]
-    ideas: [m05-ror-gleif-canonical]
-    free_tier_budget: null
-    notes: "Rate limiting aggressive — retry with exponential backoff"
-
-  - id: binlist
-    name: binlist.net BIN lookup
-    url: https://lookup.binlist.net/{bin}
-    auth: none
-    status: live
-    credential_env_var: null
-    test_result: ""
-    rate_limit: "10/min (undocumented)"
-    cost_per_call: "$0"
-    cost_source: "free community API"
-    measures: [M10]
-    ideas: [m10-binlist-stack]
-    free_tier_budget: null
-    notes: "Missing many fintech/prepaid BINs"
-
-  - id: incommon
-    name: InCommon/eduGAIN federation
-    url: https://md.incommon.org/InCommon/InCommon-metadata.xml
-    auth: none
-    status: live
-    credential_env_var: null
-    test_result: ""
-    rate_limit: "static file"
-    cost_per_call: "$0"
-    cost_source: "federation metadata"
-    measures: [M07]
-    ideas: [m07-incommon-edugain]
-    free_tier_budget: null
-    notes: "XML metadata — parse for entityID and domain"
 
   - id: smarty
     name: Smarty US Street API
@@ -154,164 +86,53 @@ endpoints:
     credential_env_var: SMARTY_AUTH_ID, SMARTY_AUTH_TOKEN
     test_result: ""
     rate_limit: "250 lookups/month (free tier)"
-    cost_per_call: "$0.003-$0.009 (paid); free tier 250/mo"
+    max_test_budget: 50               # hard cap — free tier shared across months
+    cost_per_call: "$0 (free tier) / $0.003-$0.009 (paid)"
     cost_source: "smarty.com pricing"
     measures: [M03, M04, M05]
-    ideas: [m03-smarty-melissa, m04-usps-rdi]
-    free_tier_budget: "250 lookups/month — budget 50 calls for this pipeline"
-    notes: "US addresses only. Returns RDI, CMRA, DPV, vacancy."
+    kyc_steps: [a, d, e]
+    group: address-classification
+    notes: "US addresses only. Prioritize adversarial cases — don't waste budget on easy ones."
 
-  - id: stripe-test
-    name: Stripe test mode
-    url: https://api.stripe.com/v1/
-    auth: Bearer token (secret key)
+  - id: google-places-new
+    name: Google Places API (New)
+    url: https://places.googleapis.com/v1/places:searchText
+    auth: X-Goog-Api-Key header
     status: live
-    credential_env_var: STRIPE_TEST_SK
+    credential_env_var: GOOGLE_MAPS_API_KEY
     test_result: ""
-    rate_limit: "25/sec test mode"
-    cost_per_call: "$0"
-    cost_source: "test mode is free"
-    measures: [M10, M12]
-    ideas: [m10-stripe-funding, m12-psp-avs]
-    free_tier_budget: null
-    notes: "Deterministic AVS responses in test mode — useful for schema validation, not coverage testing"
-
-  - id: stripe-avs-prod
-    name: Stripe AVS (production)
-    url: https://api.stripe.com/v1/
-    auth: Bearer token
-    status: docs-only
-    credential_env_var: null
-    test_result: "N/A — documentation review only"
-    rate_limit: "N/A"
-    cost_per_call: "included in Stripe processing fee"
-    cost_source: "stripe.com docs"
-    measures: [M12]
-    ideas: [m12-psp-avs]
-    free_tier_budget: null
-    notes: "Live AVS varies by issuer and country. Use docs + coverage matrices."
-
-  - id: plaid-sandbox
-    name: Plaid sandbox
-    url: https://sandbox.plaid.com/
-    auth: client_id + secret
-    status: live
-    credential_env_var: PLAID_CLIENT_ID, PLAID_SECRET
-    test_result: ""
-    rate_limit: "unlimited in sandbox"
-    cost_per_call: "$0"
-    cost_source: "sandbox is free"
-    measures: [M12]
-    ideas: [m12-psp-avs]
-    free_tier_budget: null
-    notes: "Synthetic data — useful for schema validation, not coverage testing"
-
-  - id: plaid-prod
-    name: Plaid Identity Match (production)
-    url: https://production.plaid.com/
-    auth: client_id + secret
-    status: docs-only
-    credential_env_var: null
-    test_result: "N/A — documentation review only"
-    rate_limit: "N/A"
-    cost_per_call: "$0.20-$1.00"
-    cost_source: "plaid.com pricing"
-    measures: [M12]
-    ideas: [m12-psp-avs]
-    free_tier_budget: null
-    notes: "US bank accounts only. Production access requires approval."
-
-  - id: companies-house
-    name: UK Companies House
-    url: https://api.company-information.service.gov.uk/
-    auth: HTTP Basic (API key as username)
-    status: live
-    credential_env_var: COMPANIES_HOUSE_API_KEY
-    test_result: ""
-    rate_limit: "600 req/5min"
-    cost_per_call: "$0"
-    cost_source: "free government API"
-    measures: [M05, M12]
-    ideas: [m05-ror-gleif-canonical]
-    free_tier_budget: null
-    notes: "UK-registered entities only (~5.5M)"
-
-  - id: exa
-    name: Exa neural search
-    url: https://api.exa.ai/search
-    auth: x-api-key header
-    status: live
-    credential_env_var: EXA_API_KEY
-    test_result: ""
-    rate_limit: "varies by plan"
-    cost_per_call: "~$0.01-$0.05 per search"
-    cost_source: "exa.ai pricing"
-    measures: [M02, M03, M04, M05, M12]
-    ideas: [llm-exa-search-standalone]
-    free_tier_budget: null
-    notes: "Standalone LLM+search tool — alternative to structured APIs"
+    rate_limit: "varies by endpoint — Text Search: no documented limit; Nearby Search: no documented limit"
+    max_test_budget: 200              # $200/month free credit; ~$0.032/call = ~6,000 calls
+    cost_per_call: "$0.032 (Text Search) / $0.032 (Nearby Search)"
+    cost_source: "cloud.google.com/maps-platform/pricing"
+    measures: [M04, M05]
+    kyc_steps: [a, d]
+    group: address-classification
+    notes: "Use New API (not legacy). Two-step: Text Search to geocode → Nearby Search to find institutions near the address. primaryType field is the key signal."
 
   - id: geonames
     name: GeoNames geographic database
     url: http://api.geonames.org/
     auth: username query param
-    status: blocked
+    status: live
     credential_env_var: GEONAMES_USERNAME
-    test_result: "N/A — no credentials"
+    test_result: ""
     rate_limit: "20,000 credits/day"
+    max_test_budget: 200
     cost_per_call: "$0"
     cost_source: "free tier"
     measures: [M05]
-    ideas: [m05-ror-gleif-canonical]
-    free_tier_budget: "20,000 credits/day"
-    notes: "Needs account creation + web services enabled"
+    kyc_steps: [a]
+    group: address-classification
+    notes: "Coarser type taxonomy than Google Places. Useful for reverse geocoding and campus-center coordinates."
 
-  - id: google-places
-    name: Google Places API
-    url: https://maps.googleapis.com/maps/api/place/
-    auth: API key
-    status: blocked
-    credential_env_var: GOOGLE_PLACES_API_KEY
-    test_result: "N/A — no credentials"
-    rate_limit: "varies"
-    cost_per_call: "$0.017 per request"
-    cost_source: "cloud.google.com pricing"
-    measures: [M04]
-    ideas: [m04-google-places-business]
-    free_tier_budget: "$200/month free credit"
-    notes: "Needs Google Cloud project + Places API enabled. Docs sufficient for coverage assessment."
-
-  # Local logic — no API calls needed
-  - id: pobox-regex
-    name: PO Box regex detection
-    url: null
-    auth: none
-    status: live
-    credential_env_var: null
-    test_result: "N/A — local regex"
-    rate_limit: null
-    cost_per_call: "$0"
-    cost_source: "local computation"
-    measures: [M03]
-    ideas: [m03-pobox-regex-sop]
-    free_tier_budget: null
-    notes: "Regex patterns for PO Box, APO/FPO, PMB. No API needed."
-
-  - id: iso-country
-    name: ISO 3166 country normalization
-    url: null
-    auth: none
-    status: live
-    credential_env_var: null
-    test_result: "N/A — local logic"
-    rate_limit: null
-    cost_per_call: "$0"
-    cost_source: "local computation"
-    measures: [M06]
-    ideas: [m06-iso-country-normalize]
-    free_tier_budget: null
-    notes: "Country code normalization + sanctioned territory lookup. No API needed."
+  # ... continue for all 31 endpoints from 01-endpoint-map.md
+  # The agent should fill in ALL endpoints, including local logic ones
 ```
+
+**Key fields the agent must determine:**
+- `rate_limit`: From documentation or by testing (e.g., hit the API rapidly and see when it throttles).
+- `max_test_budget`: How many calls stage 3 should make. Set based on rate limit, free tier constraints, and cost. For free unlimited APIs, set 100-200. For constrained APIs (Smarty: 250/month), set conservatively.
 
 ## Output: credential check log
 
@@ -319,11 +140,4 @@ Write to `tool-evaluation/00-credential-check.md` — a narrative log of each te
 
 ## Output: setup guides
 
-For each blocked endpoint, write to `tool-evaluation/setup-guides/{endpoint-id}.md` with:
-1. What the API does and why we need it.
-2. Signup URL.
-3. Step-by-step instructions.
-4. Expected env vars to set.
-5. How to verify the credential works.
-
-Reuse content from `archive-2026-04-kyc-research/investigations/a-address-to-institution/00-api-key-setup.md` where applicable.
+For each blocked endpoint (if any remain after adding GeoNames and Google Places credentials), write to `tool-evaluation/setup-guides/{endpoint-id}.md`.
