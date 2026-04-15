@@ -1,0 +1,266 @@
+group: email-domain
+endpoints: [rdap, disposable-free-mail-blocklist, mx-spf-dmarc-tenant, lookalike-homoglyph-detector, incommon-edugain]
+kyc_steps: [c]
+
+seed_cases:
+  # --- Easy (2-3): well-known academic domains, should be baseline passes ---
+  - id: 1
+    name: "David W. Morgens"
+    type: academic
+    country: US
+    source: customers_csv
+    difficulty: easy
+    query_params:
+      email: "dmorgens@berkeley.edu"
+      email_domain: "berkeley.edu"
+      claimed_institution: "UC Berkeley"
+    hypothesis: >
+      .edu domain, major US university. RDAP will show long registration history.
+      InCommon federation will list berkeley.edu as an IdP. MX/SPF/DMARC should
+      all be present and well-configured. Baseline "good" case.
+
+  - id: 2
+    name: "Patrice Guillon"
+    type: academic
+    country: AU
+    source: customers_csv
+    difficulty: easy
+    query_params:
+      email: "p.guillon@griffith.edu.au"
+      email_domain: "griffith.edu.au"
+      claimed_institution: "Griffith University"
+    hypothesis: >
+      .edu.au domain, Australian university. RDAP may not work (.edu.au is not
+      .com/.net/.org — test if RDAP returns data). eduGAIN should list Griffith
+      as a federated IdP. MX/SPF/DMARC should be configured. Tests non-US
+      academic TLD handling.
+
+  - id: 3
+    name: "Raiees Andrabi"
+    type: academic
+    country: US
+    source: customers_csv
+    difficulty: easy
+    query_params:
+      email: "randrabi@scripps.edu"
+      email_domain: "scripps.edu"
+      claimed_institution: "The Scripps Research Institute"
+    hypothesis: >
+      .edu domain, well-known US research institute (not a university). InCommon
+      should list it. Good for confirming research institutes are covered, not
+      just universities.
+
+  # --- Medium (3): non-standard TLDs, corporate domains, dual affiliation ---
+  - id: 4
+    name: "Shuvankar Dey"
+    type: academic
+    country: IN
+    source: customers_csv
+    difficulty: medium
+    query_params:
+      email_domain: "iitk.ac.in"
+      claimed_institution: "Indian Institute of Technology Kanpur"
+    hypothesis: >
+      .ac.in domain (India academic). RDAP likely won't work for .ac.in (not
+      .com/.net/.org). InCommon won't list Indian institutions — check if
+      eduGAIN covers India's INFED federation. MX/SPF/DMARC may be
+      inconsistently configured for Indian .ac.in domains. Tests non-Western
+      academic TLD coverage gap.
+
+  - id: 5
+    name: "Alexander B. Sigalov"
+    type: industry
+    country: US
+    source: customers_csv
+    difficulty: medium
+    query_params:
+      email: "sigalov@signablok.com"
+      email_domain: "signablok.com"
+      claimed_institution: "Signablok Inc"
+    hypothesis: >
+      Small US biotech company with own domain. RDAP should work (.com).
+      Registration date may be relatively recent — key signal. Not in InCommon
+      (not academic). MX/SPF/DMARC presence is the main check: does this look
+      like a properly configured corporate domain vs. a throwaway? Tests the
+      corporate-domain pathway where federation lookups are irrelevant.
+
+  - id: 6
+    name: "SOHN Myung Hyun"
+    type: industry
+    country: KR
+    source: customers_csv
+    difficulty: medium
+    query_params:
+      email_domain: "yuhs.ac"
+      claimed_institution: "GREENVAX INC."
+    hypothesis: >
+      Dual-affiliation case: email domain is Yonsei University Health System
+      (.ac TLD, Korean academic), but claimed institution is GREENVAX INC.
+      (industry). This is a legitimate pattern (researcher with hospital
+      affiliation founding a company), but the domain-institution mismatch
+      is exactly the flag KYC step (c) is looking for. Tests whether the
+      system flags the mismatch or passes because the domain is academic.
+
+  # --- Hard / adversarial (4): free email, disposable, typosquat, recently registered ---
+  - id: 7
+    name: "Honglei Sun"
+    type: academic
+    country: CN
+    source: customers_csv
+    difficulty: hard
+    query_params:
+      email: "shlei668@163.com"
+      email_domain: "163.com"
+      claimed_institution: "China Agricultural University"
+    hypothesis: >
+      163.com is NetEase's free email — extremely common among Chinese
+      researchers in the dataset (12 instances). Blocklist should flag it as
+      free-mail. But this is a legitimate researcher at a real university.
+      The hard question: should 163.com trigger a hard block or a soft flag
+      requiring additional verification? Tests the free-mail triage policy for
+      regionally common providers that are not Gmail/Yahoo.
+
+  - id: 8
+    name: "Esmaeil Saberfar"
+    type: sanctioned_institution
+    country: IR
+    source: customers_csv
+    difficulty: hard
+    query_params:
+      email: "saberfar@yahoo.com"
+      email_domain: "yahoo.com"
+      claimed_institution: "Baqiyatallah University of Medical Sciences"
+    hypothesis: >
+      Iranian researcher at a sanctioned military-affiliated university using
+      yahoo.com. Double red flag: (1) free email hides institutional affiliation,
+      (2) institution is Baqiyatallah (IRGC-affiliated, on screening lists).
+      Free email blocklist catches yahoo.com, but the deeper concern is that
+      the free email obscures the sanctioned-institution link. Tests whether
+      email screening alone can surface this risk or needs to be combined with
+      entity screening.
+
+  - id: 9
+    name: "[Synthetic] Typosquat attacker"
+    type: adversarial
+    country: US
+    source: constructed
+    difficulty: hard
+    query_params:
+      email: "researcher@rnit.edu"
+      email_domain: "rnit.edu"
+      claimed_institution: "MIT"
+    hypothesis: >
+      Typosquat of mit.edu — "rnit.edu" swaps 'm' for 'rn' (classic
+      homoglyph). Lookalike/homoglyph detector should catch this against the
+      ROR domain corpus. RDAP should show rnit.edu is either unregistered or
+      recently registered. InCommon won't list it. Tests the homoglyph
+      detector's core function. If this doesn't flag, the detector is broken.
+
+  - id: 10
+    name: "[Synthetic] Disposable email user"
+    type: adversarial
+    country: unknown
+    source: constructed
+    difficulty: hard
+    query_params:
+      email: "order4829@guerrillamail.com"
+      email_domain: "guerrillamail.com"
+      claimed_institution: "Stanford University"
+    hypothesis: >
+      Disposable email domain (guerrillamail.com is on every blocklist).
+      Should be an immediate hard flag — no legitimate researcher uses
+      disposable email. Tests the disposable-email blocklist's basic function.
+      Also tests RDAP: guerrillamail.com has been registered for years, so
+      domain age alone won't catch it — the blocklist is the critical layer.
+
+information_sources:
+  - source: "disposable-email-domains GitHub repo"
+    url: "https://github.com/disposable-email-domains/disposable-email-domains"
+    what_to_look_for: >
+      Canonical blocklist of disposable email domains. Use as ground truth
+      for the disposable blocklist endpoint. Also check the allowlist for
+      false-positive-prone domains.
+
+  - source: "free.fr.email.providers list / Mailcheck"
+    url: "https://github.com/mailcheck/mailcheck/wiki/List-of-known-providers"
+    what_to_look_for: >
+      Free email providers by country/region. Especially non-Western
+      providers: 163.com, 126.com, qq.com (China), rambler.ru, mail.ru
+      (Russia), yahoo.co.jp (Japan). The boundary between "flag" and "block"
+      is policy-dependent.
+
+  - source: "dnstwist typosquat generator"
+    url: "https://github.com/elceef/dnstwist"
+    what_to_look_for: >
+      Run against top university domains (mit.edu, harvard.edu, ox.ac.uk)
+      to generate candidate typosquat domains. Check which of those are
+      actually registered. Feed registered typosquats to the lookalike
+      detector.
+
+  - source: "InCommon participant list"
+    url: "https://incommon.org/community/incommon-federation/participants/"
+    what_to_look_for: >
+      Full list of InCommon federation members. Check coverage of non-R1
+      universities, community colleges, research institutes. Compare against
+      ROR institution list to find gaps.
+
+  - source: "eduGAIN technical site"
+    url: "https://technical.edugain.org/status"
+    what_to_look_for: >
+      Per-country federation membership. Key question: which countries
+      participate in eduGAIN? India (INFED), China (CARSI), Iran, Russia —
+      these are the countries where customers.csv has many researchers.
+      If a country's federation is not in eduGAIN, the InCommon/eduGAIN
+      endpoint is blind there.
+
+  - source: "customers.csv"
+    what_to_look_for: >
+      Filter for free-email domains (163.com, 126.com, qq.com, yahoo.com,
+      gmail.com, hotmail.com, outlook.com) — 25+ cases in the dataset.
+      Filter for 'Verified email at' entries (34 cases) — these have domain
+      but not full email address, testing partial-information handling.
+      Filter by Type='Sanctioned Institution' — check if any use institutional
+      domains that should be flagged.
+
+  - source: "IANA RDAP Bootstrap registry"
+    url: "https://data.iana.org/rdap/dns.json"
+    what_to_look_for: >
+      Which TLDs have RDAP servers? .com/.net/.org are covered. Check whether
+      .edu, .ac.uk, .ac.in, .edu.cn, .ac.ir, .ac.jp have RDAP endpoints.
+      TLDs without RDAP servers represent a coverage gap for domain-age checks.
+
+pre_committed_reasoning: |
+  The email-domain endpoint group has a fundamental two-track structure: academic
+  domains (checkable via InCommon/eduGAIN federation + ROR domain match) and
+  everything else (checked via RDAP age, MX/SPF/DMARC config, and blocklists).
+
+  The likely hard cases fall into three categories:
+
+  1. **Free email as regional norm.** Chinese researchers overwhelmingly use
+     163.com, 126.com, and qq.com — the dataset has 18+ instances. Iranian
+     researchers use yahoo.com. These are legitimate researchers at real
+     institutions who happen to use free email because their institutional
+     email systems are unreliable or because it's culturally normal. A naive
+     free-mail blocklist that hard-rejects these would produce massive false
+     positives in exactly the populations where KYC scrutiny matters most.
+     The correct policy is probably soft-flag (require additional verification)
+     rather than hard-block.
+
+  2. **RDAP coverage gaps by TLD.** RDAP works reliably for .com/.net/.org but
+     coverage for ccTLDs is spotty. .edu is managed by Educause (check if they
+     run an RDAP server). Country-code academic TLDs (.ac.uk, .ac.in, .edu.cn,
+     .ac.ir, .ac.jp) each have different registries with varying RDAP support.
+     If RDAP fails for a TLD, we lose the domain-age signal entirely, and must
+     fall back to DNS-based checks (MX/SPF/DMARC) alone.
+
+  3. **Homoglyph/typosquat detection depends on the reference corpus.** The
+     lookalike detector compares against ROR's domain list. This means it can
+     only catch typosquats of institutions that are in ROR. If a small biotech
+     company's domain (e.g., signablok.com) is not in ROR, a typosquat like
+     signabIok.com (capital I for lowercase l) won't be caught. The detector's
+     coverage is bounded by ROR's domain coverage — and ROR is academic-biased.
+
+  The InCommon/eduGAIN endpoint is strong for US/EU academic institutions but
+  will have gaps for countries not participating in eduGAIN. India, China,
+  Russia, and Iran are the critical test cases — these are exactly the countries
+  with the most sensitive customer profiles in the dataset.
