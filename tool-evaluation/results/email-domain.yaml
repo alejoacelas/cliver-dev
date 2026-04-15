@@ -1,0 +1,765 @@
+group: email-domain
+endpoints_tested: [rdap, disposable-free-mail-blocklist, mx-spf-dmarc, lookalike-homoglyph-detector, incommon-edugain]
+kyc_step: c
+test_date: "2026-04-15"
+total_api_calls:
+  rdap: 24
+  whois: 12
+  dns_dig: 78  # MX + SPF + DMARC across 26 domains
+  incommon_mdq: 13
+  edugain_status: 1
+  total: 128
+
+# ===========================================================================
+# SEED CASE RESULTS
+# ===========================================================================
+
+seed_results:
+  - id: 1
+    domain: berkeley.edu
+    claimed_institution: "UC Berkeley"
+    rdap:
+      method: whois  # .edu has NO RDAP server
+      result: registered
+      registrant: "University of California at Berkeley"
+      creation_date: null  # Educause WHOIS does not expose creation dates
+      finding: ".edu WHOIS returns registrant org name but no creation/expiration dates. Domain age signal unavailable."
+    mx_spf_dmarc:
+      mx: ["1 aspmx.l.google.com.", "5 alt1.aspmx.l.google.com.", "5 alt2.aspmx.l.google.com.", "10 alt3.aspmx.l.google.com.", "10 alt4.aspmx.l.google.com."]
+      spf: "v=spf1 include:_spf.berkeley.edu include:_spf2.berkeley.edu include:_spf.google.com include:_spf.qualtrics.com include:servers.mcsv.net include:spf.mailjet.com a:c.spf.service-now.com ~all"
+      dmarc: "v=DMARC1; p=reject; pct=100"
+      assessment: "Full stack. Google Workspace MX. SPF with multiple includes. DMARC p=reject at 100%. Gold standard configuration."
+    incommon:
+      in_federation: true
+      entity_ids: ["urn:mace:incommon:berkeley.edu", "https://datasets.lib.berkeley.edu/sp", "https://gallery.berkeley.edu/sso/SAML2"]
+      entity_count: 3
+    disposable_blocklist: not_flagged
+    verdict: PASS
+
+  - id: 2
+    domain: griffith.edu.au
+    claimed_institution: "Griffith University"
+    rdap:
+      method: rdap  # .au has RDAP at rdap.cctld.au
+      endpoint: "https://rdap.cctld.au/rdap/domain/griffith.edu.au"
+      result: registered
+      creation_date: null  # AU RDAP returns no registration date
+      status: ["server renew prohibited"]
+      finding: "AU RDAP exists but returns no dates. Status 'server renew prohibited' is unusual — may indicate government/education domain with special renewal handling."
+    mx_spf_dmarc:
+      mx: ["0 griffith-edu-au.mail.protection.outlook.com."]
+      spf: "v=spf1 ip4:132.234.227.10/29 ... include:spf.protection.outlook.com ~all"
+      dmarc: "v=DMARC1; p=reject"
+      assessment: "Full stack. Microsoft 365. DMARC p=reject. Well-configured."
+    incommon:
+      in_federation: true
+      entity_ids: ["https://idp1.griffith.edu.au/idp/shibboleth"]
+      entity_count: 1
+      note: "Griffith is in InCommon via eduGAIN interfederation (AAF member)"
+    disposable_blocklist: not_flagged
+    verdict: PASS
+
+  - id: 3
+    domain: scripps.edu
+    claimed_institution: "The Scripps Research Institute"
+    rdap:
+      method: whois
+      result: registered
+      registrant: "The Scripps Research Institute"
+    mx_spf_dmarc:
+      mx: ["10 scripps-edu.mail.protection.outlook.com."]
+      spf: "v=spf1 ip4:192.26.252.29 ip4:192.26.252.30 include:spf.protection.outlook.com ~all"
+      dmarc: "v=DMARC1; p=quarantine"
+      assessment: "Full stack. M365. DMARC p=quarantine (weaker than reject but functional)."
+    incommon:
+      in_federation: true
+      entity_ids: ["https://shibboleth.scripps.edu/idp/shibboleth"]
+      entity_count: 1
+    disposable_blocklist: not_flagged
+    verdict: PASS
+
+  - id: 4
+    domain: iitk.ac.in
+    claimed_institution: "Indian Institute of Technology Kanpur"
+    rdap:
+      method: rdap  # .in has RDAP at rdap.nixiregistry.in
+      endpoint: "https://rdap.nixiregistry.in/rdap/domain/iitk.ac.in"
+      result: registered
+      creation_date: "2004-02-28"
+      expiration_date: "2029-02-28"
+      status: ["active"]
+      finding: "India RDAP works and returns dates. 22-year-old domain — strong age signal."
+    mx_spf_dmarc:
+      mx: ["10 mailo.iitk.ac.in.", "10 mail1.iitk.ac.in.", "10 mail0.iitk.ac.in."]
+      spf: "v=spf1 include:spf.protection.outlook.com a:mail1.iitk.ac.in ... ~all"
+      dmarc: null
+      dmarc_missing: true
+      assessment: "MX and SPF present. NO DMARC record. Self-hosted mail servers + Outlook hybrid. Missing DMARC is a coverage gap — cannot verify email authentication policy."
+    incommon:
+      in_federation: false
+      note: "Search for 'iitk.ac.in' returned 0 entity IDs. Only match was 'iiitkottayam.ac.in' (IIIT Kottayam, different institution) — a substring false positive."
+    edugain:
+      federation: "INFED (India)"
+      federation_size: "317 IdPs"
+      note: "India's INFED federation has 317 IdPs in eduGAIN but InCommon MDQ search does not surface IIT Kanpur specifically. Would need INFED-specific metadata to confirm."
+    disposable_blocklist: not_flagged
+    verdict: PARTIAL_GAP
+    gap_details: "No DMARC. Not directly findable in InCommon MDQ. RDAP works (good). Need INFED-specific lookup."
+
+  - id: 5
+    domain: signablok.com
+    claimed_institution: "Signablok Inc"
+    rdap:
+      method: rdap
+      endpoint: "https://rdap.verisign.com/com/v1/domain/signablok.com"
+      result: registered
+      creation_date: "2009-06-28"
+      expiration_date: "2026-06-28"
+      status: ["active"]
+      registrar: "Tucows Domains Inc."
+      nameservers: ["NS.INMOTIONHOSTING.COM", "NS2.INMOTIONHOSTING.COM"]
+      finding: "17-year-old domain on shared hosting (InMotion). Legitimate small business pattern."
+    mx_spf_dmarc:
+      mx: ["0 signablok.com."]
+      mx_note: "MX points to the domain itself (self-hosted mail). Priority 0."
+      spf: "v=spf1 include:relay.mailchannels.net +a +mx +ip4:104.193.143.92 +ip4:144.208.78.119 -all"
+      dmarc: "v=DMARC1; p=none"
+      assessment: "Self-hosted MX on shared hosting via MailChannels relay. SPF is present with -all (hard fail). DMARC p=none (monitoring only, no enforcement). Typical small business config."
+    incommon:
+      in_federation: false
+      note: "Not academic — InCommon check not applicable."
+    disposable_blocklist: not_flagged
+    verdict: PASS_WITH_CAVEATS
+    caveats: "DMARC p=none means no enforcement. Self-hosted mail on shared hosting is a legitimate but lower-trust configuration."
+
+  - id: 6
+    domain: yuhs.ac
+    claimed_institution: "GREENVAX INC."
+    rdap:
+      method: whois  # .ac has no RDAP server in IANA bootstrap
+      result: "WHOIS returns .ac TLD-level info only (Ascension Island registry). No per-domain data accessible."
+      finding: "Complete RDAP/WHOIS blind spot for .ac TLD. Cannot determine domain age or registrant."
+    mx_spf_dmarc:
+      mx: ["10 mx1.yuhs.ac.", "20 mail.yuhs.ac."]
+      spf: "v=spf1 ip4:180.65.57.33 ... include:spf.protection.outlook.com -all"
+      dmarc: "v=DMARC1; p=quarantine; pct=10"
+      dmarc_note: "DMARC at pct=10 means only 10% of messages get quarantine treatment — effectively monitoring mode."
+      assessment: "Self-hosted MX + Outlook hybrid. SPF with -all (good). DMARC p=quarantine but pct=10 (weak enforcement)."
+    incommon:
+      in_federation: false
+      note: "Not in InCommon MDQ. KAFE (Korea) has only 29 IdPs in eduGAIN."
+    domain_institution_mismatch: true
+    mismatch_detail: "Email domain yuhs.ac = Yonsei University Health System (Korean academic hospital). Claimed institution = GREENVAX INC. (biotech company). Legitimate dual-affiliation pattern but domain-institution mismatch flag should fire."
+    disposable_blocklist: not_flagged
+    verdict: FLAG_MISMATCH
+
+  - id: 7
+    domain: 163.com
+    claimed_institution: "China Agricultural University"
+    rdap:
+      method: rdap
+      result: registered
+      creation_date: "1997-09-15"
+      status: ["client delete prohibited", "client transfer prohibited", "client update prohibited", "server delete prohibited", "server transfer prohibited", "server update prohibited"]
+      registrar: "MarkMonitor Information Technology (Shanghai) Co., Ltd."
+      finding: "29-year-old domain. Premium registrar (MarkMonitor). Full lock status. Clearly a major provider — NetEase free email."
+    mx_spf_dmarc:
+      mx: ["10 163mx01.mxmail.netease.com.", "10 163mx02.mxmail.netease.com.", "10 163mx03.mxmail.netease.com.", "50 163mx00.mxmail.netease.com."]
+      spf: "v=spf1 include:spf.mail.163.com -all"
+      dmarc: "v=DMARC1; p=none"
+      assessment: "Full MX/SPF stack. DMARC p=none means NetEase does not enforce DMARC — anyone can spoof a 163.com address without rejection. This is a real security concern."
+    incommon:
+      in_federation: false
+      note: "Free email provider — InCommon check not applicable."
+    disposable_blocklist:
+      is_disposable: false
+      is_free_mail: true
+      classification: "Free email (Chinese regional)"
+      prevalence: "Extremely common among Chinese researchers — 12+ instances in customer dataset"
+    verdict: SOFT_FLAG
+    policy_question: "163.com is free mail but NOT disposable. Hard-blocking would reject a large fraction of legitimate Chinese researchers. Correct policy: soft flag requiring additional affiliation verification (e.g., institutional website listing, publication record)."
+
+  - id: 8
+    domain: yahoo.com
+    claimed_institution: "Baqiyatallah University of Medical Sciences"
+    rdap:
+      method: rdap
+      creation_date: "1995-01-18"
+      registrar: "MarkMonitor Inc."
+    mx_spf_dmarc:
+      mx: ["1 mta5.am0.yahoodns.net.", "1 mta6.am0.yahoodns.net.", "1 mta7.am0.yahoodns.net."]
+      spf: "v=spf1 redirect=_spf.mail.yahoo.com"
+      dmarc: "v=DMARC1; p=reject; pct=100"
+      assessment: "Yahoo has excellent email auth. DMARC p=reject at 100%. But this tells us nothing about the user — only that Yahoo's infrastructure is solid."
+    incommon:
+      in_federation: false
+    institution_domain_check:
+      domain: bmsu.ac.ir
+      mx: null
+      spf: null
+      dmarc: null
+      finding: "bmsu.ac.ir (Baqiyatallah) has ZERO DNS records — no MX, no SPF, no DMARC. The institution appears to have no functional email infrastructure, which explains why the researcher uses yahoo.com."
+    disposable_blocklist:
+      is_disposable: false
+      is_free_mail: true
+    verdict: COMPOUND_FLAG
+    flags:
+      - "Free email hides institutional affiliation"
+      - "Claimed institution (Baqiyatallah) is IRGC-affiliated and on screening lists"
+      - "Institution domain bmsu.ac.ir has zero DNS infrastructure"
+      - "Iran's IRFED has only 2 IdPs in eduGAIN — near-zero federation coverage"
+    policy_question: "Email screening alone cannot surface the sanctioned-institution risk. The free email actually makes it HARDER to detect because it breaks the email-to-institution link. This case requires entity-level screening (step b) to complement email screening (step c)."
+
+  - id: 9
+    domain: rnit.edu
+    claimed_institution: "MIT"
+    rdap:
+      method: whois
+      result: not_registered
+      finding: "rnit.edu does not exist in Educause WHOIS. The typosquat domain is not registered."
+    mx_spf_dmarc:
+      mx: null
+      spf: null
+      dmarc: null
+      assessment: "No DNS records at all — domain does not resolve. This is the easy case."
+    incommon:
+      in_federation: false
+    homoglyph_detection:
+      target: "mit.edu"
+      technique: "rn → m substitution (classic homoglyph)"
+      detectable: true
+      note: "Because rnit.edu is unregistered, it has no DNS/MX/RDAP presence. Detection depends entirely on the homoglyph comparator. For .edu domains, the Educause registration restriction means typosquats are unlikely to be registered. The real threat vector is .com typosquats (see adversarial case 14)."
+    disposable_blocklist: not_flagged
+    verdict: DETECTABLE
+    detection_method: "Homoglyph detector (primary). Unregistered domain (secondary). No DNS records (tertiary)."
+
+  - id: 10
+    domain: guerrillamail.com
+    claimed_institution: "Stanford University"
+    rdap:
+      method: rdap
+      creation_date: "2006-11-29"
+      registrar: "Cloudflare, Inc."
+      finding: "Registered for 20 years. Domain age alone does NOT flag this — the blocklist is the critical detection layer."
+    mx_spf_dmarc:
+      mx: ["0 mail.guerrillamail.com."]
+      spf: "v=spf1 mx a ip4:168.119.142.36 ip6:2a01:4f8:251:657:0:0:0:2 -all"
+      dmarc: "v=DMARC1; p=reject; sp=reject; pct=100"
+      assessment: "Ironically, guerrillamail.com has EXCELLENT email auth config — DMARC p=reject, SPF -all. DNS-based checks would pass this domain. Only the disposable-email blocklist catches it."
+    incommon:
+      in_federation: false
+    disposable_blocklist:
+      is_disposable: true
+      on_canonical_list: true  # github.com/disposable-email-domains
+    verdict: HARD_FLAG
+    critical_finding: "RDAP age (20 years) and DNS config (full MX/SPF/DMARC with reject policy) would PASS this domain. Only the disposable-email blocklist catches it. This proves the blocklist is not redundant — it is the primary detection layer for disposable email."
+
+# ===========================================================================
+# ADVERSARIAL PROBING RESULTS
+# ===========================================================================
+
+adversarial_results:
+  # --- Free email providers by region ---
+  - id: 11
+    domain: 126.com
+    category: free_email_chinese
+    rdap:
+      creation_date: "1998-02-28"
+      status: ["client delete prohibited", "client transfer prohibited", "client update prohibited", "server delete prohibited", "server transfer prohibited", "server update prohibited"]
+    mx_spf_dmarc:
+      mx: ["10 126mx01.mxmail.netease.com.", "10 126mx02.mxmail.netease.com."]
+      spf: "v=spf1 include:spf.mail.163.com -all"
+      dmarc: "v=DMARC1; p=none"
+    finding: "Same NetEase infrastructure as 163.com. DMARC p=none. SPF shares 163.com's SPF record."
+    verdict: SOFT_FLAG
+
+  - id: 12
+    domain: qq.com
+    category: free_email_chinese
+    rdap:
+      creation_date: "1995-05-04"
+      status: ["client delete prohibited", "client transfer prohibited", "client update prohibited", "server delete prohibited", "server transfer prohibited", "server update prohibited"]
+    mx_spf_dmarc:
+      mx: ["10 mx3.qq.com.", "20 mx2.qq.com.", "30 mx1.qq.com."]
+      spf: "v=spf1 include:spf.mail.qq.com -all"
+      dmarc: "v=DMARC1; p=quarantine"
+    finding: "Tencent QQ Mail. Better DMARC than NetEase (p=quarantine vs p=none). 31-year-old domain."
+    verdict: SOFT_FLAG
+
+  - id: 13
+    domain: outlook.com
+    category: free_email_global
+    mx_spf_dmarc:
+      mx: ["5 outlook-com.olc.protection.outlook.com."]
+      spf: "v=spf1 include:spf2.outlook.com -all"
+      dmarc: "v=DMARC1; p=none; sp=quarantine"
+    finding: "Microsoft's consumer email. DMARC p=none on parent domain but sp=quarantine on subdomains. Free but ubiquitous."
+    verdict: SOFT_FLAG
+
+  - id: 14
+    domain: gmail.com
+    category: free_email_global
+    mx_spf_dmarc:
+      mx: ["5 gmail-smtp-in.l.google.com.", "10 alt1.gmail-smtp-in.l.google.com."]
+      spf: "v=spf1 redirect=_spf.google.com"
+      dmarc: "v=DMARC1; p=none; sp=quarantine"
+    finding: "Google's consumer email. DMARC p=none. The most common free email globally."
+    verdict: SOFT_FLAG
+
+  # --- Regional free-mail providers ---
+  - id: 15
+    domain: mail.ru
+    category: free_email_russian
+    mx_spf_dmarc:
+      mx: ["10 mxs.mail.ru."]
+      spf: "v=spf1 redirect=_spf.mail.ru"
+      dmarc: "v=DMARC1; p=reject"
+    rdap_available: false  # .ru has NO RDAP server
+    finding: "Russian free email. DMARC p=reject (strongest enforcement). But .ru has no RDAP — cannot check domain age via RDAP."
+    verdict: SOFT_FLAG
+
+  - id: 16
+    domain: naver.com
+    category: free_email_korean
+    mx_spf_dmarc:
+      mx: ["10 mx1.naver.com.", "10 mx2.naver.com.", "10 mx3.naver.com."]
+      spf: "v=spf1 ip4:111.91.135.0/27 ... ~all"
+      dmarc: "v=DMARC1; p=none"
+    finding: "Korean #1 portal. DMARC p=none. Very common among Korean researchers."
+    verdict: SOFT_FLAG
+
+  - id: 17
+    domain: hanmail.net
+    category: free_email_korean
+    mx_spf_dmarc:
+      mx: ["10 mx1.hanmail.net.", "10 mx2.hanmail.net."]
+      spf: "v=spf1 include:_spf.daum.net include:_external_smtp.daum.net ~all"
+      dmarc: "v=DMARC1; p=none"
+    finding: "Kakao/Daum free email (Korean). DMARC p=none."
+    verdict: SOFT_FLAG
+
+  # --- Disposable email ---
+  - id: 18
+    domain: mailinator.com
+    category: disposable
+    rdap:
+      creation_date: "2003-07-02"
+      registrar: "GoDaddy.com, LLC"
+    mx_spf_dmarc:
+      mx: ["1 mail.mailinator.com.", "1 mail2.mailinator.com."]
+      spf: "v=spf1 -all"
+      dmarc: "v=DMARC1; p=reject; sp=reject; aspf=s; pct=100"
+    finding: "23-year-old disposable email service. SPF -all and DMARC p=reject — EXCELLENT auth config. Like guerrillamail, DNS checks alone would not flag this."
+    verdict: HARD_FLAG
+    detection: "Blocklist only. RDAP age and DNS config pass."
+
+  - id: 19
+    domain: 10minutemail.com
+    category: disposable
+    rdap:
+      creation_date: "2006-11-03"
+      registrar: "Cloudflare, Inc."
+    mx_spf_dmarc:
+      mx: null
+      spf: null
+      dmarc: null
+    finding: "No DNS records despite 20-year registration. Domain exists in RDAP but has no mail infrastructure. Unusual pattern — may have sunset mail service."
+    verdict: HARD_FLAG
+    detection: "Blocklist (primary). Absence of MX records (secondary)."
+
+  # --- .com impersonation of .edu institutions ---
+  - id: 20
+    domain: mit-edu.com
+    category: com_impersonation
+    rdap:
+      creation_date: "2025-07-02"
+      status: ["client transfer prohibited"]
+    mx_spf_dmarc:
+      mx: ["0 mit-edu.com."]
+      spf: "v=spf1 +a +mx +ip4:158.220.107.73 ~all"
+      dmarc: "v=DMARC1; p=none"
+      a_record: "158.220.107.73"
+    finding: "REGISTERED LESS THAN 1 YEAR AGO. Self-hosted MX on a single IP. DMARC p=none. This domain looks like active infrastructure for impersonation. The .com TLD means it bypasses .edu registration restrictions entirely."
+    verdict: CRITICAL_FINDING
+    threat: "An attacker could use researcher@mit-edu.com and claim MIT affiliation. RDAP creation date (< 1 year) is the primary signal. Homoglyph detector must check .com variants of .edu institutions."
+
+  - id: 21
+    domain: berkeley-edu.com
+    category: com_impersonation
+    rdap:
+      creation_date: "2025-08-29"
+    mx_spf_dmarc:
+      mx: null
+      spf: null
+      dmarc: null
+      a_record: ["107.163.90.228", "192.186.34.30"]
+    finding: "Registered August 2025. No mail infrastructure. Parked domain (two A records suggest parking service)."
+    verdict: FLAG
+    threat: "Currently parked but could be activated for impersonation at any time."
+
+  - id: 22
+    domain: stanford-edu.com
+    category: com_impersonation
+    rdap:
+      creation_date: "2025-08-04"
+    mx_spf_dmarc:
+      mx: ["10 mx.zoho.com.", "20 mx2.zoho.com.", "50 mx3.zoho.com."]
+      spf: "v=spf1 include:zohomail.com ~all"
+      dmarc: null
+    finding: "REGISTERED 2025. ACTIVE MAIL on Zoho. Someone is sending/receiving email as @stanford-edu.com. No DMARC enforcement."
+    verdict: CRITICAL_FINDING
+    threat: "Active email service on a Stanford impersonation domain. Zoho provides cheap business email. An attacker could email as professor@stanford-edu.com with functional mail delivery."
+
+  - id: 23
+    domain: harvard-edu.com
+    category: com_impersonation
+    rdap:
+      creation_date: "2019-08-28"
+    mx_spf_dmarc:
+      mx: ["10 mx1.privateemail.com.", "10 mx2.privateemail.com."]
+      spf: "v=spf1 include:spf.privateemail.com ~all"
+      dmarc: null
+    finding: "7-year-old domain with active email via Namecheap PrivateEmail. Long-established impersonation infrastructure."
+    verdict: CRITICAL_FINDING
+    threat: "Oldest of the .com impersonation domains. Active mail. No DMARC. Has had years to build reputation."
+
+  - id: 24
+    domain: mitresearch.com
+    category: com_impersonation
+    rdap:
+      creation_date: "2024-04-09"
+    mx_spf_dmarc:
+      mx: null
+      spf: null
+      dmarc: null
+    finding: "Registered April 2024 (~2 years old). No mail infrastructure. Parked/squatted."
+    verdict: FLAG
+
+  - id: 25
+    domain: harvardmed.com
+    category: com_impersonation
+    rdap:
+      creation_date: "2014-10-04"
+    mx_spf_dmarc:
+      mx: ["0 ."]  # Null MX (RFC 7505 — explicit "no mail")
+      spf: "v=spf1 -all"
+      dmarc_record: "v=spf1 -all"  # WRONG — SPF syntax in DMARC TXT record
+    finding: "Null MX (intentionally no mail). But the _dmarc TXT record contains SPF syntax instead of DMARC syntax — misconfigured. 12-year-old domain. Likely defensive registration by Harvard."
+    verdict: LOW_RISK
+    note: "Null MX + SPF -all suggests this is a defensive registration. The broken DMARC record is a misconfiguration, not malice."
+
+  # --- Typosquat .edu domains ---
+  - id: 26
+    domain: rnit.edu
+    category: typosquat_edu
+    target: mit.edu
+    technique: "rn → m homoglyph"
+    whois: not_registered
+    dns: null
+    finding: "Not registered. .edu registration is restricted to accredited US institutions — typosquatting is very hard on .edu."
+    verdict: NOT_REGISTERED
+
+  - id: 27
+    domain: miit.edu
+    category: typosquat_edu
+    target: mit.edu
+    technique: "doubled-i insertion"
+    whois: not_registered
+    dns: null
+    finding: "Not registered."
+    verdict: NOT_REGISTERED
+
+  - id: 28
+    domain: scrlpps.edu
+    category: typosquat_edu
+    target: scripps.edu
+    technique: "i → l substitution + extra letter"
+    whois: not_registered
+    dns: null
+    finding: "Not registered."
+    verdict: NOT_REGISTERED
+
+  - id: 29
+    domain: mit-research.edu
+    category: typosquat_edu
+    target: mit.edu
+    technique: "hyphenated variant"
+    whois: not_registered
+    dns: null
+    finding: "Not registered."
+    verdict: NOT_REGISTERED
+
+  # --- Non-Western academic TLDs ---
+  - id: 30
+    domain: ox.ac.uk
+    institution: "University of Oxford"
+    rdap:
+      method: rdap
+      endpoint: "https://rdap.nominet.uk/uk/domain/ox.ac.uk"
+      result: registered
+      creation_date: null  # UK RDAP returns no dates for .ac.uk
+      finding: "UK RDAP exists but returns no registration/expiration dates for .ac.uk domains. Domain age signal lost."
+    mx_spf_dmarc:
+      mx: ["4 oxforduni.in.tmes.trendmicro.eu."]
+      spf: "v=spf1 redirect=_spf.ox.ac.uk"
+      dmarc: "v=DMARC1; p=quarantine"
+    incommon:
+      in_federation: true  # Via UK federation / eduGAIN
+      entity_count: 39
+
+  - id: 31
+    domain: pku.edu.cn
+    institution: "Peking University"
+    rdap:
+      method: whois  # .cn has no RDAP in IANA bootstrap
+      finding: "CNNIC WHOIS returned only a referral URL. No domain-level data accessible from standard whois."
+    mx_spf_dmarc:
+      mx: ["5 mx-pku-edu-cn.icoremail.net.", "10 gateway.pku.edu.cn."]
+      spf: "v=spf1 ip4:162.105.129.0/24 include:spf.icoremail.net -all"
+      dmarc: "v=DMARC1; p=quarantine; sp=reject"
+    incommon:
+      in_federation: true  # Via CARSI/eduGAIN
+      entity_count: 2
+    edugain:
+      federation: "CARSI (China)"
+      federation_size: "573 IdPs"
+
+  - id: 32
+    domain: tsinghua.edu.cn
+    institution: "Tsinghua University"
+    rdap:
+      method: whois
+      finding: "Same CNNIC referral. No RDAP."
+    mx_spf_dmarc:
+      mx: ["10 mta0.tsinghua.edu.cn.", "10 mta1.tsinghua.edu.cn."]
+      spf: "v=spf1 redirect=spf.tsinghua.edu.cn"
+      dmarc: "v=DMARC1; p=quarantine"
+    incommon:
+      in_federation: true  # Via CARSI
+      entity_count: 1
+
+  - id: 33
+    domain: snu.ac.kr
+    institution: "Seoul National University"
+    rdap:
+      method: whois
+      creation_date: "1997-06-25"
+      expiration_date: "2028-04-12"
+      finding: "Korean WHOIS works and returns dates."
+    mx_spf_dmarc:
+      mx: ["1 aspmx1.gov-dooray.com."]
+      spf: "v=spf1 include:_spf.snu.ac.kr include:_spf2.snu.ac.kr ... ~all"
+      dmarc: "v=DMARC1; p=none"
+    incommon:
+      in_federation: true  # Via KAFE
+      entity_count: 1
+    finding: "DMARC p=none despite being a top Korean university. KAFE has only 29 IdPs in eduGAIN."
+
+  - id: 34
+    domain: sharif.edu
+    institution: "Sharif University of Technology (Iran)"
+    rdap:
+      method: whois
+      result: registered  # In Educause WHOIS — Sharif has a .edu domain!
+      finding: "Sharif University (Iran) has a .edu domain — registered through Educause. This is unusual for a non-US institution."
+    mx_spf_dmarc:
+      mx: ["10 mx01.sharif.edu.", "10 mx02.sharif.edu."]
+      spf: "v=spf1 mx -all"
+      dmarc: "v=DMARC1; p=quarantine"
+    incommon:
+      in_federation: false
+      note: "Zero results in InCommon MDQ despite having a .edu domain. Sharif is NOT an InCommon participant."
+    finding: ".edu domain does NOT guarantee InCommon membership. Sharif.edu is a valid .edu but not in InCommon. This means the 'check if .edu is in InCommon' heuristic has false negatives."
+
+  - id: 35
+    domain: ut.ac.ir
+    institution: "University of Tehran"
+    rdap:
+      method: whois
+      finding: ".ir has no RDAP server. WHOIS not tested (different registry)."
+    mx_spf_dmarc:
+      mx: ["10 mx01.ut.ac.ir.", "10 mx02.ut.ac.ir."]
+      spf: "v=spf1 ip4:80.66.179.13 ip4:80.66.179.14 mx -all"
+      dmarc: "v=DMARC1; p=quarantine"
+    edugain:
+      federation: "IRFED (Iran)"
+      federation_size: "2 IdPs"
+      finding: "Iran has only 2 IdPs in all of eduGAIN. Near-zero coverage. Cannot rely on federation for Iranian institutions."
+
+  # --- Sanctioned institution domains ---
+  - id: 36
+    domain: bmsu.ac.ir
+    institution: "Baqiyatallah University of Medical Sciences"
+    sanctioned: true
+    rdap:
+      method: none
+      finding: ".ir has no RDAP. No WHOIS tested."
+    mx_spf_dmarc:
+      mx: null
+      spf: null
+      dmarc: null
+      assessment: "ZERO DNS records. No MX, no SPF, no DMARC. This institution has no email infrastructure visible in public DNS."
+    finding: "Baqiyatallah has no email infrastructure at all — researchers must use free email (yahoo, gmail). This means email-domain screening is BLIND to Baqiyatallah affiliations. Detection requires entity-level screening."
+
+  - id: 37
+    domain: mut.ac.ir
+    institution: "Malek Ashtar University of Technology"
+    sanctioned: true
+    mx_spf_dmarc:
+      mx: ["10 mail.mut.ac.ir."]
+      spf: null
+      dmarc: null
+    finding: "MUT (IRGC-affiliated) has MX but no SPF or DMARC. Minimal email config. Better than bmsu.ac.ir but still weak."
+
+  # --- Privacy-focused email ---
+  - id: 38
+    domain: protonmail.com
+    category: privacy_email
+    mx_spf_dmarc:
+      mx: ["5 mail.protonmail.ch.", "10 mailsec.protonmail.ch."]
+      spf: "v=spf1 include:_spf.protonmail.ch ~all"
+      dmarc: "v=DMARC1; p=quarantine; aspf=s; adkim=s"
+    finding: "ProtonMail has good email auth (DMARC quarantine, strict alignment). Privacy-focused but not disposable. Should be soft-flagged like other free mail."
+    verdict: SOFT_FLAG
+
+  - id: 39
+    domain: tutanota.com
+    category: privacy_email
+    mx_spf_dmarc:
+      mx: ["0 mail.tutanota.de."]
+      spf: "v=spf1 include:spf.tutanota.de -all"
+      dmarc: "v=DMARC1; p=quarantine; adkim=s"
+    finding: "Tutanota (now Tuta) — encrypted email. Good auth config. Like ProtonMail, privacy-focused but legitimate."
+    verdict: SOFT_FLAG
+
+# ===========================================================================
+# RDAP COVERAGE MAP
+# ===========================================================================
+
+rdap_coverage:
+  has_rdap:
+    - tld: ".com"
+      server: "rdap.verisign.com/com/v1"
+      returns_dates: true
+    - tld: ".net"
+      server: "rdap.verisign.com/net/v1"
+      returns_dates: true
+    - tld: ".org"
+      server: "rdap.publicinterestregistry.org/rdap"
+      returns_dates: true  # assumed
+    - tld: ".in (.ac.in)"
+      server: "rdap.nixiregistry.in/rdap"
+      returns_dates: true
+    - tld: ".au (.edu.au)"
+      server: "rdap.cctld.au/rdap"
+      returns_dates: false  # returns status but no dates
+    - tld: ".uk (.ac.uk)"
+      server: "rdap.nominet.uk/uk"
+      returns_dates: false  # returns neither dates nor status
+  no_rdap:
+    - ".edu — use whois.educause.edu (no dates, registrant only)"
+    - ".ac (Ascension Island / Korean academic) — no per-domain WHOIS"
+    - ".cn (.edu.cn) — CNNIC WHOIS returns referral only"
+    - ".ir (.ac.ir) — no RDAP, no accessible WHOIS"
+    - ".ru — no RDAP"
+    - ".kr (.ac.kr) — Korean WHOIS works, returns dates"
+    - ".jp — not tested"
+
+# ===========================================================================
+# EDUGAIN FEDERATION COVERAGE
+# ===========================================================================
+
+edugain_coverage:
+  - country: US
+    federation: InCommon
+    idps: 587
+    sps: 1879
+    coverage: excellent
+  - country: China
+    federation: CARSI
+    idps: 573
+    sps: 132
+    coverage: good
+  - country: India
+    federation: INFED
+    idps: 317
+    sps: 12
+    coverage: moderate
+  - country: Japan
+    federation: GakuNin
+    idps: 157
+    sps: 7
+    coverage: moderate
+  - country: Australia
+    federation: AAF
+    idps: 40
+    sps: 12
+    coverage: moderate
+  - country: South Korea
+    federation: KAFE
+    idps: 29
+    sps: 1
+    coverage: weak
+  - country: Iran
+    federation: IRFED
+    idps: 2
+    sps: 0
+    coverage: near_zero
+  - country: Russia
+    federation: null
+    idps: 0
+    note: "Russia NOT MENTIONED on eduGAIN status page. No federation found."
+    coverage: none
+
+# ===========================================================================
+# DMARC POLICY DISTRIBUTION
+# ===========================================================================
+
+dmarc_summary:
+  reject:
+    - berkeley.edu
+    - griffith.edu.au
+    - yahoo.com
+    - guerrillamail.com
+    - mailinator.com
+    - mail.ru
+    - cam.ac.uk
+  quarantine:
+    - scripps.edu
+    - yuhs.ac  # but pct=10
+    - ox.ac.uk
+    - pku.edu.cn
+    - tsinghua.edu.cn
+    - sharif.edu
+    - ut.ac.ir
+    - protonmail.com
+    - tutanota.com
+    - rambler.ru
+    - qq.com
+    - modares.ac.ir
+  none:
+    - signablok.com
+    - 163.com
+    - 126.com
+    - gmail.com
+    - outlook.com
+    - naver.com
+    - hanmail.net
+    - yandex.ru
+    - cau.edu.cn
+    - snu.ac.kr
+    - mit-edu.com
+  missing:
+    - iitk.ac.in
+    - bmsu.ac.ir
+    - mut.ac.ir
+    - 10minutemail.com
+    - rnit.edu
+    - miit.edu
+    - scrlpps.edu
+    - mit-research.edu
+    - stanford-edu.com
+    - harvard-edu.com
+    - berkeley-edu.com
+    - mitresearch.com
+    - stanfordbio.com
