@@ -11,6 +11,7 @@ Cliver aims to be a user-facing website demonstrating automated KYC verification
 - **`notes/`** — Meeting notes, planning docs, and investigation summaries.
   - `2026-04-07-minimal-standard-meeting2-agenda.md` — CSSWG Meeting #2 agenda and discussion notes. Contains the draft minimal standard structure, stakeholder alignment criteria, discussion of attacker stories, and the full measure-by-measure table with screening processes, requirements, and open questions. Key reference for ongoing work.
   - `measure-A-deep-dive-planning.md` — Planning doc for the Measure A (address-to-institution) deep dive.
+  - `reference-wg-and-phishing.md` — Pointers and excerpts from `cliver/wg` (bypass research, measures-in-practice, false-negative rates) and `tries/phishing` (provider email security, attack chain costs). Maps our 5 KYC steps to the wg measure numbers.
 
 ## Archive
 
